@@ -5,7 +5,13 @@
   "scripts": {
     "release": "semantic-release"
   },
+  "scripts": {
+    "release": "semantic-release",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui"
+  },
   "devDependencies": {
+    "@playwright/test": "^1.50.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",

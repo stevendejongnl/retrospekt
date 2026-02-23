@@ -16,8 +16,10 @@ dependencies = [
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
     "mongomock-motor>=0.0.36",
     "httpx>=0.28.0",
+    "nox>=2024.10.9",
     "ruff>=0.8.0",
     "mypy>=1.9.0",
 ]
@@ -35,6 +37,24 @@ packages = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+omit = ["src/main.py"]  # uvicorn entry point — covered by E2E
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 80
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
+check_untyped_defs = true
 
 [tool.ruff]
 line-length = 110

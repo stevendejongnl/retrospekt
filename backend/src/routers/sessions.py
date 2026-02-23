@@ -1,3 +1,4 @@
+from collections.abc import AsyncGenerator
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Header, HTTPException
@@ -96,7 +97,7 @@ async def stream_session(
 
     queue = sse_manager.subscribe(session_id)
 
-    async def event_stream():
+    async def event_stream() -> AsyncGenerator[str, None]:
         async for chunk in sse_manager.stream(session_id, queue):
             yield chunk
 

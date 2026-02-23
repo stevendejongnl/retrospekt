@@ -1,11 +1,17 @@
-.PHONY: install start stop logs ps restart test lint typecheck help
+# Quality checks, tests, and linting are managed by nox (noxfile.py).
+# Run `uv run --project backend nox -l` to list available sessions.
+# This Makefile only handles Docker/infrastructure tasks.
 
-## Install all dependencies locally
+.PHONY: install start stop logs ps restart help
+
+## Install all project dependencies
 install:
 	cd backend && uv sync
 	cd frontend && npm install
+	npm install
+	npx playwright install chromium --with-deps
 
-## Start all services with Docker Compose (detached)
+## Start MongoDB + backend + frontend via Docker Compose
 start:
 	docker compose up --build -d
 
@@ -13,7 +19,7 @@ start:
 stop:
 	docker compose down
 
-## View live logs from all services
+## Stream live logs from all services
 logs:
 	docker compose logs -f
 
@@ -25,30 +31,24 @@ ps:
 restart:
 	docker compose restart
 
-## Run backend tests
-test:
-	cd backend && uv run pytest
-
-## Lint backend (ruff)
-lint:
-	cd backend && uv run ruff check .
-
-## Type-check frontend (tsc)
-typecheck:
-	cd frontend && npm run typecheck
-
 ## Show this help
 help:
 	@echo ""
 	@echo "  Retrospekt — self-hosted retro board 🥓"
 	@echo ""
-	@echo "  make start        Start MongoDB + backend + frontend"
-	@echo "  make stop         Stop all services"
-	@echo "  make logs         Stream logs"
-	@echo "  make ps           Show service status"
-	@echo "  make restart      Restart all services"
-	@echo "  make install      Install deps (uv + npm)"
-	@echo "  make test         Run backend pytest"
-	@echo "  make lint         Run ruff linter"
-	@echo "  make typecheck    Run tsc type check"
+	@echo "  Infrastructure (this Makefile):"
+	@echo "    make start     Start MongoDB + backend + frontend"
+	@echo "    make stop      Stop all services"
+	@echo "    make logs      Stream logs"
+	@echo "    make install   Install all deps"
+	@echo ""
+	@echo "  Quality checks (nox — run from project root):"
+	@echo "    nox -s test          Backend unit + integration tests"
+	@echo "    nox -s coverage      Tests with HTML coverage report"
+	@echo "    nox -s lint          Ruff linter (backend)"
+	@echo "    nox -s mypy          Mypy type checker (backend)"
+	@echo "    nox -s lint_frontend ESLint (frontend)"
+	@echo "    nox -s typecheck     tsc type checker (frontend)"
+	@echo "    nox -s e2e           Playwright E2E tests"
+	@echo "    nox                  Run all checks (default)"
 	@echo ""
