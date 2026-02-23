@@ -1,3 +1,18 @@
+## [1.2.0](https://github.com/stevendejongnl/retrospekt/compare/v1.1.0...v1.2.0) (2026-02-23)
+
+### Features
+
+* **retro:** add card publish flow and discussion-only voting ([397f55f](https://github.com/stevendejongnl/retrospekt/commit/397f55f84835b34a2bd64f4dc207d19b6400e6be))
+* vote sorting, column management, and platform-aware shortcuts ([2eb513f](https://github.com/stevendejongnl/retrospekt/commit/2eb513f7edc1cf4ddb621df3a741bad3ccdd0e58))
+
+### Bug Fixes
+
+* **backend:** fix ruff lint errors from column management ([5e5e6dc](https://github.com/stevendejongnl/retrospekt/commit/5e5e6dc7803ff7c308ca88880372c8483fe5ff66))
+
+### Documentation
+
+* add CLAUDE.md with project guidance ([da99e9b](https://github.com/stevendejongnl/retrospekt/commit/da99e9bae984b220ca098a74ddde4a1853d3d566))
+
 ## [1.1.0](https://github.com/stevendejongnl/retrospekt/compare/v1.0.3...v1.1.0) (2026-02-23)
 
 ### Features
