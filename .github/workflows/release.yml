@@ -50,10 +50,18 @@ jobs:
           npm ci
           npm run typecheck
 
-      - name: Frontend tests
+      - name: Frontend unit tests
         run: |
           cd frontend
           npm run test:coverage
+
+      - name: Install Playwright browsers
+        run: cd frontend && npx playwright install --with-deps chromium
+
+      - name: Frontend browser tests
+        run: |
+          cd frontend
+          npm run test:ct
 
       - name: Install root dependencies
         run: npm install

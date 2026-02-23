@@ -6,6 +6,7 @@ const apiTarget = process.env.VITE_BACKEND_URL ?? 'http://localhost:8000'
 export default defineConfig({
   test: {
     environment: 'jsdom',
+    include: ['**/*.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],

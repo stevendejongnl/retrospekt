@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:ct": "playwright test -c playwright-ct.config.ts"
   },
   "dependencies": {
     "lit": "^3.1.0"
