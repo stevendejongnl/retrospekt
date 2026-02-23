@@ -1,3 +1,11 @@
+## [1.0.2](https://github.com/stevendejongnl/retrospekt/compare/v1.0.1...v1.0.2) (2026-02-23)
+
+### Bug Fixes
+
+* **api:** correct header merge order and wire repo via Depends for testability ([e2ff1a1](https://github.com/stevendejongnl/retrospekt/commit/e2ff1a1a257ea36d78f097c3ded09afd8e8b03e0))
+* **frontend:** add @playwright/test to devDependencies ([ec87523](https://github.com/stevendejongnl/retrospekt/commit/ec875235b6d59528a6df701d2aa8f9e3f023d8d5))
+* **frontend:** add @types/mocha, fix null casts, exclude spec files from tsc ([76a0ba1](https://github.com/stevendejongnl/retrospekt/commit/76a0ba1443fd63a2ecab01077e97491d3ebcc31f))
+
 ## [1.0.1](https://github.com/stevendejongnl/retrospekt/compare/v1.0.0...v1.0.1) (2026-02-23)
 
 ### Bug Fixes
