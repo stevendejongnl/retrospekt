@@ -56,8 +56,8 @@ jobs:
           echo "=== semantic-release dry-run output ==="
           cat release-output.txt
           echo "======================================="
-          if grep -q "The next release version is" release-output.txt; then
-            NEXT_VERSION=$(grep "The next release version is" release-output.txt | sed 's/.*The next release version is //' | tr -d '[:space:]')
+          if grep -qi "the next release version is" release-output.txt; then
+            NEXT_VERSION=$(grep -i "the next release version is" release-output.txt | sed 's/.*the next release version is //i' | tr -d '[:space:]')
             echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
             echo "SHOULD_RELEASE=true" >> $GITHUB_ENV
             echo "Next version: $NEXT_VERSION"
