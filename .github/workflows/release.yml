@@ -39,11 +39,21 @@ jobs:
           uv sync
           uv run ruff check .
 
+      - name: Backend tests
+        run: |
+          cd backend
+          uv run pytest --cov
+
       - name: Frontend typecheck
         run: |
           cd frontend
           npm ci
           npm run typecheck
+
+      - name: Frontend tests
+        run: |
+          cd frontend
+          npm run test:coverage
 
       - name: Install root dependencies
         run: npm install
