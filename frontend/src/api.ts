@@ -4,8 +4,8 @@ const BASE = '/api/v1'
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
   })
   if (!response.ok) {
     const text = await response.text()

@@ -1,16 +1,12 @@
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 
-from ..database import database
+from ..dependencies import get_repo
 from ..models.requests import AddCardRequest
 from ..models.session import Card, Session, Vote
 from ..repositories.session_repo import SessionRepository
 from ..services.sse_manager import sse_manager
 
 router = APIRouter(prefix="/api/v1/sessions")
-
-
-def _get_repo() -> SessionRepository:
-    return SessionRepository(database.db)
 
 
 def _public(session: Session) -> dict:
@@ -20,8 +16,11 @@ def _public(session: Session) -> dict:
 
 
 @router.post("/{session_id}/cards", status_code=201)
-async def add_card(session_id: str, body: AddCardRequest) -> dict:
-    repo = _get_repo()
+async def add_card(
+    session_id: str,
+    body: AddCardRequest,
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -40,11 +39,11 @@ async def delete_card(
     session_id: str,
     card_id: str,
     x_participant_name: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
 ) -> None:
     if not x_participant_name:
         raise HTTPException(status_code=400, detail="X-Participant-Name header required")
 
-    repo = _get_repo()
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -65,11 +64,11 @@ async def add_vote(
     session_id: str,
     card_id: str,
     x_participant_name: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
 ) -> dict:
     if not x_participant_name:
         raise HTTPException(status_code=400, detail="X-Participant-Name header required")
 
-    repo = _get_repo()
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -93,11 +92,11 @@ async def remove_vote(
     session_id: str,
     card_id: str,
     x_participant_name: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
 ) -> dict:
     if not x_participant_name:
         raise HTTPException(status_code=400, detail="X-Participant-Name header required")
 
-    repo = _get_repo()
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
