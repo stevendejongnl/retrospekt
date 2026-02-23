@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/stevendejongnl/retrospekt/compare/v1.0.3...v1.1.0) (2026-02-23)
+
+### Features
+
+* **frontend:** add phase help dialog and back navigation for facilitator ([feb933e](https://github.com/stevendejongnl/retrospekt/commit/feb933e2c354ea832a9eb13eb3caf7fed48f2e88))
+
 ## [1.0.3](https://github.com/stevendejongnl/retrospekt/compare/v1.0.2...v1.0.3) (2026-02-23)
 
 ### Bug Fixes
