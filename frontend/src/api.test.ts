@@ -77,6 +77,30 @@ describe('deleteCard', () => {
   })
 })
 
+describe('joinSession', () => {
+  it('POSTs to /api/v1/sessions/:id/join with participant_name', async () => {
+    mockOk(mockSession)
+    await api.joinSession('sess-1', 'Alice')
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/v1/sessions/sess-1/join', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ participant_name: 'Alice' }),
+    }))
+  })
+})
+
+describe('addCard', () => {
+  it('POSTs to /api/v1/sessions/:id/cards with card fields', async () => {
+    mockOk({ id: 'card-1', column: 'went-well', text: 'Great sprint', author_name: 'Alice', votes: 0 })
+    await api.addCard('sess-1', 'went-well', 'Great sprint', 'Alice')
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/v1/sessions/sess-1/cards', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ column: 'went-well', text: 'Great sprint', author_name: 'Alice' }),
+    }))
+  })
+})
+
 describe('addVote / removeVote', () => {
   it('addVote POSTs to /votes with X-Participant-Name', async () => {
     mockOk(mockSession.cards[0])
