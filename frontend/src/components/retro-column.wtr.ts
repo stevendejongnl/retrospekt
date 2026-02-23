@@ -89,9 +89,9 @@ describe('retro-column', () => {
     await el.updateComplete
 
     expect(captured).to.not.be.null
-    expect((captured as CustomEvent).detail.column).to.equal('Went Well')
-    expect((captured as CustomEvent).detail.text).to.equal('My feedback')
-    expect((captured as CustomEvent).detail.authorName).to.equal('Alice')
+    expect(captured!.detail.column).to.equal('Went Well')
+    expect(captured!.detail.text).to.equal('My feedback')
+    expect(captured!.detail.authorName).to.equal('Alice')
   })
 
   it('Cmd+Enter / Ctrl+Enter submits the form', async () => {
@@ -116,6 +116,6 @@ describe('retro-column', () => {
     await el.updateComplete
 
     expect(captured).to.not.be.null
-    expect((captured as CustomEvent).detail.text).to.equal('Follow up')
+    expect(captured!.detail.text).to.equal('Follow up')
   })
 })

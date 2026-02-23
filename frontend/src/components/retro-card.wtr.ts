@@ -57,7 +57,7 @@ describe('retro-card', () => {
     })
     el.shadowRoot!.querySelector<HTMLButtonElement>('.vote-btn')!.click()
     expect(captured).to.not.be.null
-    expect((captured as CustomEvent).detail.cardId).to.equal('card-1')
+    expect(captured!.detail.cardId).to.equal('card-1')
   })
 
   it('clicking an already-voted button dispatches an "unvote" CustomEvent', async () => {
@@ -71,7 +71,7 @@ describe('retro-card', () => {
     })
     el.shadowRoot!.querySelector<HTMLButtonElement>('.vote-btn')!.click()
     expect(captured).to.not.be.null
-    expect((captured as CustomEvent).detail.cardId).to.equal('card-1')
+    expect(captured!.detail.cardId).to.equal('card-1')
   })
 
   it('delete button is absent when canDelete=false', async () => {
@@ -95,6 +95,6 @@ describe('retro-card', () => {
     })
     ;(deleteBtn as HTMLButtonElement).click()
     expect(captured).to.not.be.null
-    expect((captured as CustomEvent).detail.cardId).to.equal('card-1')
+    expect(captured!.detail.cardId).to.equal('card-1')
   })
 })
