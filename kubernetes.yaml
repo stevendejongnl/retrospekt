@@ -44,7 +44,7 @@ spec:
                   name: retrospekt-mongodb-secret
                   key: mongodb-url
             - name: MONGODB_DATABASE
-              value: "retrospekt_production"
+              value: "retrospekt"
           resources:
             requests:
               memory: "64Mi"
@@ -77,7 +77,7 @@ spec:
     app: retrospekt-backend
   ports:
     - name: http
-      port: 8000
+      port: 80
       targetPort: http
 
 ---
@@ -144,17 +144,13 @@ metadata:
   name: retrospekt
   namespace: retrospekt
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
 spec:
   ingressClassName: nginx
-  tls:
-    - hosts:
-        - retrospekt.steven-dejong.nl
-      secretName: retrospekt-tls
   rules:
-    - host: retrospekt.steven-dejong.nl
+    - host: retrospekt.madebysteven.nl
       http:
         paths:
           - path: /api
@@ -163,18 +159,18 @@ spec:
               service:
                 name: retrospekt-backend
                 port:
-                  name: http
+                  number: 80
           - path: /health
             pathType: Exact
             backend:
               service:
                 name: retrospekt-backend
                 port:
-                  name: http
+                  number: 80
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: retrospekt-frontend
                 port:
-                  name: http
+                  number: 80

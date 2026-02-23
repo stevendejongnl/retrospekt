@@ -1,0 +1,72 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  OWNER: ${{ github.repository_owner }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/retrospekt-backend:latest
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/retrospekt-backend:${{ github.sha }}
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          target: prod
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/retrospekt-frontend:latest
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/retrospekt-frontend:${{ github.sha }}
+
+      - name: Deploy backend to Kubernetes
+        env:
+          KUBECTL_API_URL: ${{ secrets.KUBECTL_API_URL }}
+          KUBECTL_API_TOKEN: ${{ secrets.KUBECTL_API_TOKEN }}
+          IMAGE: ${{ env.REGISTRY }}/${{ env.OWNER }}/retrospekt-backend:${{ github.sha }}
+        run: |
+          curl -sf -X PATCH \
+            "$KUBECTL_API_URL/api/v1/deployments/retrospekt/retrospekt-backend/image" \
+            -H "Authorization: Bearer $KUBECTL_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: GitHub-Actions" \
+            -d "{\"container\": \"backend\", \"image\": \"$IMAGE\"}"
+
+      - name: Deploy frontend to Kubernetes
+        env:
+          KUBECTL_API_URL: ${{ secrets.KUBECTL_API_URL }}
+          KUBECTL_API_TOKEN: ${{ secrets.KUBECTL_API_TOKEN }}
+          IMAGE: ${{ env.REGISTRY }}/${{ env.OWNER }}/retrospekt-frontend:${{ github.sha }}
+        run: |
+          curl -sf -X PATCH \
+            "$KUBECTL_API_URL/api/v1/deployments/retrospekt/retrospekt-frontend/image" \
+            -H "Authorization: Bearer $KUBECTL_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: GitHub-Actions" \
+            -d "{\"container\": \"frontend\", \"image\": \"$IMAGE\"}"
