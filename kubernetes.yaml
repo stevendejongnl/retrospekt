@@ -107,6 +107,9 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+          env:
+            - name: BACKEND_HOST
+              value: "retrospekt-backend"
           resources:
             requests:
               memory: "16Mi"
