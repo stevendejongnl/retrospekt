@@ -1,11 +1,11 @@
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
 
-class SessionPhase(str, Enum):
+class SessionPhase(StrEnum):
     COLLECTING = "collecting"
     DISCUSSING = "discussing"
     CLOSED = "closed"

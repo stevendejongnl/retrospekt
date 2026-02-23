@@ -1,7 +1,7 @@
 import asyncio
 import json
 import logging
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,8 @@ class SSEManager:
     def subscribe(self, session_id: str) -> asyncio.Queue[str]:
         queue: asyncio.Queue[str] = asyncio.Queue()
         self._subscribers.setdefault(session_id, []).append(queue)
-        logger.debug("SSE subscriber added for session %s (total: %d)", session_id, len(self._subscribers[session_id]))
+        count = len(self._subscribers[session_id])
+        logger.debug("SSE subscriber added for session %s (total: %d)", session_id, count)
         return queue
 
     def unsubscribe(self, session_id: str, queue: asyncio.Queue[str]) -> None:
