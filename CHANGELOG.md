@@ -1,3 +1,9 @@
+## [1.0.3](https://github.com/stevendejongnl/retrospekt/compare/v1.0.2...v1.0.3) (2026-02-23)
+
+### Bug Fixes
+
+* **frontend:** suppress vite proxy ECONNREFUSED noise in test output ([67f3c17](https://github.com/stevendejongnl/retrospekt/commit/67f3c17631b1a150b619a8971dc3d7ec06452c50))
+
 ## [1.0.2](https://github.com/stevendejongnl/retrospekt/compare/v1.0.1...v1.0.2) (2026-02-23)
 
 ### Bug Fixes
