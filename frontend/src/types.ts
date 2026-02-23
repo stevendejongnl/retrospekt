@@ -9,6 +9,7 @@ export interface Card {
   column: string
   text: string
   author_name: string
+  published: boolean
   votes: Vote[]
   created_at: string
 }

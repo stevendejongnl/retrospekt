@@ -9,6 +9,7 @@ function makeCard(overrides: Partial<Card> = {}): Card {
     column: 'Went Well',
     text: 'Great teamwork',
     author_name: 'Alice',
+    published: false,
     votes: [],
     created_at: '2025-01-01T00:00:00Z',
     ...overrides,

@@ -20,6 +20,7 @@ class Card(BaseModel):
     column: str
     text: str
     author_name: str
+    published: bool = False
     votes: list[Vote] = []
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

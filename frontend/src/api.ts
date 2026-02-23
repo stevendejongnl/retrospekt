@@ -61,6 +61,12 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         method: 'DELETE',
         headers: { 'X-Participant-Name': participantName },
       }),
+
+    publishCard: (sessionId: string, cardId: string, participantName: string) =>
+      request<Card>(`/sessions/${sessionId}/cards/${cardId}/publish`, {
+        method: 'POST',
+        headers: { 'X-Participant-Name': participantName },
+      }),
   }
 }
 

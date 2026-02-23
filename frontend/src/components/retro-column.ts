@@ -168,9 +168,20 @@ export class RetroColumn extends LitElement {
     }
   }
 
+  private get visibleCards(): Card[] {
+    if (this.phase === 'collecting') {
+      // During collection, each participant only sees their own cards
+      return this.cards.filter((c) => c.author_name === this.participantName)
+    }
+    // During discussing/closed: published cards are visible to all;
+    // unpublished cards are only visible to their author
+    return this.cards.filter((c) => c.published || c.author_name === this.participantName)
+  }
+
   render() {
     const canAdd = this.phase === 'collecting' && !!this.participantName
     const accentStyle = `--col-accent: ${this.accent};`
+    const visible = this.visibleCards
 
     return html`
       <div class="column" style=${accentStyle}>
@@ -179,18 +190,23 @@ export class RetroColumn extends LitElement {
             <span class="dot" style="background:${this.accent}"></span>
             ${this.title}
           </span>
-          <span class="count-badge" style="background:${this.accent}">${this.cards.length}</span>
+          <span class="count-badge" style="background:${this.accent}">${visible.length}</span>
         </div>
 
         <div class="cards-list">
-          ${this.cards.map(
+          ${visible.map(
             (card) => html`
               <retro-card
                 .card=${card}
                 .participantName=${this.participantName}
-                ?canVote=${this.phase !== 'closed' && card.author_name !== this.participantName}
+                ?canVote=${this.phase === 'discussing' &&
+                card.published &&
+                card.author_name !== this.participantName}
                 ?canDelete=${card.author_name === this.participantName &&
                 this.phase === 'collecting'}
+                ?canPublish=${this.phase === 'discussing' &&
+                !card.published &&
+                card.author_name === this.participantName}
                 style="--card-accent:${this.accent}"
               ></retro-card>
             `,

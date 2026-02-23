@@ -27,6 +27,7 @@ const origAddCard = api.addCard
 const origAddVote = api.addVote
 const origRemoveVote = api.removeVote
 const origDeleteCard = api.deleteCard
+const origPublishCard = api.publishCard
 
 afterEach(() => {
   storage.isFacilitator = origIsFacilitator
@@ -36,6 +37,7 @@ afterEach(() => {
   api.addVote = origAddVote
   api.removeVote = origRemoveVote
   api.deleteCard = origDeleteCard
+  api.publishCard = origPublishCard
 })
 
 describe('retro-board', () => {
@@ -97,6 +99,7 @@ describe('retro-board', () => {
         column: 'Went Well',
         text: 'hi',
         author_name: 'Alice',
+        published: false,
         votes: [],
         created_at: '',
       })
@@ -124,6 +127,7 @@ describe('retro-board', () => {
       column: 'Went Well',
       text: 'hi',
       author_name: 'Alice',
+      published: false,
       votes: [],
       created_at: '',
     }

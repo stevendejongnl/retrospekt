@@ -263,6 +263,14 @@ export class RetroBoard extends LitElement {
     )
   }
 
+  private async onPublishCard(e: CustomEvent): Promise<void> {
+    await api.publishCard(
+      this.session.id,
+      (e.detail as { cardId: string }).cardId,
+      this.participantName,
+    )
+  }
+
   render() {
     const { session } = this
 
@@ -284,7 +292,7 @@ export class RetroBoard extends LitElement {
                   <span class="help-phase-icon">💬</span>
                   <div class="help-phase-body">
                     <h4>Discussing</h4>
-                    <p>Cards become visible to all. The team votes on the items that matter most. No new cards can be added — focus shifts to prioritising and discussing.</p>
+                    <p>Each participant publishes their own cards to reveal them to the team. Once published, others can vote on them. No new cards can be added.</p>
                   </div>
                 </div>
                 <div class="help-phase">
@@ -339,6 +347,7 @@ export class RetroBoard extends LitElement {
         @vote=${this.onVoteCard}
         @unvote=${this.onUnvoteCard}
         @delete-card=${this.onDeleteCard}
+        @publish-card=${this.onPublishCard}
       >
         ${session.columns.map(
           (col) => html`

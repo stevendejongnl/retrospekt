@@ -9,6 +9,7 @@ function makeCard(overrides: Partial<Card> = {}): Card {
     column: 'Went Well',
     text: 'Great teamwork',
     author_name: 'Alice',
+    published: false,
     votes: [],
     created_at: '2025-01-01T00:00:00Z',
     ...overrides,
@@ -18,7 +19,7 @@ function makeCard(overrides: Partial<Card> = {}): Card {
 describe('retro-column', () => {
   it('renders the column title and count badge', async () => {
     const el = await fixture<RetroColumn>(
-      html`<retro-column .title=${'Went Well'} .cards=${[makeCard(), makeCard({ id: 'c2' })]}></retro-column>`,
+      html`<retro-column .title=${'Went Well'} .cards=${[makeCard(), makeCard({ id: 'c2' })]} .participantName=${'Alice'}></retro-column>`,
     )
     const title = el.shadowRoot!.querySelector('.column-title')
     const badge = el.shadowRoot!.querySelector('.count-badge')

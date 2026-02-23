@@ -6,14 +6,33 @@ from tests.conftest import make_session
 
 
 async def _session_with_card(client: AsyncClient) -> tuple[str, str, str]:
-    """Returns (session_id, facilitator_token, card_id)."""
+    """Returns (session_id, facilitator_token, card_id).
+
+    Sets up a card that is ready to vote on: session is in discussing phase
+    and the card has been published by its author.
+    """
     session = await make_session(client)
     card_response = await client.post(
         f"/api/v1/sessions/{session.id}/cards",
         json={"column": "Went Well", "text": "CI is green", "author_name": "Alice"},
     )
     assert card_response.status_code == 201
-    return session.id, session.facilitator_token, card_response.json()["id"]
+    card_id = card_response.json()["id"]
+
+    # Advance to discussing so voting and publishing are allowed
+    await client.post(
+        f"/api/v1/sessions/{session.id}/phase",
+        json={"phase": "discussing"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+
+    # Publish the card so other participants can vote on it
+    await client.post(
+        f"/api/v1/sessions/{session.id}/cards/{card_id}/publish",
+        headers={"X-Participant-Name": "Alice"},
+    )
+
+    return session.id, session.facilitator_token, card_id
 
 
 async def test_participant_can_vote_on_a_card(client: AsyncClient):
