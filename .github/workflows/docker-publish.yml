@@ -14,6 +14,10 @@ jobs:
     permissions:
       contents: read
       packages: write
+    # Serialize Cloudflare bypass operations to avoid rate limiting
+    concurrency:
+      group: cloudflare-bypass
+      cancel-in-progress: false
 
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +53,15 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.OWNER }}/retrospekt-frontend:latest
             ${{ env.REGISTRY }}/${{ env.OWNER }}/retrospekt-frontend:${{ env.VERSION }}
 
+      - name: Bypass Cloudflare for Kubernetes deployment
+        uses: xiaotianxt/bypass-cloudflare-for-github-action@v2.1.0
+        with:
+          cf_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cf_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          disable_bot_fight_mode: 'true'
+          bfm_propagation_delay: 45
+
       - name: Deploy backend to Kubernetes
         env:
           KUBECTL_API_URL: ${{ secrets.KUBECTL_API_URL }}
@@ -57,9 +70,11 @@ jobs:
         run: |
           curl -sf -X PATCH \
             "$KUBECTL_API_URL/api/v1/deployments/retrospekt/retrospekt-backend/image" \
+            -H "accept: application/json" \
             -H "Authorization: Bearer $KUBECTL_API_TOKEN" \
             -H "Content-Type: application/json" \
             -H "User-Agent: GitHub-Actions" \
+            -H "X-Requested-With: XMLHttpRequest" \
             -d "{\"container\": \"backend\", \"image\": \"$IMAGE\"}"
 
       - name: Deploy frontend to Kubernetes
@@ -70,7 +85,9 @@ jobs:
         run: |
           curl -sf -X PATCH \
             "$KUBECTL_API_URL/api/v1/deployments/retrospekt/retrospekt-frontend/image" \
+            -H "accept: application/json" \
             -H "Authorization: Bearer $KUBECTL_API_TOKEN" \
             -H "Content-Type: application/json" \
             -H "User-Agent: GitHub-Actions" \
+            -H "X-Requested-With: XMLHttpRequest" \
             -d "{\"container\": \"frontend\", \"image\": \"$IMAGE\"}"
