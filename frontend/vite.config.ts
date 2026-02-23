@@ -18,8 +18,8 @@ export default defineConfig({
     port: 3000,
     host: '0.0.0.0',
     proxy: {
-      '/api': { target: apiTarget, changeOrigin: true },
-      '/health': { target: apiTarget, changeOrigin: true },
+      '/api': { target: apiTarget, changeOrigin: true, configure: (p) => p.on('error', () => {}) },
+      '/health': { target: apiTarget, changeOrigin: true, configure: (p) => p.on('error', () => {}) },
     },
   },
 })
