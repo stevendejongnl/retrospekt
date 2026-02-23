@@ -18,3 +18,7 @@ class AddCardRequest(BaseModel):
     column: str
     text: str
     author_name: str
+
+
+class PublishAllRequest(BaseModel):
+    column: str

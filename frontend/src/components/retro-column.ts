@@ -51,6 +51,11 @@ export class RetroColumn extends LitElement {
       border-radius: 50%;
       flex-shrink: 0;
     }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
     .count-badge {
       font-size: 11px;
       font-weight: 600;
@@ -59,6 +64,23 @@ export class RetroColumn extends LitElement {
       padding: 1px 7px;
       min-width: 20px;
       text-align: center;
+    }
+    .publish-all-btn {
+      background: none;
+      border: 1.5px solid var(--col-accent);
+      border-radius: 8px;
+      padding: 2px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--col-accent);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+      white-space: nowrap;
+    }
+    .publish-all-btn:hover {
+      background: var(--col-accent);
+      color: white;
     }
     .cards-list {
       flex: 1;
@@ -168,6 +190,20 @@ export class RetroColumn extends LitElement {
     }
   }
 
+  private get hasUnpublishedCards(): boolean {
+    return this.cards.some((c) => c.author_name === this.participantName && !c.published)
+  }
+
+  private onPublishAllClick(): void {
+    this.dispatchEvent(
+      new CustomEvent('publish-all-cards', {
+        detail: { column: this.title },
+        bubbles: true,
+        composed: true,
+      }),
+    )
+  }
+
   private get visibleCards(): Card[] {
     if (this.phase === 'collecting') {
       // During collection, each participant only sees their own cards
@@ -190,7 +226,12 @@ export class RetroColumn extends LitElement {
             <span class="dot" style="background:${this.accent}"></span>
             ${this.title}
           </span>
-          <span class="count-badge" style="background:${this.accent}">${visible.length}</span>
+          <div class="header-right">
+            ${this.phase === 'discussing' && this.hasUnpublishedCards
+              ? html`<button class="publish-all-btn" @click=${this.onPublishAllClick}>Publish all</button>`
+              : ''}
+            <span class="count-badge" style="background:${this.accent}">${visible.length}</span>
+          </div>
         </div>
 
         <div class="cards-list">

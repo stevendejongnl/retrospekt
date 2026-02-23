@@ -271,6 +271,14 @@ export class RetroBoard extends LitElement {
     )
   }
 
+  private async onPublishAllCards(e: CustomEvent): Promise<void> {
+    await api.publishAllCards(
+      this.session.id,
+      (e.detail as { column: string }).column,
+      this.participantName,
+    )
+  }
+
   render() {
     const { session } = this
 
@@ -348,6 +356,7 @@ export class RetroBoard extends LitElement {
         @unvote=${this.onUnvoteCard}
         @delete-card=${this.onDeleteCard}
         @publish-card=${this.onPublishCard}
+        @publish-all-cards=${this.onPublishAllCards}
       >
         ${session.columns.map(
           (col) => html`

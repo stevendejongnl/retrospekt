@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Header, HTTPException
 
 from ..dependencies import get_repo
-from ..models.requests import AddCardRequest
+from ..models.requests import AddCardRequest, PublishAllRequest
 from ..models.session import Card, Session, Vote
 from ..repositories.session_repo import SessionRepository
 from ..services.sse_manager import sse_manager
@@ -114,6 +114,35 @@ async def remove_vote(
 
     updated_card = next(c for c in session.cards if c.id == card_id)
     return updated_card.model_dump()
+
+
+@router.post("/{session_id}/cards/publish-all")
+async def publish_all_cards(
+    session_id: str,
+    body: PublishAllRequest,
+    x_participant_name: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> list[dict]:
+    if not x_participant_name:
+        raise HTTPException(status_code=400, detail="X-Participant-Name header required")
+
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.phase != "discussing":
+        raise HTTPException(status_code=409, detail="Cards can only be published during the discussion phase")
+
+    published = []
+    for card in session.cards:
+        if card.column == body.column and card.author_name == x_participant_name and not card.published:
+            card.published = True
+            published.append(card)
+
+    if published:
+        session = await repo.update(session)
+        await sse_manager.broadcast(session_id, _public(session))
+
+    return [c.model_dump() for c in published]
 
 
 @router.post("/{session_id}/cards/{card_id}/publish")

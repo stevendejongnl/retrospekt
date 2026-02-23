@@ -67,6 +67,13 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         method: 'POST',
         headers: { 'X-Participant-Name': participantName },
       }),
+
+    publishAllCards: (sessionId: string, column: string, participantName: string) =>
+      request<Card[]>(`/sessions/${sessionId}/cards/publish-all`, {
+        method: 'POST',
+        body: JSON.stringify({ column }),
+        headers: { 'X-Participant-Name': participantName },
+      }),
   }
 }
 
