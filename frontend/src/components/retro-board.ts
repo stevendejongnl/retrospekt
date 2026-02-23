@@ -1,5 +1,5 @@
 import { LitElement, css, html } from 'lit'
-import { customElement, property } from 'lit/decorators.js'
+import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Session, SessionPhase } from '../types'
 import { api } from '../api'
@@ -22,6 +22,8 @@ const PHASE_LABELS: Record<SessionPhase, string> = {
 export class RetroBoard extends LitElement {
   @property({ type: Object }) session!: Session
   @property({ type: String }) participantName = ''
+
+  @state() private showHelp = false
 
   static styles = css`
     :host {
@@ -91,6 +93,115 @@ export class RetroBoard extends LitElement {
       font-size: 12px;
       color: #b07040;
     }
+    .back-btn {
+      background: none;
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #9a6a3a;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.12s;
+    }
+    .back-btn:hover {
+      background: #fef3e8;
+    }
+    .help-btn {
+      background: none;
+      border: 1px solid #fed7aa;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #9a6a3a;
+      cursor: pointer;
+      font-family: inherit;
+      flex-shrink: 0;
+      transition: background 0.12s;
+    }
+    .help-btn:hover {
+      background: #fef3e8;
+    }
+
+    /* ── Help overlay ── */
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(2px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 24px;
+    }
+    .help-card {
+      background: white;
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 16px 64px rgba(0, 0, 0, 0.16);
+    }
+    .help-card h3 {
+      font-size: 18px;
+      font-weight: 800;
+      color: #111;
+      margin: 0 0 6px;
+      letter-spacing: -0.4px;
+    }
+    .help-card .subtitle {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 24px;
+    }
+    .help-phase {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-top: 1px solid #f0ede8;
+    }
+    .help-phase-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .help-phase-body h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111;
+      margin: 0 0 4px;
+    }
+    .help-phase-body p {
+      font-size: 13px;
+      color: #666;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .help-close-btn {
+      margin-top: 24px;
+      width: 100%;
+      padding: 11px;
+      background: #e85d04;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.12s;
+    }
+    .help-close-btn:hover {
+      background: #c44e00;
+    }
     .columns {
       display: flex;
       gap: 16px;
@@ -115,6 +226,12 @@ export class RetroBoard extends LitElement {
     const order: SessionPhase[] = ['collecting', 'discussing', 'closed']
     const next = order[order.indexOf(this.session.phase) + 1]
     if (next) await api.setPhase(this.session.id, next, this.facilitatorToken)
+  }
+
+  private async goBackPhase(): Promise<void> {
+    const order: SessionPhase[] = ['collecting', 'discussing', 'closed']
+    const prev = order[order.indexOf(this.session.phase) - 1]
+    if (prev) await api.setPhase(this.session.id, prev, this.facilitatorToken)
   }
 
   private async onAddCard(e: CustomEvent): Promise<void> {
@@ -150,6 +267,39 @@ export class RetroBoard extends LitElement {
     const { session } = this
 
     return html`
+      ${this.showHelp
+        ? html`
+            <div class="help-overlay" @click=${() => (this.showHelp = false)}>
+              <div class="help-card" @click=${(e: Event) => e.stopPropagation()}>
+                <h3>How Retrospekt works</h3>
+                <p class="subtitle">A session moves through three phases — only you as facilitator can advance or go back.</p>
+                <div class="help-phase">
+                  <span class="help-phase-icon">✏️</span>
+                  <div class="help-phase-body">
+                    <h4>Collecting</h4>
+                    <p>Everyone adds cards to the columns anonymously. Use this phase to gather honest, unfiltered feedback before the team sees each other's responses.</p>
+                  </div>
+                </div>
+                <div class="help-phase">
+                  <span class="help-phase-icon">💬</span>
+                  <div class="help-phase-body">
+                    <h4>Discussing</h4>
+                    <p>Cards become visible to all. The team votes on the items that matter most. No new cards can be added — focus shifts to prioritising and discussing.</p>
+                  </div>
+                </div>
+                <div class="help-phase">
+                  <span class="help-phase-icon">🔒</span>
+                  <div class="help-phase-body">
+                    <h4>Closed</h4>
+                    <p>The session is read-only. Use this phase to wrap up and share results. Voting and card creation are disabled.</p>
+                  </div>
+                </div>
+                <button class="help-close-btn" @click=${() => (this.showHelp = false)}>Got it</button>
+              </div>
+            </div>
+          `
+        : ''}
+
       ${this.isFacilitator
         ? html`
             <div class="facilitator-bar">
@@ -157,6 +307,11 @@ export class RetroBoard extends LitElement {
               <span class="phase-badge badge-${session.phase}">
                 ${PHASE_LABELS[session.phase]}
               </span>
+              ${session.phase !== 'collecting'
+                ? html`
+                    <button class="back-btn" @click=${this.goBackPhase}>← Back</button>
+                  `
+                : ''}
               ${session.phase !== 'closed'
                 ? html`
                     <button
@@ -173,6 +328,7 @@ export class RetroBoard extends LitElement {
                 👥 ${session.participants.length}
                 participant${session.participants.length !== 1 ? 's' : ''}
               </span>
+              <button class="help-btn" @click=${() => (this.showHelp = true)}>?</button>
             </div>
           `
         : ''}
