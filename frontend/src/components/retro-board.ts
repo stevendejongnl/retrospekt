@@ -202,6 +202,22 @@ export class RetroBoard extends LitElement {
     .help-close-btn:hover {
       background: #c44e00;
     }
+    .add-column-btn {
+      background: none;
+      border: 1.5px dashed #fed7aa;
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #9a6a3a;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+    }
+    .add-column-btn:hover {
+      border-color: #e85d04;
+      color: #e85d04;
+    }
     .columns {
       display: flex;
       gap: 16px;
@@ -279,6 +295,23 @@ export class RetroBoard extends LitElement {
     )
   }
 
+  private async onAddColumn(): Promise<void> {
+    await api.addColumn(this.session.id, 'New Column', this.facilitatorToken)
+  }
+
+  private async onRenameColumn(e: CustomEvent): Promise<void> {
+    const { oldName, newName } = e.detail as { oldName: string; newName: string }
+    await api.renameColumn(this.session.id, oldName, newName, this.facilitatorToken)
+  }
+
+  private async onRemoveColumn(e: CustomEvent): Promise<void> {
+    await api.removeColumn(
+      this.session.id,
+      (e.detail as { column: string }).column,
+      this.facilitatorToken,
+    )
+  }
+
   render() {
     const { session } = this
 
@@ -340,6 +373,9 @@ export class RetroBoard extends LitElement {
                     </button>
                   `
                 : ''}
+              ${session.phase === 'collecting'
+                ? html`<button class="add-column-btn" @click=${this.onAddColumn}>+ Add column</button>`
+                : ''}
               <span class="participant-count">
                 👥 ${session.participants.length}
                 participant${session.participants.length !== 1 ? 's' : ''}
@@ -357,6 +393,8 @@ export class RetroBoard extends LitElement {
         @delete-card=${this.onDeleteCard}
         @publish-card=${this.onPublishCard}
         @publish-all-cards=${this.onPublishAllCards}
+        @rename-column=${this.onRenameColumn}
+        @remove-column=${this.onRemoveColumn}
       >
         ${session.columns.map(
           (col) => html`
@@ -366,6 +404,7 @@ export class RetroBoard extends LitElement {
               .participantName=${this.participantName}
               .phase=${session.phase}
               .accent=${COLUMN_ACCENTS[col] ?? '#e85d04'}
+              ?isFacilitator=${this.isFacilitator}
             ></retro-column>
           `,
         )}

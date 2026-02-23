@@ -4,6 +4,9 @@ import { customElement, property, state } from 'lit/decorators.js'
 import type { Card, SessionPhase } from '../types'
 import './retro-card'
 
+const isMac = navigator.platform.startsWith('Mac') || navigator.userAgent.includes('Mac')
+const modKey = isMac ? '⌘' : 'Ctrl'
+
 @customElement('retro-column')
 export class RetroColumn extends LitElement {
   @property({ type: String }) title = ''
@@ -11,9 +14,12 @@ export class RetroColumn extends LitElement {
   @property({ type: String }) participantName = ''
   @property({ type: String }) phase: SessionPhase = 'collecting'
   @property({ type: String }) accent = '#e85d04'
+  @property({ type: Boolean }) isFacilitator = false
 
   @state() private newCardText = ''
   @state() private isAdding = false
+  @state() private editingTitle = false
+  @state() private editTitleValue = ''
 
   static styles = css`
     :host {
@@ -162,6 +168,35 @@ export class RetroColumn extends LitElement {
       color: #bbb;
       text-align: right;
     }
+    .title-input {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1a1a;
+      border: 1.5px solid var(--col-accent);
+      border-radius: 6px;
+      padding: 1px 6px;
+      background: white;
+      font-family: inherit;
+      width: 100%;
+      min-width: 0;
+    }
+    .title-input:focus {
+      outline: none;
+    }
+    .delete-col-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: #bbb;
+      padding: 0 2px;
+      line-height: 1;
+      transition: color 0.12s;
+      flex-shrink: 0;
+    }
+    .delete-col-btn:hover {
+      color: #e85d04;
+    }
   `
 
   private async submitCard(): Promise<void> {
@@ -204,6 +239,39 @@ export class RetroColumn extends LitElement {
     )
   }
 
+  private startEditTitle(): void {
+    this.editTitleValue = this.title
+    this.editingTitle = true
+  }
+
+  private commitTitleEdit(): void {
+    const newName = this.editTitleValue.trim()
+    this.editingTitle = false
+    if (!newName || newName === this.title) return
+    this.dispatchEvent(
+      new CustomEvent('rename-column', {
+        detail: { oldName: this.title, newName },
+        bubbles: true,
+        composed: true,
+      }),
+    )
+  }
+
+  private onTitleKeydown(e: KeyboardEvent): void {
+    if (e.key === 'Enter') this.commitTitleEdit()
+    if (e.key === 'Escape') this.editingTitle = false
+  }
+
+  private onRemoveColumn(): void {
+    this.dispatchEvent(
+      new CustomEvent('remove-column', {
+        detail: { column: this.title },
+        bubbles: true,
+        composed: true,
+      }),
+    )
+  }
+
   private get visibleCards(): Card[] {
     if (this.phase === 'collecting') {
       // During collection, each participant only sees their own cards
@@ -211,7 +279,11 @@ export class RetroColumn extends LitElement {
     }
     // During discussing/closed: published cards are visible to all;
     // unpublished cards are only visible to their author
-    return this.cards.filter((c) => c.published || c.author_name === this.participantName)
+    const visible = this.cards.filter((c) => c.published || c.author_name === this.participantName)
+    if (this.phase === 'closed') {
+      return [...visible].sort((a, b) => b.votes.length - a.votes.length)
+    }
+    return visible
   }
 
   render() {
@@ -222,13 +294,29 @@ export class RetroColumn extends LitElement {
     return html`
       <div class="column" style=${accentStyle}>
         <div class="column-header">
-          <span class="column-title">
-            <span class="dot" style="background:${this.accent}"></span>
-            ${this.title}
+          <span class="column-title" style="flex:1;min-width:0;">
+            <span class="dot" style="background:${this.accent};flex-shrink:0"></span>
+            ${this.isFacilitator && this.phase === 'collecting'
+              ? this.editingTitle
+                ? html`<input
+                    class="title-input"
+                    .value=${this.editTitleValue}
+                    @input=${(e: Event) => {
+                      this.editTitleValue = (e.target as HTMLInputElement).value
+                    }}
+                    @blur=${this.commitTitleEdit}
+                    @keydown=${this.onTitleKeydown}
+                    @click=${(e: Event) => e.stopPropagation()}
+                  />`
+                : html`<span style="cursor:pointer" @click=${this.startEditTitle}>${this.title}</span>`
+              : this.title}
           </span>
           <div class="header-right">
             ${this.phase === 'discussing' && this.hasUnpublishedCards
               ? html`<button class="publish-all-btn" @click=${this.onPublishAllClick}>Publish all</button>`
+              : ''}
+            ${this.isFacilitator && this.phase === 'collecting'
+              ? html`<button class="delete-col-btn" @click=${this.onRemoveColumn} title="Remove column">×</button>`
               : ''}
             <span class="count-badge" style="background:${this.accent}">${visible.length}</span>
           </div>
@@ -262,7 +350,7 @@ export class RetroColumn extends LitElement {
                       <div class="add-form">
                         <textarea
                           .value=${this.newCardText}
-                          placeholder="What's on your mind? (⌘↵ to add)"
+                          placeholder=${`What's on your mind? (${modKey}↵ to add)`}
                           @input=${(e: Event) => {
                             this.newCardText = (e.target as HTMLTextAreaElement).value
                           }}

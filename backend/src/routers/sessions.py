@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import StreamingResponse
 
 from ..dependencies import get_repo
-from ..models.requests import CreateSessionRequest, JoinSessionRequest, SetPhaseRequest
+from ..models.requests import AddColumnRequest, CreateSessionRequest, JoinSessionRequest, RenameColumnRequest, SetPhaseRequest
 from ..models.session import Participant, Session, SessionPhase
 from ..repositories.session_repo import SessionRepository
 from ..services.sse_manager import sse_manager
@@ -84,6 +84,83 @@ async def set_phase(
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
     return _public(session)
+
+
+@router.post("/{session_id}/columns", status_code=201)
+async def add_column(
+    session_id: str,
+    body: AddColumnRequest,
+    x_facilitator_token: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.facilitator_token != x_facilitator_token:
+        raise HTTPException(status_code=403, detail="Facilitator token required")
+    if session.phase != SessionPhase.COLLECTING:
+        raise HTTPException(status_code=409, detail="Columns can only be modified during collecting phase")
+    if body.name in session.columns:
+        raise HTTPException(status_code=409, detail="Column already exists")
+
+    session.columns.append(body.name)
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
+    return _public(session)
+
+
+@router.patch("/{session_id}/columns/{column_name}")
+async def rename_column(
+    session_id: str,
+    column_name: str,
+    body: RenameColumnRequest,
+    x_facilitator_token: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.facilitator_token != x_facilitator_token:
+        raise HTTPException(status_code=403, detail="Facilitator token required")
+    if session.phase != SessionPhase.COLLECTING:
+        raise HTTPException(status_code=409, detail="Columns can only be modified during collecting phase")
+    if column_name not in session.columns:
+        raise HTTPException(status_code=404, detail="Column not found")
+    if body.name in session.columns and body.name != column_name:
+        raise HTTPException(status_code=409, detail="Column name already in use")
+
+    idx = session.columns.index(column_name)
+    session.columns[idx] = body.name
+    for card in session.cards:
+        if card.column == column_name:
+            card.column = body.name
+
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
+    return _public(session)
+
+
+@router.delete("/{session_id}/columns/{column_name}", status_code=204)
+async def remove_column(
+    session_id: str,
+    column_name: str,
+    x_facilitator_token: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> None:
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.facilitator_token != x_facilitator_token:
+        raise HTTPException(status_code=403, detail="Facilitator token required")
+    if session.phase != SessionPhase.COLLECTING:
+        raise HTTPException(status_code=409, detail="Columns can only be modified during collecting phase")
+    if column_name not in session.columns:
+        raise HTTPException(status_code=404, detail="Column not found")
+
+    session.columns.remove(column_name)
+    session.cards = [c for c in session.cards if c.column != column_name]
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
 
 
 @router.get("/{session_id}/stream")

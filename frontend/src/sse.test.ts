@@ -1,10 +1,12 @@
-import { vi, describe, it, expect, beforeEach, type TestAPI } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 
-function suppressWarn(fn: Parameters<TestAPI>[1]): Parameters<TestAPI>[1] {
+type TestFn = () => void | Promise<void>
+
+function suppressWarn(fn: TestFn): TestFn {
   return async () => {
     const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     try {
-      await (fn as () => Promise<void>)()
+      await fn()
     } finally {
       spy.mockRestore()
     }

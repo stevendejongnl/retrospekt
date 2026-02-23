@@ -74,6 +74,26 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         body: JSON.stringify({ column }),
         headers: { 'X-Participant-Name': participantName },
       }),
+
+    addColumn: (sessionId: string, name: string, facilitatorToken: string) =>
+      request<Session>(`/sessions/${sessionId}/columns`, {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+        headers: { 'X-Facilitator-Token': facilitatorToken },
+      }),
+
+    renameColumn: (sessionId: string, oldName: string, newName: string, facilitatorToken: string) =>
+      request<Session>(`/sessions/${sessionId}/columns/${encodeURIComponent(oldName)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ name: newName }),
+        headers: { 'X-Facilitator-Token': facilitatorToken },
+      }),
+
+    removeColumn: (sessionId: string, name: string, facilitatorToken: string) =>
+      request<void>(`/sessions/${sessionId}/columns/${encodeURIComponent(name)}`, {
+        method: 'DELETE',
+        headers: { 'X-Facilitator-Token': facilitatorToken },
+      }),
   }
 }
 

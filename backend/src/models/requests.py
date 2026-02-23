@@ -22,3 +22,11 @@ class AddCardRequest(BaseModel):
 
 class PublishAllRequest(BaseModel):
     column: str
+
+
+class AddColumnRequest(BaseModel):
+    name: str
+
+
+class RenameColumnRequest(BaseModel):
+    name: str
