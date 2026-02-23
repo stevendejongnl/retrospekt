@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/stevendejongnl/retrospekt/compare/v1.0.0...v1.0.1) (2026-02-23)
+
+### Bug Fixes
+
+* use envsubst for nginx backend host to support kubernetes service names ([490ed5e](https://github.com/stevendejongnl/retrospekt/commit/490ed5e953f69267e436b0b6d0706662691b8710))
+
 ## 1.0.0 (2026-02-23)
 
 ### Features
