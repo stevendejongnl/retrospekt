@@ -5,7 +5,13 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import StreamingResponse
 
 from ..dependencies import get_repo
-from ..models.requests import AddColumnRequest, CreateSessionRequest, JoinSessionRequest, RenameColumnRequest, SetPhaseRequest
+from ..models.requests import (
+    AddColumnRequest,
+    CreateSessionRequest,
+    JoinSessionRequest,
+    RenameColumnRequest,
+    SetPhaseRequest,
+)
 from ..models.session import Participant, Session, SessionPhase
 from ..repositories.session_repo import SessionRepository
 from ..services.sse_manager import sse_manager

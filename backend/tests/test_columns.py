@@ -8,11 +8,9 @@ Facilitator-only endpoints, collecting-phase-gated:
 
 from urllib.parse import quote
 
-import pytest
 from httpx import AsyncClient
 
 from tests.conftest import make_session
-
 
 # ── helpers ─────────────────────────────────────────────────────────────────
 
