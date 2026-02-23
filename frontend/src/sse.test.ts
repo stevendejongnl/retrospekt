@@ -1,4 +1,15 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach, type TestAPI } from 'vitest'
+
+function suppressWarn(fn: Parameters<TestAPI>[1]): Parameters<TestAPI>[1] {
+  return async () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      await (fn as () => Promise<void>)()
+    } finally {
+      spy.mockRestore()
+    }
+  }
+}
 
 // EventSource is not in jsdom — stub it BEFORE importing sse.ts
 // (sse.ts does not access EventSource at module load time, only inside connect(),
@@ -50,14 +61,14 @@ describe('SSEClient', () => {
     expect(onUpdate).toHaveBeenCalledWith(session)
   })
 
-  it('swallows invalid JSON without throwing and without calling onUpdate', () => {
+  it('swallows invalid JSON without throwing and without calling onUpdate', suppressWarn(() => {
     const client = new SSEClient('session-abc', onUpdate)
     client.connect()
     expect(() => {
       MockEventSource.instance!.onmessage!(new MessageEvent('message', { data: 'not-valid-json' }))
     }).not.toThrow()
     expect(onUpdate).not.toHaveBeenCalled()
-  })
+  }))
 
   it('calls close() on disconnect()', () => {
     const client = new SSEClient('session-abc', onUpdate)
