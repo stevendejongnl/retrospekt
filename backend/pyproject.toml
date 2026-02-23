@@ -1,0 +1,44 @@
+[project]
+name = "retrospekt-backend"
+version = "0.1.0"
+description = "Backend for Retrospekt retro board"
+requires-python = ">=3.12"
+
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "motor>=3.6.0",
+    "pydantic-settings>=2.0.0",
+    "sse-starlette>=2.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "mongomock-motor>=0.0.36",
+    "httpx>=0.28.0",
+    "ruff>=0.8.0",
+    "mypy>=1.9.0",
+]
+
+[project.scripts]
+retrospekt-server = "src.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
