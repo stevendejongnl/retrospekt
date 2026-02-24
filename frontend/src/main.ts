@@ -1,4 +1,9 @@
+import * as Sentry from '@sentry/browser'
 import { initTheme } from './theme'
+
+if (window.__SENTRY_DSN__) {
+  Sentry.init({ dsn: window.__SENTRY_DSN__, tracesSampleRate: 0 })
+}
 import './pages/home-page'
 import './pages/session-page'
 import './pages/not-found-page'

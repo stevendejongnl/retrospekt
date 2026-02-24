@@ -24,6 +24,7 @@ services:
       MONGODB_URL: mongodb://mongodb:27017
       MONGODB_DATABASE: retrospekt
       REDIS_URL: redis://redis:6379
+      SENTRY_DSN: ${SENTRY_DSN_BACKEND:-}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -43,6 +44,7 @@ services:
       - "3001:3000"
     environment:
       VITE_BACKEND_URL: http://backend:8000
+      SENTRY_DSN: ${SENTRY_DSN_FRONTEND:-}
     depends_on:
       - backend
     develop:

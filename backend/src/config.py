@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     mongodb_database: str = "retrospekt"
     session_expiry_days: int = 30
     redis_url: str = "redis://localhost:6379"
+    sentry_dsn: str = ""
 
     class Config:
         env_file = ".env"
