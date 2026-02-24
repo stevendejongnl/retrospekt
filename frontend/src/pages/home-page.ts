@@ -4,7 +4,8 @@ import { customElement, state } from 'lit/decorators.js'
 import { api } from '../api'
 import { storage } from '../storage'
 import { getEffectiveTheme, toggleTheme } from '../theme'
-import { faIconStyles, iconSun, iconMoon } from '../icons'
+import { faIconStyles, iconSun, iconMoon, iconClockRotateLeft } from '../icons'
+import '../components/session-history'
 
 const COLUMN_TEMPLATES = [
   { label: 'Standard', columns: ['Went Well', 'To Improve', 'Action Items'] },
@@ -21,6 +22,7 @@ export class HomePage extends LitElement {
   @state() private error = ''
   @state() private selectedTemplate = 0
   @state() private isDark = getEffectiveTheme() === 'dark'
+  @state() private showHistory = false
 
   private _themeListener!: EventListener
 
@@ -46,6 +48,27 @@ export class HomePage extends LitElement {
       background: linear-gradient(160deg, var(--retro-bg-page) 0%, var(--retro-accent-tint) 100%);
       padding: 24px;
       position: relative;
+    }
+    .history-toggle {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--retro-bg-surface);
+      border: 1.5px solid var(--retro-border-default);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .history-toggle:hover {
+      border-color: var(--retro-accent);
+      background: var(--retro-accent-tint);
+      color: var(--retro-accent);
     }
     .theme-toggle {
       position: absolute;
@@ -224,6 +247,15 @@ export class HomePage extends LitElement {
       const session = await api.createSession(name, yourName, columns)
       storage.setFacilitatorToken(session.id, session.facilitator_token)
       storage.setName(session.id, yourName)
+      storage.addOrUpdateHistory({
+        id: session.id,
+        name: session.name,
+        phase: session.phase,
+        created_at: session.created_at,
+        participantName: yourName,
+        isFacilitator: true,
+        joinedAt: new Date().toISOString(),
+      })
       window.router.navigate(`/session/${session.id}`)
     } catch {
       this.error = 'Failed to create session. Is the backend running?'
@@ -244,6 +276,8 @@ export class HomePage extends LitElement {
     const canCreate = !!this.sessionName.trim() && !this.loading
 
     return html`
+      <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
+      <button class="history-toggle" @click=${() => { this.showHistory = true }} title="Your sessions">${iconClockRotateLeft()}</button>
       <button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>
       <div class="hero">
         <div class="logo">🥓</div>

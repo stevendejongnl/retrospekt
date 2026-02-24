@@ -16,8 +16,10 @@ import {
   iconMoon,
   iconLink,
   iconCheck,
+  iconClockRotateLeft,
 } from '../icons'
 import '../components/retro-board'
+import '../components/session-history'
 
 @customElement('session-page')
 export class SessionPage extends LitElement {
@@ -32,6 +34,7 @@ export class SessionPage extends LitElement {
   @state() private copied = false
   @state() private isDark = getEffectiveTheme() === 'dark'
   @state() private showHelp = false
+  @state() private showHistory = false
 
   private sseClient: SSEClient | null = null
   private _themeListener!: EventListener
@@ -84,6 +87,25 @@ export class SessionPage extends LitElement {
       font-size: 12px;
       font-weight: 400;
       margin-left: 6px;
+    }
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--retro-bg-subtle);
+      border: 1.5px solid var(--retro-border-default);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      flex-shrink: 0;
+    }
+    .icon-btn:hover {
+      border-color: var(--retro-accent);
+      background: var(--retro-accent-tint);
+      color: var(--retro-accent);
     }
     .theme-toggle {
       width: 36px;
@@ -435,12 +457,16 @@ export class SessionPage extends LitElement {
       if (storedName) {
         this.participantName = storedName
         await api.joinSession(this.sessionId, storedName)
+        this.saveToHistory(session, storedName)
       } else {
         this.showNamePrompt = true
       }
 
       this.sseClient = new SSEClient(this.sessionId, (updated) => {
         this.session = updated
+        if (this.participantName) {
+          this.saveToHistory(updated, this.participantName)
+        }
       })
       this.sseClient.connect()
     } catch {
@@ -458,6 +484,7 @@ export class SessionPage extends LitElement {
     this.participantName = name
     this.showNamePrompt = false
     await api.joinSession(this.sessionId, name)
+    if (this.session) this.saveToHistory(this.session, name)
   }
 
   private async copyUrl(): Promise<void> {
@@ -475,6 +502,18 @@ export class SessionPage extends LitElement {
     if (!this.session || !this.participantName) return 'var(--retro-accent)'
     const map = buildParticipantColorMap(this.session.participants)
     return map[this.participantName] ?? 'var(--retro-accent)'
+  }
+
+  private saveToHistory(session: Session, name: string): void {
+    storage.addOrUpdateHistory({
+      id: session.id,
+      name: session.name,
+      phase: session.phase,
+      created_at: session.created_at,
+      participantName: name,
+      isFacilitator: storage.isFacilitator(session.id),
+      joinedAt: new Date().toISOString(),
+    })
   }
 
   private onThemeToggle(): void {
@@ -504,6 +543,8 @@ export class SessionPage extends LitElement {
     const { session } = this
 
     return html`
+      <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
+
       ${this.showHelp
         ? html`
             <div class="help-overlay" @click=${() => (this.showHelp = false)}>
@@ -586,6 +627,7 @@ export class SessionPage extends LitElement {
         <span class="session-title">
           ${session.name}<span class="session-date">· ${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
         </span>
+        <button class="icon-btn" @click=${() => { this.showHistory = true }} title="Your sessions">${iconClockRotateLeft()}</button>
         <button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>
         ${this.participantName
           ? html`
