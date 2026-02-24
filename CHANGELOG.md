@@ -1,3 +1,9 @@
+## [1.7.1](https://github.com/stevendejongnl/retrospekt/compare/v1.7.0...v1.7.1) (2026-02-24)
+
+### Bug Fixes
+
+* **sse:** send current session state on reconnect ([95aa6e1](https://github.com/stevendejongnl/retrospekt/commit/95aa6e1f69475e35a1c42e3d59d8d9366e7e315b))
+
 ## [1.7.0](https://github.com/stevendejongnl/retrospekt/compare/v1.6.0...v1.7.0) (2026-02-24)
 
 ### Features
