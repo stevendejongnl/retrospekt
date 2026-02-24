@@ -185,7 +185,7 @@ export class SessionPage extends LitElement {
       padding: 24px;
     }
     .help-card {
-      background: white;
+      background: var(--retro-bg-surface);
       border-radius: 20px;
       padding: 32px;
       max-width: 480px;
@@ -195,13 +195,13 @@ export class SessionPage extends LitElement {
     .help-card h3 {
       font-size: 18px;
       font-weight: 800;
-      color: #111;
+      color: var(--retro-text-primary);
       margin: 0 0 6px;
       letter-spacing: -0.4px;
     }
     .help-card .subtitle {
       font-size: 13px;
-      color: #888;
+      color: var(--retro-text-muted);
       margin-bottom: 24px;
     }
     .help-phase {
@@ -209,7 +209,7 @@ export class SessionPage extends LitElement {
       gap: 14px;
       align-items: flex-start;
       padding: 14px 0;
-      border-top: 1px solid #f0ede8;
+      border-top: 1px solid var(--retro-border-subtle);
     }
     .help-phase-icon {
       font-size: 24px;
@@ -219,12 +219,12 @@ export class SessionPage extends LitElement {
     .help-phase-body h4 {
       font-size: 14px;
       font-weight: 700;
-      color: #111;
+      color: var(--retro-text-primary);
       margin: 0 0 4px;
     }
     .help-phase-body p {
       font-size: 13px;
-      color: #666;
+      color: var(--retro-text-secondary);
       margin: 0;
       line-height: 1.5;
     }
@@ -232,7 +232,7 @@ export class SessionPage extends LitElement {
       margin-top: 24px;
       width: 100%;
       padding: 11px;
-      background: #e85d04;
+      background: var(--retro-accent);
       color: white;
       border: none;
       border-radius: 10px;
@@ -243,16 +243,16 @@ export class SessionPage extends LitElement {
       transition: background 0.12s;
     }
     .help-close-btn:hover {
-      background: #c44e00;
+      background: var(--retro-accent-hover);
     }
     .help-footer {
       margin-top: 16px;
       font-size: 11px;
-      color: #999;
+      color: var(--retro-text-muted);
       text-align: center;
     }
     .help-footer a {
-      color: #e85d04;
+      color: var(--retro-accent);
       text-decoration: none;
     }
     .help-footer a:hover {

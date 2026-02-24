@@ -2,6 +2,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 
 import type { Card } from '../types'
+import { faIconStyles, iconThumbsUp } from '../icons'
 
 @customElement('retro-card')
 export class RetroCard extends LitElement {
@@ -11,7 +12,7 @@ export class RetroCard extends LitElement {
   @property({ type: Boolean }) canDelete = false
   @property({ type: Boolean }) canPublish = false
 
-  static styles = css`
+  static styles = [faIconStyles, css`
     :host {
       display: block;
     }
@@ -127,7 +128,7 @@ export class RetroCard extends LitElement {
     .delete-btn:hover {
       color: var(--retro-error);
     }
-  `
+  `]
 
   private get hasVoted(): boolean {
     return this.card.votes.some((v) => v.participant_name === this.participantName)
@@ -188,7 +189,7 @@ export class RetroCard extends LitElement {
                     @click=${this.onVoteClick}
                     title="${this.hasVoted ? 'Remove vote' : 'Vote'}"
                   >
-                    👍 ${card.votes.length}
+                    ${iconThumbsUp()} ${card.votes.length}
                   </button>
                 `}
             ${canDelete
