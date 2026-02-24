@@ -1,3 +1,20 @@
+## [1.7.0](https://github.com/stevendejongnl/retrospekt/compare/v1.6.0...v1.7.0) (2026-02-24)
+
+### Features
+
+* **board:** add clickable participants popup with color-coded avatars ([d3a0ea7](https://github.com/stevendejongnl/retrospekt/commit/d3a0ea731a0549197ab70115f26d2357c2e71e99))
+* **board:** color cards and avatars by participant ([430b85c](https://github.com/stevendejongnl/retrospekt/commit/430b85c44704bcd975120a4533088303b136a765))
+* **history:** add session history sidebar ([943a622](https://github.com/stevendejongnl/retrospekt/commit/943a622f56b3a8d29e332506399a7b3b79d59961))
+* **ui:** replace emojis with Font Awesome 7 SVG icons and add GitHub links ([9714a7a](https://github.com/stevendejongnl/retrospekt/commit/9714a7ac78f3ecabfc231fdd5251988f5aff6c7f))
+
+### Bug Fixes
+
+* **test:** define __APP_VERSION__ in WTR esbuild config ([7f0b7db](https://github.com/stevendejongnl/retrospekt/commit/7f0b7db431703955fee699074e18b0cbeb45bfbe))
+
+### Documentation
+
+* update README and CLAUDE.md to reflect current feature set ([da65864](https://github.com/stevendejongnl/retrospekt/commit/da65864f1768344ff82e9ff89203a18d57b7e07f))
+
 ## [1.6.0](https://github.com/stevendejongnl/retrospekt/compare/v1.5.0...v1.6.0) (2026-02-24)
 
 ### Features
