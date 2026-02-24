@@ -7,6 +7,23 @@ source "$(dirname "$0")/shared.sh"
 
 echo "🔍 Pre-push checks..."
 
+# ── Rebase check ──────────────────────────────────────────────────────────────
+# Fetch remote silently and abort early if local branch is behind.
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+REMOTE=$(git config "branch.${BRANCH}.remote" 2>/dev/null || echo "origin")
+REMOTE_BRANCH="${REMOTE}/${BRANCH}"
+
+git fetch "$REMOTE" "$BRANCH" --quiet 2>/dev/null || true
+
+if git rev-parse --verify "$REMOTE_BRANCH" >/dev/null 2>&1; then
+  BEHIND=$(git rev-list --count "HEAD..${REMOTE_BRANCH}")
+  if [ "$BEHIND" -gt 0 ]; then
+    echo "❌ Push blocked: your branch is $BEHIND commit(s) behind ${REMOTE_BRANCH}."
+    echo "   Run: git pull --rebase"
+    exit 1
+  fi
+fi
+
 _be_lint()  { cd "$ROOT/backend";  uv run ruff check .; }
 _be_mypy()  { cd "$ROOT/backend";  uv run mypy src; }
 _be_tests() { cd "$ROOT/backend";  uv run pytest -q --tb=short --cov --cov-report=term-missing; }
