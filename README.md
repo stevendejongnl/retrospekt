@@ -1,6 +1,7 @@
 # Retrospekt 🥓
 
 [![CI](https://github.com/stevendejongnl/retrospekt/actions/workflows/ci.yml/badge.svg)](https://github.com/stevendejongnl/retrospekt/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/stevendejongnl/retrospekt)](https://github.com/stevendejongnl/retrospekt/releases)
 [![codecov](https://codecov.io/gh/stevendejongnl/retrospekt/graph/badge.svg)](https://codecov.io/gh/stevendejongnl/retrospekt)
 
 A simple, self-hosted retrospective board. Built as a replacement for retrotool.io.
