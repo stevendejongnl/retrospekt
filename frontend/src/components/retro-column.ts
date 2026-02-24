@@ -52,12 +52,6 @@ export class RetroColumn extends LitElement {
       color: var(--retro-text-primary);
       letter-spacing: 0.1px;
     }
-    .dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
     .header-right {
       display: flex;
       align-items: center;
@@ -298,7 +292,6 @@ export class RetroColumn extends LitElement {
       <div class="column" style=${accentStyle}>
         <div class="column-header">
           <span class="column-title" style="flex:1;min-width:0;">
-            <span class="dot" style="background:${this.accent};flex-shrink:0"></span>
             ${this.isFacilitator && this.phase === 'collecting'
               ? this.editingTitle
                 ? html`<input
