@@ -55,14 +55,17 @@ nox                             # lint + mypy + pytest (backend), lint + typeche
 - `main.py` — app factory; `config.py` — pydantic-settings; `database.py` — Motor connection
 - `models/session.py` — Domain models: `Session`, `Card`, `Participant`, `Vote`, `SessionPhase`
 - `repositories/session_repo.py` — All MongoDB access; `services/sse_manager.py` — pub/sub for SSE broadcasts
-- `routers/sessions.py` — Session CRUD + phase transitions + SSE stream endpoint
-- `routers/cards.py` — Card CRUD + voting + publish/publish-all
+- `routers/sessions.py` — Session CRUD + phase transitions (bidirectional) + column management (add/rename/delete) + SSE stream endpoint
+- `routers/cards.py` — Card CRUD + voting + per-card publish (author) + publish-all in column (participant's own cards)
 
 ### Frontend (`frontend/src/`)
 - **Lit** web components + **Vite** + TypeScript; custom client-side router (no library)
-- `router.ts` — pattern-based routing, exposed as `window.router`; `api.ts` — fetch wrapper; `sse.ts` — SSE client; `storage.ts` — localStorage (per-session namespaced keys)
-- Pages: `home-page` (session creation), `session-page` (main board + SSE lifecycle)
-- Components: `retro-board` (orchestrates events + facilitator controls) → `retro-column` → `retro-card`
+- `router.ts` — pattern-based routing, exposed as `window.router`; `api.ts` — fetch wrapper; `sse.ts` — SSE client
+- `storage.ts` — localStorage helper: per-session keys (`retro_name_{id}`, `retro_facilitator_{id}`) + cross-session `retro_history` (array of up to 50 `SessionHistoryEntry`)
+- `theme.ts` — theme init, toggle, and persistence (`retro_theme` in localStorage); `initTheme()` called before router start to prevent FOUC
+- `icons.ts` — Font Awesome Free 7.2.0 SVG icons as inline Lit `TemplateResult` values; `faIconStyles` shared CSS for sizing/alignment
+- Pages: `home-page` (session creation + template picker + history sidebar), `session-page` (main board + SSE lifecycle)
+- Components: `session-history` (sidebar panel, used in both pages), `retro-board` (facilitator controls + columns) → `retro-column` → `retro-card`
 - **State**: component-local `@state()` + SSE pushes full `Session` object on every change — backend is the single source of truth. No global store.
 
 ### Real-time flow
@@ -74,9 +77,10 @@ Every mutation (add card, vote, publish, phase change) calls the REST API → ba
 - No login system — session-scoped tokens only
 
 ### Phase-based visibility (frontend enforced)
-- `collecting`: each participant only sees their own cards
-- `discussing`: published cards visible to all; drafts only to author; facilitator can publish-all per column
+- `collecting`: each participant only sees their own cards; facilitator can add/rename/delete columns
+- `discussing`: published cards visible to all; drafts only to author; each author can publish their own cards; facilitator can publish-all per column (publishes the facilitator's own cards in that column)
 - `closed`: read-only
+- Phase transitions are bidirectional — facilitator can move forward or backward between any phases
 
 ## Key Conventions
 
@@ -91,4 +95,4 @@ Every mutation (add card, vote, publish, phase change) calls the REST API → ba
 - **Docker Compose** for local dev (`compose.yml`); watch mounts for hot reload
 - **Kubernetes** in production (`kubernetes.yaml`); deployed to `retrospekt.madebysteven.nl`
 - CI/CD via GitHub Actions: `release.yml` (tests + semantic-release) → `docker-publish.yml` (build images + K8s rollout)
-- Backend config via env vars: `MONGODB_URL`, `MONGODB_DATABASE`; K8s reads from `retrospekt-mongodb-secret`
+- Backend config via env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default 30); K8s reads from `retrospekt-mongodb-secret`

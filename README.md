@@ -8,11 +8,17 @@ A simple, self-hosted retrospective board. Built as a replacement for retrotool.
 
 - UUID-based sessions — no accounts, no login
 - Share a URL to collaborate in real time
-- Three default columns: Went Well, To Improve, Action Items
+- Column templates: Standard, Mad·Sad·Glad, Start·Stop·Continue, 4Ls
+- Column management: add, rename, and delete columns (facilitator, collecting phase only)
 - Per-session name (remembered in localStorage)
+- Color-coded participants and cards — 10-color palette, consistent per participant
 - Vote on cards (idempotent, one vote per participant per card)
-- Facilitator controls: collecting → discussing → closed phases
+- Card publishing: each author publishes their own cards during discussing phase
+- Facilitator controls: collecting ↔ discussing ↔ closed phases (bidirectional)
 - Real-time updates via Server-Sent Events (auto-reconnects)
+- Session history sidebar: up to 50 past sessions persisted in localStorage
+- Dark mode with persisted preference (CSS custom properties)
+- Session auto-expiry: sessions deleted after 30 days of inactivity
 
 ## Stack
 
@@ -43,28 +49,36 @@ make stop         # stop everything
 ```
 GET  /health
 
-POST   /api/v1/sessions                              create session
-GET    /api/v1/sessions/{id}                         get session (no facilitator_token)
-POST   /api/v1/sessions/{id}/join                    join session (adds participant)
-POST   /api/v1/sessions/{id}/phase                   advance phase (X-Facilitator-Token required)
-GET    /api/v1/sessions/{id}/stream                  SSE stream
+POST   /api/v1/sessions                                     create session (columns optional)
+GET    /api/v1/sessions/{id}                                get session (no facilitator_token)
+POST   /api/v1/sessions/{id}/join                          join session (adds participant)
+POST   /api/v1/sessions/{id}/phase                         set phase (X-Facilitator-Token required)
+GET    /api/v1/sessions/{id}/stream                        SSE stream
 
-POST   /api/v1/sessions/{id}/cards                   add card
-DELETE /api/v1/sessions/{id}/cards/{card_id}         delete own card
-POST   /api/v1/sessions/{id}/cards/{card_id}/votes   vote (idempotent)
-DELETE /api/v1/sessions/{id}/cards/{card_id}/votes   remove vote
+POST   /api/v1/sessions/{id}/columns                       add column (facilitator, collecting only)
+PATCH  /api/v1/sessions/{id}/columns/{name}                rename column (facilitator, collecting only)
+DELETE /api/v1/sessions/{id}/columns/{name}                remove column + its cards (facilitator, collecting only)
+
+POST   /api/v1/sessions/{id}/cards                         add card (collecting phase)
+DELETE /api/v1/sessions/{id}/cards/{card_id}               delete own card
+POST   /api/v1/sessions/{id}/cards/{card_id}/votes         vote (idempotent)
+DELETE /api/v1/sessions/{id}/cards/{card_id}/votes         remove vote
+POST   /api/v1/sessions/{id}/cards/{card_id}/publish       publish own card (discussing phase)
+POST   /api/v1/sessions/{id}/cards/publish-all             publish all own cards in a column (discussing phase)
 ```
 
 Every mutation broadcasts the full updated session JSON to all connected SSE clients.
 
 ## Session lifecycle
 
-1. Open the app → enter session name + your name → **Create session**
+1. Open the app → enter session name + your name → choose a column template → **Create session**
 2. Share the URL with your team
 3. Everyone enters their name on first visit
-4. Add cards to the three columns during the **Collecting** phase
-5. Facilitator moves to **Discussing** — vote on cards that matter most
-6. Facilitator **Closes** the session when done
+4. Facilitator can add, rename, or delete columns during the **Collecting** phase
+5. Add cards privately during **Collecting** — only you see your own cards
+6. Facilitator moves to **Discussing** — participants publish their own cards; facilitator can publish-all per column
+7. Vote on published cards that matter most
+8. Facilitator moves to **Closed** when done (or steps back to any earlier phase if needed)
 
 Only the creator (identified by `facilitator_token` in localStorage) sees the phase controls.
 
@@ -79,7 +93,7 @@ make typecheck    # tsc --noEmit
 
 ## Deployment
 
-A `kubernetes.yaml` is included with Namespace, Deployments, Services, and an Ingress pointing to `retrospekt.steven-dejong.nl`. The Ingress sets `proxy-buffering: off` and a long `proxy-read-timeout` to keep SSE connections alive through nginx.
+A `kubernetes.yaml` is included with Namespace, Deployments, Services, and an Ingress pointing to `retrospekt.madebysteven.nl`. The Ingress sets `proxy-buffering: off` and a long `proxy-read-timeout` to keep SSE connections alive through nginx.
 
 Create the MongoDB secret before applying:
 
@@ -90,3 +104,5 @@ kubectl create secret generic retrospekt-mongodb-secret \
 
 kubectl apply -f kubernetes.yaml
 ```
+
+Backend env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default: 30).
