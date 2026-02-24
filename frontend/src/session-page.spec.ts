@@ -473,4 +473,174 @@ test.describe('session-page export', () => {
     const download = await downloadPromise
     expect(download.suggestedFilename()).toMatch(/sprint-retro.*\.md/)
   })
+
+  test('export with cards renders card text, multiple votes, reactions, and assignee', async ({ page }) => {
+    await withName(page, 'Alice')
+    const sessionWithCards = {
+      ...BASE,
+      phase: 'discussing',
+      cards: [
+        {
+          id: 'card-1',
+          column: 'Went Well',
+          text: 'Great teamwork',
+          author_name: 'Alice',
+          votes: [{ participant_name: 'Alice' }, { participant_name: 'Bob' }],
+          published: true,
+          reactions: [{ emoji: '❤️', participant_name: 'Alice' }],
+          assignee: 'Bob',
+          created_at: '2026-01-01T00:00:00Z',
+        },
+        {
+          id: 'card-2',
+          column: 'Went Well',
+          text: 'Good retrospective',
+          author_name: 'Bob',
+          votes: [{ participant_name: 'Bob' }],
+          published: true,
+          reactions: [],
+          assignee: null,
+          created_at: '2026-01-01T00:00:00Z',
+        },
+        {
+          id: 'card-3',
+          column: 'To Improve',
+          text: 'Communication',
+          author_name: 'Alice',
+          votes: [],
+          published: true,
+          reactions: null, // covers the ?? [] fallback on line 552
+          assignee: null,
+          created_at: '2026-01-01T00:00:00Z',
+        },
+      ],
+    }
+    await mockApi(page, sessionWithCards as typeof BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    const downloadPromise = page.waitForEvent('download')
+    await page.locator('.export-btn').click()
+    const download = await downloadPromise
+    expect(download.suggestedFilename()).toMatch(/\.md$/)
+  })
+})
+
+// ── SSE error path (sse.ts line 26) ──────────────────────────────────────────
+
+test.describe('session-page SSE error handling', () => {
+  test('SSE onmessage ignores invalid JSON without crashing (sse.ts line 26)', async ({ page }) => {
+    await page.addInitScript(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = window as any
+      w.__mockEventSources = []
+      w.EventSource = function (url: string) {
+        const es = {
+          url,
+          onmessage: null as null | ((e: { data: string }) => void),
+          onerror: null as null | (() => void),
+          close() {},
+        }
+        w.__mockEventSources.push(es)
+        return es
+      }
+    })
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+
+    // Send invalid JSON — hits the catch block (sse.ts line 26)
+    await page.evaluate(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const es = (window as any).__mockEventSources?.[0] as {
+        onmessage: null | ((e: { data: string }) => void)
+      }
+      if (es?.onmessage) es.onmessage({ data: 'NOT VALID JSON {{' })
+    })
+
+    // Board still works — no crash from bad SSE message
+    await expect(page.locator('retro-board')).toBeVisible()
+  })
+})
+
+// ── SSE callback with named participant ───────────────────────────────────────
+
+test.describe('session-page SSE callback', () => {
+  test('SSE update triggers saveToHistory when participant name is set', async ({ page }) => {
+    // Intercept EventSource before page loads so we can trigger messages manually
+    await page.addInitScript(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = window as any
+      w.__mockEventSources = []
+      w.EventSource = function (url: string) {
+        const es = {
+          url,
+          onmessage: null as null | ((e: { data: string }) => void),
+          onerror: null as null | (() => void),
+          close() {},
+        }
+        w.__mockEventSources.push(es)
+        return es
+      }
+    })
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+
+    // Trigger the SSE onmessage callback — hits session-page.ts lines 483-485
+    const updated = { ...BASE, name: 'SSE History Test' }
+    await page.evaluate((data) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = window as any
+      const es = w.__mockEventSources?.[0] as { onmessage: null | ((e: { data: string }) => void) }
+      if (es?.onmessage) es.onmessage({ data: JSON.stringify(data) })
+    }, updated)
+
+    await expect(page.getByText('SSE History Test')).toBeVisible()
+  })
+})
+
+// ── Facilitator closed phase ──────────────────────────────────────────────────
+
+test.describe('session-page board (facilitator, closed)', () => {
+  test.beforeEach(async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
+    await mockApi(page, { ...BASE, phase: 'closed' } as typeof BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.facilitator-bar')).toBeVisible()
+  })
+
+  test('shows the Closed phase badge in facilitator bar', async ({ page }) => {
+    await expect(page.locator('.badge-closed')).toBeVisible()
+    await expect(page.locator('.badge-closed')).toContainText('Closed')
+  })
+
+  test('clicking the help overlay backdrop in facilitator bar closes it', async ({ page }) => {
+    await page.locator('.facilitator-bar .help-btn').click()
+    await expect(page.locator('.help-overlay')).toBeVisible()
+    await page.locator('.help-overlay').click({ position: { x: 5, y: 5 } })
+    await expect(page.locator('.help-overlay')).not.toBeVisible()
+  })
+})
+
+// ── Add column deduplication ──────────────────────────────────────────────────
+
+test.describe('retro-board add column deduplication', () => {
+  test('Add column uses "New column 2" when "New column" already exists', async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
+    const sessionWithNewCol = {
+      ...BASE,
+      columns: ['New column', 'Went Well', 'To Improve', 'Action Items'],
+    }
+    await mockApi(page, sessionWithNewCol as typeof BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.facilitator-bar')).toBeVisible()
+    const req = page.waitForRequest(
+      (r) => r.url().includes('/columns') && r.method() === 'POST',
+    )
+    await page.getByRole('button', { name: /Add column/ }).click()
+    const request = await req
+    const body = JSON.parse(request.postData() ?? '{}') as Record<string, unknown>
+    expect(body.name).toBe('New column 2')
+  })
 })

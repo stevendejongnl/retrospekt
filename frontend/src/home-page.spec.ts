@@ -208,3 +208,136 @@ test.describe('not-found page', () => {
     expect(page.url()).toMatch(/\/$/)
   })
 })
+
+// ── Empty session name guard (home-page.ts line 240) ─────────────────────────
+
+test.describe('home-page empty name guard', () => {
+  test('pressing Enter on session name input when empty is a no-op', async ({ page }) => {
+    await page.goto('/')
+    // Do NOT fill the session name — pressing Enter calls createSession() which hits `if (!name) return`
+    await page.getByLabel('Session name').press('Enter')
+    // Page stays on home page (no navigation)
+    await expect(page).toHaveTitle('Retrospekt 🥓')
+  })
+})
+
+// ── matchMedia change (theme.ts lines 24-25) ──────────────────────────────────
+
+test.describe('home-page matchMedia change', () => {
+  test('system theme change applies when no stored preference exists', async ({ page }) => {
+    // Capture the change listener that initTheme registers before the page loads
+    await page.addInitScript(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = window as any
+      const origMatchMedia = window.matchMedia.bind(window)
+      w.matchMedia = function (query: string) {
+        const mql = origMatchMedia(query)
+        if (query === '(prefers-color-scheme: dark)') {
+          const origAdd = mql.addEventListener.bind(mql)
+          ;(mql as any).addEventListener = function (
+            type: string,
+            fn: EventListenerOrEventListenerObject,
+            opts?: boolean | AddEventListenerOptions,
+          ) {
+            if (type === 'change') w.__darkListener = fn
+            return origAdd(type, fn, opts)
+          }
+        }
+        return mql
+      }
+    })
+    await page.emulateMedia({ colorScheme: 'light' })
+    await page.goto('/')
+    // Fire the captured listener directly with matches=true — hits lines 24-25
+    await page.evaluate(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = window as any
+      localStorage.removeItem('retro_theme')
+      if (w.__darkListener)
+        w.__darkListener({ matches: true, media: '(prefers-color-scheme: dark)' })
+    })
+    const after = await page.evaluate(() =>
+      document.documentElement.getAttribute('data-theme'),
+    )
+    expect(after).toBe('dark')
+  })
+
+  test('getEffectiveTheme returns dark when system prefers dark and no stored pref', async ({ page }) => {
+    // Covers the ? 'dark' : 'light' truthy branch in getEffectiveTheme (theme.ts line 11)
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await page.goto('/')
+    const theme = await page.evaluate(() =>
+      document.documentElement.getAttribute('data-theme'),
+    )
+    expect(theme).toBe('dark')
+  })
+
+  test('system theme change applies light theme when system switches back to light', async ({ page }) => {
+    // Covers the matches=false branch of e.matches ? 'dark' : 'light' (theme.ts line 25)
+    await page.addInitScript(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = window as any
+      const origMatchMedia = window.matchMedia.bind(window)
+      w.matchMedia = function (query: string) {
+        const mql = origMatchMedia(query)
+        if (query === '(prefers-color-scheme: dark)') {
+          const origAdd = mql.addEventListener.bind(mql)
+          ;(mql as any).addEventListener = function (
+            type: string,
+            fn: EventListenerOrEventListenerObject,
+            opts?: boolean | AddEventListenerOptions,
+          ) {
+            if (type === 'change') w.__darkListener = fn
+            return origAdd(type, fn, opts)
+          }
+        }
+        return mql
+      }
+    })
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await page.goto('/')
+    // Fire listener with matches=false (system switched to light, no stored pref)
+    await page.evaluate(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = window as any
+      localStorage.removeItem('retro_theme')
+      if (w.__darkListener) w.__darkListener({ matches: false, media: '(prefers-color-scheme: dark)' })
+    })
+    const after = await page.evaluate(() =>
+      document.documentElement.getAttribute('data-theme'),
+    )
+    expect(after).toBe('light')
+  })
+})
+
+// ── Theme toggle from dark (theme.ts line 15 'light' branch) ─────────────────
+
+test.describe('home-page theme toggle from dark', () => {
+  test('toggleTheme switches from dark to light (covers "light" branch)', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await page.goto('/')
+    const before = await page.evaluate(() =>
+      document.documentElement.getAttribute('data-theme'),
+    )
+    expect(before).toBe('dark')
+    await page.locator('.theme-toggle').click()
+    const after = await page.evaluate(() =>
+      document.documentElement.getAttribute('data-theme'),
+    )
+    expect(after).toBe('light')
+  })
+})
+
+// ── Corrupted history JSON (storage.ts line 45) ───────────────────────────────
+
+test.describe('home-page corrupted history', () => {
+  test('history sidebar shows empty state when localStorage history is invalid JSON', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('retro_history', 'NOT VALID JSON {{')
+    })
+    await page.goto('/')
+    await page.locator('.history-toggle').click()
+    await expect(page.locator('.sidebar.open')).toBeVisible()
+    await expect(page.getByText('No sessions yet')).toBeVisible()
+  })
+})
