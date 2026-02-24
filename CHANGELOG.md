@@ -1,3 +1,9 @@
+## [1.9.0](https://github.com/stevendejongnl/retrospekt/compare/v1.8.1...v1.9.0) (2026-02-24)
+
+### Features
+
+* **sentry:** add error monitoring to frontend and backend ([2844230](https://github.com/stevendejongnl/retrospekt/commit/2844230cadca769665bd327b8297c712daccd5f1))
+
 ## [1.8.1](https://github.com/stevendejongnl/retrospekt/compare/v1.8.0...v1.8.1) (2026-02-24)
 
 ### Bug Fixes
