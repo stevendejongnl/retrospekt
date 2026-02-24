@@ -1,3 +1,13 @@
+## [1.8.0](https://github.com/stevendejongnl/retrospekt/compare/v1.7.1...v1.8.0) (2026-02-24)
+
+### Features
+
+* **sse:** use Redis pub/sub for cross-replica broadcasting ([09cbcc0](https://github.com/stevendejongnl/retrospekt/commit/09cbcc09a712f82719949654eb97a98070661ff6))
+
+### Bug Fixes
+
+* **sse:** use builtin TimeoutError instead of asyncio.TimeoutError ([c31135c](https://github.com/stevendejongnl/retrospekt/commit/c31135c405c5ff34c464b9abed0927dbe4b77207))
+
 ## [1.7.1](https://github.com/stevendejongnl/retrospekt/compare/v1.7.0...v1.7.1) (2026-02-24)
 
 ### Bug Fixes
