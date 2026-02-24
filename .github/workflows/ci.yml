@@ -73,7 +73,7 @@ jobs:
       - name: Generate Playwright coverage report
         run: |
           cd frontend
-          npx nyc report --reporter=lcov --report-dir=playwright-coverage --temp-dir=.nyc_output || true
+          npx nyc report --reporter=lcov --report-dir=playwright-coverage --temp-dir=.nyc_output --check-coverage
 
       - name: Upload Playwright coverage to Codecov
         uses: codecov/codecov-action@v4
