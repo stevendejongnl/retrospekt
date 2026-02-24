@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 
 import type { TimerState } from '../types'
 import { api } from '../api'
-import { faIconStyles, iconClock, iconPlay, iconPause, iconRotateLeft } from '../icons'
+import { faIconStyles, iconClock, iconPlay, iconPause, iconRotateLeft, iconVolumeHigh, iconVolumeXmark } from '../icons'
 
 /**
  * Pure function: compute how many seconds remain on the timer at a given `now` timestamp.
@@ -35,6 +35,8 @@ export class RetroTimer extends LitElement {
   @state() private customMinutes = ''
 
   private _interval: number | null = null
+  private _muted = localStorage.getItem('retro_timer_muted') === 'true'
+  private _audioCtx: AudioContext | null = null
 
   static styles = [faIconStyles, css`
     :host {
@@ -186,6 +188,40 @@ export class RetroTimer extends LitElement {
       border-radius: 20px;
       padding: 6px 14px;
     }
+    .mute-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: 1px solid var(--retro-border-default);
+      border-radius: 7px;
+      padding: 5px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--retro-text-secondary);
+      font-family: inherit;
+      transition: all 0.12s;
+    }
+    .mute-btn:hover {
+      border-color: var(--retro-text-secondary);
+    }
+    .mute-btn.muted {
+      color: var(--retro-text-disabled);
+    }
+    .mute-btn-pill {
+      display: inline-flex;
+      align-items: center;
+      background: none;
+      border: none;
+      padding: 0 2px;
+      font-size: 11px;
+      cursor: pointer;
+      color: var(--retro-text-disabled);
+      transition: color 0.12s;
+    }
+    .mute-btn-pill:hover {
+      color: var(--retro-text-secondary);
+    }
   `]
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -206,6 +242,32 @@ export class RetroTimer extends LitElement {
     }
   }
 
+  private playDing(): void {
+    if (this._muted) return
+    try {
+      if (!this._audioCtx) this._audioCtx = new AudioContext()
+      const ctx = this._audioCtx
+      if (ctx.state === 'suspended') void ctx.resume()
+      const t = ctx.currentTime
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(880, t)
+      gain.gain.setValueAtTime(0.4, t)
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 1.5)
+      osc.start(t)
+      osc.stop(t + 1.5)
+    } catch { /* audio unavailable */ }
+  }
+
+  private toggleMute(): void {
+    this._muted = !this._muted
+    localStorage.setItem('retro_timer_muted', String(this._muted))
+    this.requestUpdate()
+  }
+
   private syncFromTimer(): void {
     this.clearTimer()
     if (!this.timer) {
@@ -220,8 +282,12 @@ export class RetroTimer extends LitElement {
           return
         }
         const remaining = Math.round(computeRemaining(this.timer, Date.now()))
+        const wasRunning = this.displaySeconds > 0
         this.displaySeconds = remaining
-        if (remaining <= 0) this.clearTimer()
+        if (remaining <= 0) {
+          if (wasRunning) this.playDing()
+          this.clearTimer()
+        }
       }, 1000)
     }
   }
@@ -284,6 +350,11 @@ export class RetroTimer extends LitElement {
           <span class="timer-display ${this.colorClass}" style="font-size:16px">
             ${this.formatTime(this.displaySeconds)}
           </span>
+          <button
+            class="mute-btn-pill"
+            title=${this._muted ? 'Unmute timer sound' : 'Mute timer sound'}
+            @click=${this.toggleMute}
+          >${this._muted ? iconVolumeXmark() : iconVolumeHigh()}</button>
         </div>
       `
     }
@@ -350,6 +421,11 @@ export class RetroTimer extends LitElement {
             ?disabled=${!this.timer}
             @click=${this.onReset}
           >${iconRotateLeft()} Reset</button>
+          <button
+            class="mute-btn ${this._muted ? 'muted' : ''}"
+            title=${this._muted ? 'Unmute timer sound' : 'Mute timer sound'}
+            @click=${this.toggleMute}
+          >${this._muted ? iconVolumeXmark() : iconVolumeHigh()}</button>
         </div>
       </div>
     `
