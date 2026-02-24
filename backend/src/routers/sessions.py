@@ -20,9 +20,10 @@ router = APIRouter(prefix="/api/v1/sessions")
 
 
 def _public(session: Session) -> dict:
-    """Strip facilitator_token before sending to clients."""
+    """Strip internal fields before sending to clients."""
     d = session.model_dump()
     d.pop("facilitator_token", None)
+    d.pop("last_accessed_at", None)
     return d
 
 
@@ -49,6 +50,7 @@ async def get_session(
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
+    await repo.touch(session_id)  # reset expiry clock
     return _public(session)
 
 
