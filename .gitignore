@@ -26,3 +26,8 @@ frontend/test-results/
 frontend/playwright-report/
 playwright-report/
 test-results/
+
+# Playwright MCP tool artifacts
+.playwright-mcp/
+*.jpg
+*.png
