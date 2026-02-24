@@ -1,96 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥓</text></svg>">
-    <title>Retrospekt 🥓</title>
-    <style>
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        -webkit-font-smoothing: antialiased;
-      }
-      #app {
-        min-height: 100vh;
-      }
 
-      :root {
-        color-scheme: light;
-        --retro-bg-page: #faf9f7;
-        --retro-bg-surface: #ffffff;
-        --retro-bg-subtle: #f4f4f2;
-        --retro-bg-hover: #fef3e8;
-        --retro-text-primary: #111111;
-        --retro-text-secondary: #555555;
-        --retro-text-muted: #999999;
-        --retro-text-disabled: #bbbbbb;
-        --retro-border-default: #e0e0e0;
-        --retro-border-subtle: #f0ede8;
-        --retro-border-strong: #cccccc;
-        --retro-accent: #e85d04;
-        --retro-accent-hover: #c44e00;
-        --retro-accent-tint: #fff3e8;
-        --retro-phase-collecting-bg: #dbeafe;
-        --retro-phase-collecting-text: #1d4ed8;
-        --retro-phase-discussing-bg: #ffedd5;
-        --retro-phase-discussing-text: #c2410c;
-        --retro-phase-closed-bg: #f3e8ff;
-        --retro-phase-closed-text: #7e22ce;
-        --retro-error: #ef4444;
-        --retro-share-bg: #f0f9ff;
-        --retro-share-border: #bae6fd;
-        --retro-share-text: #0369a1;
-        --retro-facilitator-bg: #fff8f0;
-        --retro-facilitator-border: #fed7aa;
-        --retro-facilitator-text: #9a6a3a;
-        --retro-overlay-bg: rgba(0, 0, 0, 0.4);
-        --retro-card-shadow: rgba(0, 0, 0, 0.08);
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥓</text></svg>">
+  <title>Retrospekt</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-      [data-theme='dark'] {
-        color-scheme: dark;
-        --retro-bg-page: #0f0f0d;
-        --retro-bg-surface: #1c1b18;
-        --retro-bg-subtle: #252420;
-        --retro-bg-hover: #2a1f10;
-        --retro-text-primary: #f0ede8;
-        --retro-text-secondary: #a89f94;
-        --retro-text-muted: #6b6560;
-        --retro-text-disabled: #4a4540;
-        --retro-border-default: #38352f;
-        --retro-border-subtle: #2a2720;
-        --retro-border-strong: #4a4540;
-        --retro-accent: #f97316;
-        --retro-accent-hover: #ea6a0a;
-        --retro-accent-tint: #2a1500;
-        --retro-phase-collecting-bg: #0f1e3a;
-        --retro-phase-collecting-text: #93c5fd;
-        --retro-phase-discussing-bg: #2a0f00;
-        --retro-phase-discussing-text: #fb923c;
-        --retro-phase-closed-bg: #1a0a2e;
-        --retro-phase-closed-text: #c084fc;
-        --retro-error: #f87171;
-        --retro-share-bg: #0a1929;
-        --retro-share-border: #1e3a5f;
-        --retro-share-text: #60a5fa;
-        --retro-facilitator-bg: #1a0e03;
-        --retro-facilitator-border: #92400e;
-        --retro-facilitator-text: #d97706;
-        --retro-overlay-bg: rgba(0, 0, 0, 0.65);
-        --retro-card-shadow: rgba(0, 0, 0, 0.35);
-      }
-    </style>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script src="/env.js"></script>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #app {
+      min-height: 100vh;
+    }
+
+    :root {
+      color-scheme: light;
+      --retro-bg-page: #faf9f7;
+      --retro-bg-surface: #ffffff;
+      --retro-bg-subtle: #f4f4f2;
+      --retro-bg-hover: #fef3e8;
+      --retro-text-primary: #111111;
+      --retro-text-secondary: #555555;
+      --retro-text-muted: #999999;
+      --retro-text-disabled: #bbbbbb;
+      --retro-border-default: #e0e0e0;
+      --retro-border-subtle: #f0ede8;
+      --retro-border-strong: #cccccc;
+      --retro-accent: #e85d04;
+      --retro-accent-hover: #c44e00;
+      --retro-accent-tint: #fff3e8;
+      --retro-phase-collecting-bg: #dbeafe;
+      --retro-phase-collecting-text: #1d4ed8;
+      --retro-phase-discussing-bg: #ffedd5;
+      --retro-phase-discussing-text: #c2410c;
+      --retro-phase-closed-bg: #f3e8ff;
+      --retro-phase-closed-text: #7e22ce;
+      --retro-error: #ef4444;
+      --retro-share-bg: #f0f9ff;
+      --retro-share-border: #bae6fd;
+      --retro-share-text: #0369a1;
+      --retro-facilitator-bg: #fff8f0;
+      --retro-facilitator-border: #fed7aa;
+      --retro-facilitator-text: #9a6a3a;
+      --retro-overlay-bg: rgba(0, 0, 0, 0.4);
+      --retro-card-shadow: rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme='dark'] {
+      color-scheme: dark;
+      --retro-bg-page: #0f0f0d;
+      --retro-bg-surface: #1c1b18;
+      --retro-bg-subtle: #252420;
+      --retro-bg-hover: #2a1f10;
+      --retro-text-primary: #f0ede8;
+      --retro-text-secondary: #a89f94;
+      --retro-text-muted: #6b6560;
+      --retro-text-disabled: #4a4540;
+      --retro-border-default: #38352f;
+      --retro-border-subtle: #2a2720;
+      --retro-border-strong: #4a4540;
+      --retro-accent: #f97316;
+      --retro-accent-hover: #ea6a0a;
+      --retro-accent-tint: #2a1500;
+      --retro-phase-collecting-bg: #0f1e3a;
+      --retro-phase-collecting-text: #93c5fd;
+      --retro-phase-discussing-bg: #2a0f00;
+      --retro-phase-discussing-text: #fb923c;
+      --retro-phase-closed-bg: #1a0a2e;
+      --retro-phase-closed-text: #c084fc;
+      --retro-error: #f87171;
+      --retro-share-bg: #0a1929;
+      --retro-share-border: #1e3a5f;
+      --retro-share-text: #60a5fa;
+      --retro-facilitator-bg: #1a0e03;
+      --retro-facilitator-border: #92400e;
+      --retro-facilitator-text: #d97706;
+      --retro-overlay-bg: rgba(0, 0, 0, 0.65);
+      --retro-card-shadow: rgba(0, 0, 0, 0.35);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script src="/env.js"></script>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>
