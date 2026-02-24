@@ -1,3 +1,14 @@
+## [1.11.0](https://github.com/stevendejongnl/retrospekt/compare/v1.10.2...v1.11.0) (2026-02-24)
+
+### Features
+
+* **reactions:** make emoji reactions opt-in at session creation ([38fc8fe](https://github.com/stevendejongnl/retrospekt/commit/38fc8fe349ab6d36fa4c0b613fbfa7d9bf8c5009))
+* **timer:** add completion ding sound with mute toggle ([3265f4b](https://github.com/stevendejongnl/retrospekt/commit/3265f4bf7a93678b3e16f65f31f3af9b3c1325c8))
+
+### Documentation
+
+* **conventions:** document TDD red/green/refactor workflow ([a74ec32](https://github.com/stevendejongnl/retrospekt/commit/a74ec3225a56db3e6128f7d34196b9cdf149104a))
+
 ## [1.10.2](https://github.com/stevendejongnl/retrospekt/compare/v1.10.1...v1.10.2) (2026-02-24)
 
 ### Bug Fixes
