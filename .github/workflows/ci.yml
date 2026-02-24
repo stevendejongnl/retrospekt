@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Lint & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh && echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Backend lint
+        run: |
+          cd backend
+          uv sync
+          uv run ruff check .
+
+      - name: Backend tests
+        run: |
+          cd backend
+          uv run pytest --cov
+
+      - name: Frontend typecheck
+        run: |
+          cd frontend
+          npm ci
+          npm run typecheck
+
+      - name: Frontend unit tests
+        run: |
+          cd frontend
+          npm run test:coverage
+
+      - name: Install Playwright browsers
+        run: cd frontend && npx playwright install --with-deps chromium
+
+      - name: Frontend E2E tests (Playwright)
+        run: |
+          cd frontend
+          npm run test:ct
+
+      - name: Frontend component tests (WTR)
+        run: |
+          cd frontend
+          npm run test:wtr
