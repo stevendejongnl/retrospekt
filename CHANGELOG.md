@@ -1,3 +1,10 @@
+## [1.6.0](https://github.com/stevendejongnl/retrospekt/compare/v1.5.0...v1.6.0) (2026-02-24)
+
+### Features
+
+* **session-page:** add participant help button in topbar ([f7b23ef](https://github.com/stevendejongnl/retrospekt/commit/f7b23efbadaed824ed40065847803a763947b226))
+* **theme:** add dark mode with CSS tokens and toggle ([90b6db5](https://github.com/stevendejongnl/retrospekt/commit/90b6db5b5df6e4aca05dc29147fa73f18a2d07bb))
+
 ## [1.5.0](https://github.com/stevendejongnl/retrospekt/compare/v1.4.0...v1.5.0) (2026-02-24)
 
 ### Features
