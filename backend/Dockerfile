@@ -4,10 +4,8 @@ WORKDIR /app
 
 RUN pip install uv --no-cache-dir
 
-COPY pyproject.toml .
-RUN uv venv /app/.venv && \
-    uv pip install --python /app/.venv/bin/python \
-    fastapi "uvicorn[standard]" motor pydantic-settings sse-starlette
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
 
 COPY src/ src/
 
