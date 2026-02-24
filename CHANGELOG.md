@@ -1,3 +1,13 @@
+## [1.3.0](https://github.com/stevendejongnl/retrospekt/compare/v1.2.0...v1.3.0) (2026-02-24)
+
+### Features
+
+* column templates on create form and unique new-column naming ([8d0f5e4](https://github.com/stevendejongnl/retrospekt/commit/8d0f5e45b26958f62e337a8d7232e854bea01da9))
+
+### Bug Fixes
+
+* **board:** scroll columns horizontally within container ([b357cc9](https://github.com/stevendejongnl/retrospekt/commit/b357cc9f49ee0d61801a407d5e9f6641297e10a9))
+
 ## [1.2.0](https://github.com/stevendejongnl/retrospekt/compare/v1.1.0...v1.2.0) (2026-02-23)
 
 ### Features
