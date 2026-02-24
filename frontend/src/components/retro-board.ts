@@ -222,6 +222,7 @@ export class RetroBoard extends LitElement {
       display: flex;
       gap: 16px;
       align-items: flex-start;
+      overflow-x: auto;
     }
     @media (max-width: 800px) {
       .columns {
