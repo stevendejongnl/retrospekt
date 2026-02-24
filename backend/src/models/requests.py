@@ -31,3 +31,15 @@ class AddColumnRequest(BaseModel):
 
 class RenameColumnRequest(BaseModel):
     name: str
+
+
+class AddReactionRequest(BaseModel):
+    emoji: str
+
+
+class AssignCardRequest(BaseModel):
+    assignee: str | None
+
+
+class SetTimerDurationRequest(BaseModel):
+    duration_seconds: int

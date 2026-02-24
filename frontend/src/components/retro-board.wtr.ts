@@ -13,6 +13,7 @@ function makeSession(overrides: Partial<Session> = {}): Session {
     phase: 'collecting',
     participants: [{ name: 'Alice', joined_at: '2025-01-01T00:00:00Z' }],
     cards: [],
+    timer: null,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
     ...overrides,
@@ -101,6 +102,8 @@ describe('retro-board', () => {
         author_name: 'Alice',
         published: false,
         votes: [],
+        reactions: [],
+        assignee: null,
         created_at: '',
       })
     }
@@ -129,6 +132,8 @@ describe('retro-board', () => {
       author_name: 'Alice',
       published: false,
       votes: [],
+      reactions: [],
+      assignee: null,
       created_at: '',
     }
     let voteCalled = false

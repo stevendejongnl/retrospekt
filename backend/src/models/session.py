@@ -4,6 +4,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
+REACTION_EMOJI = frozenset(["❤️", "😂", "😮", "🎉", "🤔", "👀"])
+
 
 class SessionPhase(StrEnum):
     COLLECTING = "collecting"
@@ -15,6 +17,11 @@ class Vote(BaseModel):
     participant_name: str
 
 
+class Reaction(BaseModel):
+    emoji: str
+    participant_name: str
+
+
 class Card(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     column: str
@@ -22,7 +29,15 @@ class Card(BaseModel):
     author_name: str
     published: bool = False
     votes: list[Vote] = []
+    reactions: list[Reaction] = []
+    assignee: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class TimerState(BaseModel):
+    duration_seconds: int
+    started_at: datetime | None = None
+    paused_remaining: int | None = None
 
 
 class Participant(BaseModel):
@@ -38,6 +53,7 @@ class Session(BaseModel):
     facilitator_token: str = Field(default_factory=lambda: str(uuid4()))
     participants: list[Participant] = []
     cards: list[Card] = []
+    timer: TimerState | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_accessed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

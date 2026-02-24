@@ -2,12 +2,13 @@ import { LitElement, css, html } from 'lit'
 import type { TemplateResult } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
-import type { Session, SessionPhase } from '../types'
+import type { Card, Session, SessionPhase } from '../types'
 import { buildParticipantColorMap } from '../types'
 import { api } from '../api'
 import { storage } from '../storage'
-import { faIconStyles, iconPencil, iconCommentDots, iconLock, iconUsers } from '../icons'
+import { faIconStyles, iconPencil, iconCommentDots, iconLock, iconUsers, iconCircleCheck } from '../icons'
 import './retro-column'
+import './retro-timer'
 
 const COLUMN_ACCENTS: Record<string, string> = {
   'Went Well': '#22c55e',
@@ -343,6 +344,66 @@ export class RetroBoard extends LitElement {
         flex-direction: column;
       }
     }
+
+    /* ── Action items panel ── */
+    .action-items-panel {
+      margin-top: 24px;
+      background: var(--retro-bg-subtle);
+      border-radius: 14px;
+      padding: 16px 20px;
+    }
+    .action-items-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--retro-text-primary);
+      margin: 0 0 14px;
+      letter-spacing: 0.1px;
+    }
+    .action-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .action-item {
+      background: var(--retro-bg-surface);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 1px 3px var(--retro-card-shadow);
+    }
+    .action-item-text {
+      font-size: 13px;
+      color: var(--retro-text-primary);
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .action-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .action-item-assignee {
+      font-size: 11px;
+      font-weight: 600;
+      background: color-mix(in srgb, var(--retro-accent) 12%, transparent);
+      color: var(--retro-accent);
+      border-radius: 10px;
+      padding: 2px 8px;
+    }
+    .action-item-column {
+      font-size: 11px;
+      color: var(--retro-text-disabled);
+    }
   `]
 
   private get participantColorMap(): Record<string, string> {
@@ -355,6 +416,12 @@ export class RetroBoard extends LitElement {
 
   private get facilitatorToken(): string {
     return storage.getFacilitatorToken(this.session.id) ?? ''
+  }
+
+  private get actionItems(): Array<{ card: Card; column: string }> {
+    return this.session.cards
+      .filter((c) => c.published && c.assignee)
+      .map((c) => ({ card: c, column: c.column }))
   }
 
   private async transitionPhase(): Promise<void> {
@@ -414,6 +481,26 @@ export class RetroBoard extends LitElement {
     )
   }
 
+  private async onReact(e: CustomEvent): Promise<void> {
+    const { cardId, emoji } = e.detail as { cardId: string; emoji: string }
+    await api.addReaction(this.session.id, cardId, emoji, this.participantName)
+  }
+
+  private async onUnreact(e: CustomEvent): Promise<void> {
+    const { cardId, emoji } = e.detail as { cardId: string; emoji: string }
+    await api.removeReaction(this.session.id, cardId, emoji, this.participantName)
+  }
+
+  private async onAssignCard(e: CustomEvent): Promise<void> {
+    const { cardId, assignee } = e.detail as { cardId: string; assignee: string }
+    await api.assignCard(this.session.id, cardId, assignee, this.participantName, this.facilitatorToken)
+  }
+
+  private async onUnassignCard(e: CustomEvent): Promise<void> {
+    const { cardId } = e.detail as { cardId: string }
+    await api.assignCard(this.session.id, cardId, null, this.participantName, this.facilitatorToken)
+  }
+
   private async onAddColumn(): Promise<void> {
     const existing = new Set(this.session.columns)
     let name = 'New column'
@@ -439,12 +526,14 @@ export class RetroBoard extends LitElement {
     const { session } = this
 
     const colorMap = this.participantColorMap
+    const participantNames = session.participants.map((p) => p.name)
     const participantCountBtn = html`
       <button class="participant-count" @click=${() => (this.showParticipants = true)}>
         ${iconUsers()} ${session.participants.length}
         participant${session.participants.length !== 1 ? 's' : ''}
       </button>
     `
+    const items = this.actionItems
 
     return html`
       ${this.showParticipants
@@ -543,6 +632,17 @@ export class RetroBoard extends LitElement {
             </div>
           `}
 
+      ${this.isFacilitator || session.timer
+        ? html`
+            <retro-timer
+              .timer=${session.timer ?? null}
+              .sessionId=${session.id}
+              ?isFacilitator=${this.isFacilitator}
+              .facilitatorToken=${this.facilitatorToken}
+            ></retro-timer>
+          `
+        : ''}
+
       <div
         class="columns"
         @add-card=${this.onAddCard}
@@ -551,6 +651,10 @@ export class RetroBoard extends LitElement {
         @delete-card=${this.onDeleteCard}
         @publish-card=${this.onPublishCard}
         @publish-all-cards=${this.onPublishAllCards}
+        @react=${this.onReact}
+        @unreact=${this.onUnreact}
+        @assign-card=${this.onAssignCard}
+        @unassign-card=${this.onUnassignCard}
         @rename-column=${this.onRenameColumn}
         @remove-column=${this.onRemoveColumn}
       >
@@ -560,6 +664,7 @@ export class RetroBoard extends LitElement {
               .title=${col}
               .cards=${session.cards.filter((c) => c.column === col)}
               .participantName=${this.participantName}
+              .participantNames=${participantNames}
               .phase=${session.phase}
               .accent=${COLUMN_ACCENTS[col] ?? '#e85d04'}
               .participantColorMap=${this.participantColorMap}
@@ -568,6 +673,27 @@ export class RetroBoard extends LitElement {
           `,
         )}
       </div>
+
+      ${(session.phase === 'discussing' || session.phase === 'closed') && items.length > 0
+        ? html`
+            <div class="action-items-panel">
+              <h3 class="action-items-heading">${iconCircleCheck()} Action Items</h3>
+              <div class="action-items-list">
+                ${items.map(
+                  ({ card, column }) => html`
+                    <div class="action-item">
+                      <span class="action-item-text">${card.text}</span>
+                      <span class="action-item-meta">
+                        <span class="action-item-assignee">${card.assignee}</span>
+                        <span class="action-item-column">${column}</span>
+                      </span>
+                    </div>
+                  `,
+                )}
+              </div>
+            </div>
+          `
+        : ''}
     `
   }
 }

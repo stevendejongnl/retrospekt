@@ -4,6 +4,11 @@ export interface Vote {
   participant_name: string
 }
 
+export interface Reaction {
+  emoji: string
+  participant_name: string
+}
+
 export interface Card {
   id: string
   column: string
@@ -11,12 +16,20 @@ export interface Card {
   author_name: string
   published: boolean
   votes: Vote[]
+  reactions: Reaction[]
+  assignee: string | null
   created_at: string
 }
 
 export interface Participant {
   name: string
   joined_at: string
+}
+
+export interface TimerState {
+  duration_seconds: number
+  started_at: string | null
+  paused_remaining: number | null
 }
 
 export interface Session {
@@ -26,6 +39,7 @@ export interface Session {
   phase: SessionPhase
   participants: Participant[]
   cards: Card[]
+  timer: TimerState | null
   created_at: string
   updated_at: string
 }

@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Header, HTTPException
@@ -11,8 +12,9 @@ from ..models.requests import (
     JoinSessionRequest,
     RenameColumnRequest,
     SetPhaseRequest,
+    SetTimerDurationRequest,
 )
-from ..models.session import Participant, Session, SessionPhase
+from ..models.session import Participant, Session, SessionPhase, TimerState
 from ..repositories.session_repo import SessionRepository
 from ..services.sse_manager import sse_manager
 
@@ -171,6 +173,103 @@ async def remove_column(
     session.cards = [c for c in session.cards if c.column != column_name]
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
+
+
+@router.patch("/{session_id}/timer")
+async def set_timer_duration(
+    session_id: str,
+    body: SetTimerDurationRequest,
+    x_facilitator_token: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.facilitator_token != x_facilitator_token:
+        raise HTTPException(status_code=403, detail="Facilitator token required")
+    if not (30 <= body.duration_seconds <= 7200):
+        raise HTTPException(status_code=400, detail="Duration must be between 30 and 7200 seconds")
+
+    session.timer = TimerState(duration_seconds=body.duration_seconds)
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
+    return _public(session)
+
+
+@router.post("/{session_id}/timer/start")
+async def start_timer(
+    session_id: str,
+    x_facilitator_token: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.facilitator_token != x_facilitator_token:
+        raise HTTPException(status_code=403, detail="Facilitator token required")
+    if not session.timer:
+        raise HTTPException(status_code=409, detail="No timer configured")
+    if session.timer.paused_remaining is not None and session.timer.paused_remaining <= 0:
+        raise HTTPException(status_code=409, detail="Timer has expired — reset before starting")
+
+    now = datetime.now(UTC)
+    if session.timer.paused_remaining is not None:
+        # Resume: adjust started_at so elapsed = duration - paused_remaining
+        already_elapsed = session.timer.duration_seconds - session.timer.paused_remaining
+        session.timer.started_at = now - timedelta(seconds=already_elapsed)
+    else:
+        session.timer.started_at = now
+    session.timer.paused_remaining = None
+
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
+    return _public(session)
+
+
+@router.post("/{session_id}/timer/pause")
+async def pause_timer(
+    session_id: str,
+    x_facilitator_token: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.facilitator_token != x_facilitator_token:
+        raise HTTPException(status_code=403, detail="Facilitator token required")
+    if not session.timer or not session.timer.started_at:
+        raise HTTPException(status_code=409, detail="Timer is not running")
+
+    now = datetime.now(UTC)
+    elapsed = (now - session.timer.started_at).total_seconds()
+    session.timer.paused_remaining = max(0, int(session.timer.duration_seconds - elapsed))
+    session.timer.started_at = None
+
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
+    return _public(session)
+
+
+@router.post("/{session_id}/timer/reset")
+async def reset_timer(
+    session_id: str,
+    x_facilitator_token: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.facilitator_token != x_facilitator_token:
+        raise HTTPException(status_code=403, detail="Facilitator token required")
+    if not session.timer:
+        raise HTTPException(status_code=409, detail="No timer configured")
+
+    session.timer.started_at = None
+    session.timer.paused_remaining = None
+
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
+    return _public(session)
 
 
 @router.get("/{session_id}/stream")

@@ -7,6 +7,13 @@ import './retro-card'
 const isMac = navigator.platform.startsWith('Mac') || navigator.userAgent.includes('Mac')
 const modKey = isMac ? '⌘' : 'Ctrl'
 
+const EMOJI_PICKER_SET = [
+  '😀', '😄', '😂', '😊', '😍', '🥰', '😎', '🤔', '😮', '😴',
+  '👍', '👎', '👋', '🙌', '🤝', '✌️', '👏', '🙏', '💪', '🫡',
+  '❤️', '🎉', '⭐', '🔥', '💡', '⚠️', '✅', '❌', '💬', '📌',
+  '🚀', '🎯', '🏆', '💰', '📈', '📉', '🛑', '🔄', '⚡', '🌟',
+]
+
 @customElement('retro-column')
 export class RetroColumn extends LitElement {
   @property({ type: String }) title = ''
@@ -16,11 +23,29 @@ export class RetroColumn extends LitElement {
   @property({ type: String }) accent = '#e85d04'
   @property({ type: Boolean }) isFacilitator = false
   @property({ type: Object }) participantColorMap: Record<string, string> = {}
+  @property({ type: Array }) participantNames: string[] = []
 
   @state() private newCardText = ''
   @state() private isAdding = false
   @state() private editingTitle = false
   @state() private editTitleValue = ''
+  @state() private showEmojiPicker = false
+
+  private readonly _outsideClickHandler = (e: MouseEvent): void => {
+    if (!e.composedPath().includes(this)) {
+      this.showEmojiPicker = false
+    }
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    document.addEventListener('click', this._outsideClickHandler)
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    document.removeEventListener('click', this._outsideClickHandler)
+  }
 
   static styles = css`
     :host {
@@ -112,6 +137,9 @@ export class RetroColumn extends LitElement {
       flex-direction: column;
       gap: 6px;
     }
+    .textarea-row {
+      position: relative;
+    }
     textarea {
       width: 100%;
       padding: 10px 12px;
@@ -130,6 +158,54 @@ export class RetroColumn extends LitElement {
     textarea:focus {
       outline: none;
       border-color: var(--col-accent);
+    }
+    .emoji-toggle {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: none;
+      border: 1px solid var(--retro-border-default);
+      border-radius: 6px;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      line-height: 1;
+      transition: border-color 0.12s;
+    }
+    .emoji-toggle:hover {
+      border-color: var(--col-accent);
+    }
+    .emoji-popover {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      right: 0;
+      background: var(--retro-bg-surface);
+      border: 1px solid var(--retro-border-default);
+      border-radius: 10px;
+      padding: 8px;
+      box-shadow: 0 4px 16px var(--retro-card-shadow);
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 2px;
+      z-index: 50;
+      min-width: 260px;
+    }
+    .emoji-item {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+      border-radius: 6px;
+      line-height: 1;
+      transition: background 0.1s;
+    }
+    .emoji-item:hover {
+      background: var(--retro-bg-subtle);
     }
     .form-row {
       display: flex;
@@ -222,6 +298,22 @@ export class RetroColumn extends LitElement {
     }
   }
 
+  private insertEmoji(emoji: string): void {
+    const ta = this.shadowRoot?.querySelector('textarea') as HTMLTextAreaElement | null
+    const start = ta?.selectionStart ?? this.newCardText.length
+    const end = ta?.selectionEnd ?? this.newCardText.length
+    this.newCardText = this.newCardText.slice(0, start) + emoji + this.newCardText.slice(end)
+    this.showEmojiPicker = false
+    void this.updateComplete.then(() => {
+      const newTa = this.shadowRoot?.querySelector('textarea') as HTMLTextAreaElement | null
+      if (newTa) {
+        const pos = start + [...emoji].length
+        newTa.setSelectionRange(pos, pos)
+        newTa.focus()
+      }
+    })
+  }
+
   private get hasUnpublishedCards(): boolean {
     return this.cards.some((c) => c.author_name === this.participantName && !c.published)
   }
@@ -287,6 +379,7 @@ export class RetroColumn extends LitElement {
     const canAdd = this.phase === 'collecting' && !!this.participantName
     const accentStyle = `--col-accent: ${this.accent};`
     const visible = this.visibleCards
+    const canReact = this.phase === 'discussing' || this.phase === 'closed'
 
     return html`
       <div class="column" style=${accentStyle}>
@@ -324,6 +417,7 @@ export class RetroColumn extends LitElement {
               <retro-card
                 .card=${card}
                 .participantName=${this.participantName}
+                .participantNames=${this.participantNames}
                 ?canVote=${this.phase === 'discussing' &&
                 card.published &&
                 card.author_name !== this.participantName}
@@ -332,6 +426,10 @@ export class RetroColumn extends LitElement {
                 ?canPublish=${this.phase === 'discussing' &&
                 !card.published &&
                 card.author_name === this.participantName}
+                ?canReact=${canReact && card.published}
+                ?canAssign=${this.phase !== 'collecting' &&
+                card.published &&
+                (card.author_name === this.participantName || this.isFacilitator)}
                 style="--card-accent:${this.participantColorMap[card.author_name] ?? '#6b7280'}"
               ></retro-card>
             `,
@@ -344,15 +442,42 @@ export class RetroColumn extends LitElement {
                 ${this.isAdding
                   ? html`
                       <div class="add-form">
-                        <textarea
-                          .value=${this.newCardText}
-                          placeholder=${`What's on your mind? (${modKey}↵ to add)`}
-                          @input=${(e: Event) => {
-                            this.newCardText = (e.target as HTMLTextAreaElement).value
-                          }}
-                          @keydown=${this.onTextKeydown}
-                          autofocus
-                        ></textarea>
+                        <div class="textarea-row">
+                          <textarea
+                            .value=${this.newCardText}
+                            placeholder=${`What's on your mind? (${modKey}↵ to add)`}
+                            @input=${(e: Event) => {
+                              this.newCardText = (e.target as HTMLTextAreaElement).value
+                            }}
+                            @keydown=${this.onTextKeydown}
+                            autofocus
+                          ></textarea>
+                          <button
+                            class="emoji-toggle"
+                            title="Insert emoji"
+                            @click=${(e: Event) => {
+                              e.stopPropagation()
+                              this.showEmojiPicker = !this.showEmojiPicker
+                            }}
+                          >😊</button>
+                          ${this.showEmojiPicker
+                            ? html`
+                                <div class="emoji-popover">
+                                  ${EMOJI_PICKER_SET.map(
+                                    (emoji) => html`
+                                      <button
+                                        class="emoji-item"
+                                        @click=${(e: Event) => {
+                                          e.stopPropagation()
+                                          this.insertEmoji(emoji)
+                                        }}
+                                      >${emoji}</button>
+                                    `,
+                                  )}
+                                </div>
+                              `
+                            : ''}
+                        </div>
                         <div class="form-row">
                           <button
                             class="btn-submit"

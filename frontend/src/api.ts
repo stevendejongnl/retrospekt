@@ -94,6 +94,57 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         method: 'DELETE',
         headers: { 'X-Facilitator-Token': facilitatorToken },
       }),
+
+    addReaction: (sessionId: string, cardId: string, emoji: string, participantName: string) =>
+      request<Card>(`/sessions/${sessionId}/cards/${cardId}/reactions`, {
+        method: 'POST',
+        body: JSON.stringify({ emoji }),
+        headers: { 'X-Participant-Name': participantName },
+      }),
+
+    removeReaction: (sessionId: string, cardId: string, emoji: string, participantName: string) =>
+      request<void>(
+        `/sessions/${sessionId}/cards/${cardId}/reactions?emoji=${encodeURIComponent(emoji)}`,
+        { method: 'DELETE', headers: { 'X-Participant-Name': participantName } },
+      ),
+
+    assignCard: (
+      sessionId: string,
+      cardId: string,
+      assignee: string | null,
+      participantName: string,
+      facilitatorToken: string,
+    ) =>
+      request<Card>(`/sessions/${sessionId}/cards/${cardId}/assignee`, {
+        method: 'PATCH',
+        body: JSON.stringify({ assignee }),
+        headers: { 'X-Participant-Name': participantName, 'X-Facilitator-Token': facilitatorToken },
+      }),
+
+    setTimerDuration: (sessionId: string, durationSeconds: number, facilitatorToken: string) =>
+      request<Session>(`/sessions/${sessionId}/timer`, {
+        method: 'PATCH',
+        body: JSON.stringify({ duration_seconds: durationSeconds }),
+        headers: { 'X-Facilitator-Token': facilitatorToken },
+      }),
+
+    startTimer: (sessionId: string, facilitatorToken: string) =>
+      request<Session>(`/sessions/${sessionId}/timer/start`, {
+        method: 'POST',
+        headers: { 'X-Facilitator-Token': facilitatorToken },
+      }),
+
+    pauseTimer: (sessionId: string, facilitatorToken: string) =>
+      request<Session>(`/sessions/${sessionId}/timer/pause`, {
+        method: 'POST',
+        headers: { 'X-Facilitator-Token': facilitatorToken },
+      }),
+
+    resetTimer: (sessionId: string, facilitatorToken: string) =>
+      request<Session>(`/sessions/${sessionId}/timer/reset`, {
+        method: 'POST',
+        headers: { 'X-Facilitator-Token': facilitatorToken },
+      }),
   }
 }
 
