@@ -27,6 +27,7 @@ export class RetroBoard extends LitElement {
   @property({ type: String }) participantName = ''
 
   @state() private showHelp = false
+  @state() private showParticipants = false
 
   static styles = [faIconStyles, css`
     :host {
@@ -205,6 +206,116 @@ export class RetroBoard extends LitElement {
     .help-close-btn:hover {
       background: var(--retro-accent-hover);
     }
+
+    /* ── Participant count button ── */
+    .participant-count {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--retro-facilitator-text);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.12s;
+    }
+    .participant-count:hover {
+      background: var(--retro-bg-hover);
+    }
+
+    /* ── Non-facilitator participants bar ── */
+    .participant-bar {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px;
+      background: var(--retro-bg-surface);
+      border: 1px solid var(--retro-border-default);
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    /* ── Participants popup ── */
+    .participants-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--retro-overlay-bg);
+      backdrop-filter: blur(2px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 24px;
+    }
+    .participants-card {
+      background: var(--retro-bg-surface);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 16px 64px var(--retro-card-shadow);
+    }
+    .participants-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .participants-header h3 {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--retro-text-primary);
+      margin: 0;
+      letter-spacing: -0.4px;
+    }
+    .participants-close {
+      background: none;
+      border: 1px solid var(--retro-border-default);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      color: var(--retro-text-secondary);
+      font-family: inherit;
+      transition: background 0.12s;
+    }
+    .participants-close:hover {
+      background: var(--retro-bg-hover);
+    }
+    .participants-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .participant-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .participant-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    .participant-name {
+      font-size: 14px;
+      color: var(--retro-text-primary);
+    }
+
     .add-column-btn {
       background: none;
       border: 1.5px dashed var(--retro-facilitator-border);
@@ -327,7 +438,41 @@ export class RetroBoard extends LitElement {
   render() {
     const { session } = this
 
+    const colorMap = this.participantColorMap
+    const participantCountBtn = html`
+      <button class="participant-count" @click=${() => (this.showParticipants = true)}>
+        ${iconUsers()} ${session.participants.length}
+        participant${session.participants.length !== 1 ? 's' : ''}
+      </button>
+    `
+
     return html`
+      ${this.showParticipants
+        ? html`
+            <div class="participants-overlay" @click=${() => (this.showParticipants = false)}>
+              <div class="participants-card" @click=${(e: Event) => e.stopPropagation()}>
+                <div class="participants-header">
+                  <h3>Participants (${session.participants.length})</h3>
+                  <button class="participants-close" @click=${() => (this.showParticipants = false)}>×</button>
+                </div>
+                <div class="participants-list">
+                  ${session.participants.map(
+                    (p) => html`
+                      <div class="participant-row">
+                        <div
+                          class="participant-avatar"
+                          style="background: ${colorMap[p.name] ?? '#6b7280'}"
+                        >${p.name[0]?.toUpperCase() ?? '?'}</div>
+                        <span class="participant-name">${p.name}</span>
+                      </div>
+                    `,
+                  )}
+                </div>
+              </div>
+            </div>
+          `
+        : ''}
+
       ${this.showHelp
         ? html`
             <div class="help-overlay" @click=${() => (this.showHelp = false)}>
@@ -388,14 +533,15 @@ export class RetroBoard extends LitElement {
               ${session.phase === 'collecting'
                 ? html`<button class="add-column-btn" @click=${this.onAddColumn}>+ Add column</button>`
                 : ''}
-              <span class="participant-count">
-                ${iconUsers()} ${session.participants.length}
-                participant${session.participants.length !== 1 ? 's' : ''}
-              </span>
+              ${participantCountBtn}
               <button class="help-btn" @click=${() => (this.showHelp = true)}>?</button>
             </div>
           `
-        : ''}
+        : html`
+            <div class="participant-bar">
+              ${participantCountBtn}
+            </div>
+          `}
 
       <div
         class="columns"
