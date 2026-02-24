@@ -55,7 +55,7 @@ class SSEManager:
                     if item is None:
                         break
                     yield f"data: {item}\n\n"
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     yield ": keepalive\n\n"
         except asyncio.CancelledError:
             task.cancel()
