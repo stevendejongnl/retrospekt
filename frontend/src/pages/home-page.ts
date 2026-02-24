@@ -4,12 +4,20 @@ import { customElement, state } from 'lit/decorators.js'
 import { api } from '../api'
 import { storage } from '../storage'
 
+const COLUMN_TEMPLATES = [
+  { label: 'Standard', columns: ['Went Well', 'To Improve', 'Action Items'] },
+  { label: 'Mad · Sad · Glad', columns: ['Mad', 'Sad', 'Glad'] },
+  { label: 'Start · Stop · Continue', columns: ['Start', 'Stop', 'Continue'] },
+  { label: '4Ls', columns: ['Liked', 'Learned', 'Lacked', 'Longed for'] },
+]
+
 @customElement('home-page')
 export class HomePage extends LitElement {
   @state() private sessionName = ''
   @state() private yourName = ''
   @state() private loading = false
   @state() private error = ''
+  @state() private selectedTemplate = 0
 
   static styles = css`
     :host {
@@ -129,6 +137,39 @@ export class HomePage extends LitElement {
       color: #e85d04;
       text-decoration: none;
     }
+    .template-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .template-btn {
+      padding: 10px 12px;
+      border: 1.5px solid #e8e8e8;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #fafafa;
+      text-align: left;
+      font-family: inherit;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .template-btn:hover {
+      border-color: #e85d04;
+      background: #fff8f3;
+    }
+    .template-btn.selected {
+      border-color: #e85d04;
+      background: #fff3e8;
+    }
+    .template-btn .t-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 3px;
+    }
+    .template-btn .t-cols {
+      font-size: 11px;
+      color: #999;
+    }
   `
 
   private async createSession(): Promise<void> {
@@ -140,7 +181,8 @@ export class HomePage extends LitElement {
     this.error = ''
 
     try {
-      const session = await api.createSession(name, yourName)
+      const columns = COLUMN_TEMPLATES[this.selectedTemplate].columns
+      const session = await api.createSession(name, yourName, columns)
       storage.setFacilitatorToken(session.id, session.facilitator_token)
       storage.setName(session.id, yourName)
       window.router.navigate(`/session/${session.id}`)
@@ -193,6 +235,24 @@ export class HomePage extends LitElement {
               @keydown=${this.onKeydown}
               ?disabled=${this.loading}
             />
+          </div>
+
+          <div class="field">
+            <label>Column template</label>
+            <div class="template-grid">
+              ${COLUMN_TEMPLATES.map(
+                (t, i) => html`
+                  <button
+                    class="template-btn ${this.selectedTemplate === i ? 'selected' : ''}"
+                    @click=${() => { this.selectedTemplate = i }}
+                    ?disabled=${this.loading}
+                  >
+                    <div class="t-label">${t.label}</div>
+                    <div class="t-cols">${t.columns.join(' · ')}</div>
+                  </button>
+                `,
+              )}
+            </div>
           </div>
 
           ${this.error ? html`<p class="error-msg">${this.error}</p>` : ''}

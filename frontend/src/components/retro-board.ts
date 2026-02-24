@@ -297,7 +297,11 @@ export class RetroBoard extends LitElement {
   }
 
   private async onAddColumn(): Promise<void> {
-    await api.addColumn(this.session.id, 'New Column', this.facilitatorToken)
+    const existing = new Set(this.session.columns)
+    let name = 'New column'
+    let n = 2
+    while (existing.has(name)) name = `New column ${n++}`
+    await api.addColumn(this.session.id, name, this.facilitatorToken)
   }
 
   private async onRenameColumn(e: CustomEvent): Promise<void> {

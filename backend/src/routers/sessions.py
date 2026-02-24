@@ -32,6 +32,8 @@ async def create_session(
     repo: SessionRepository = Depends(get_repo),
 ) -> dict:
     session = Session(id=str(uuid4()), name=body.name)
+    if body.columns:
+        session.columns = body.columns
     # Seed the creator as first participant
     session.participants.append(Participant(name=body.participant_name))
     session = await repo.create(session)

@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class CreateSessionRequest(BaseModel):
     name: str
     participant_name: str = "Facilitator"
+    columns: list[str] | None = None
 
 
 class JoinSessionRequest(BaseModel):
