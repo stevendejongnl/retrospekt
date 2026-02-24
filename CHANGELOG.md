@@ -1,3 +1,9 @@
+## [1.4.0](https://github.com/stevendejongnl/retrospekt/compare/v1.3.0...v1.4.0) (2026-02-24)
+
+### Features
+
+* **backend:** add session auto-expiry with configurable retention period ([1e92ba7](https://github.com/stevendejongnl/retrospekt/commit/1e92ba7135cda6dd3d12187ab3880c32e61df12a))
+
 ## [1.3.0](https://github.com/stevendejongnl/retrospekt/compare/v1.2.0...v1.3.0) (2026-02-24)
 
 ### Features
