@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Pre-push: lint + typecheck + unit tests + Playwright suite with coverage thresholds.
+set -euo pipefail
+
+# shellcheck source=shared.sh
+source "$(dirname "$0")/shared.sh"
+
+echo "🔍 Running pre-push checks..."
+
+run_frontend() {
+  cd "$ROOT/frontend"
+  npm run typecheck && \
+  npm run test:coverage && \
+  npm run test:ct && \
+  npx nyc report --reporter=text --check-coverage --temp-dir=.nyc_output
+}
+
+run_parallel "Push blocked"
+echo "✅ All checks passed — pushing."

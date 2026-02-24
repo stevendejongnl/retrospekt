@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Pre-commit: lint + typecheck + unit tests with coverage thresholds.
+set -euo pipefail
+
+# shellcheck source=shared.sh
+source "$(dirname "$0")/shared.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+run_frontend() {
+  cd "$ROOT/frontend"
+  npm run typecheck && \
+  npm run test:coverage
+}
+
+run_parallel "Commit blocked"
+echo "✅ All checks passed — committing."

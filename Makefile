@@ -2,14 +2,21 @@
 # Run `uv run --project backend nox -l` to list available sessions.
 # This Makefile only handles Docker/infrastructure tasks.
 
-.PHONY: install start stop logs ps restart help
+.PHONY: install hooks start stop logs ps restart help
 
-## Install all project dependencies
-install:
+## Install all project dependencies and git hooks
+install: hooks
 	cd backend && uv sync
 	cd frontend && npm install
 	npm install
 	npx playwright install chromium --with-deps
+
+## Install git hooks (delegators that call hooks/ scripts tracked in the repo)
+hooks:
+	printf '#!/usr/bin/env bash\nexec "$$(git rev-parse --show-toplevel)/hooks/pre-commit"\n' > .git/hooks/pre-commit
+	printf '#!/usr/bin/env bash\nexec "$$(git rev-parse --show-toplevel)/hooks/pre-push"\n'   > .git/hooks/pre-push
+	chmod +x .git/hooks/pre-commit .git/hooks/pre-push
+	@echo "✅ Git hooks installed"
 
 ## Start MongoDB + backend + frontend via Docker Compose
 start:
