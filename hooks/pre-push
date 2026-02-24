@@ -1,19 +1,29 @@
 #!/usr/bin/env bash
-# Pre-push: lint + typecheck + unit tests + Playwright suite with coverage thresholds.
+# Pre-push: lint + typecheck + unit tests + Playwright suite (all parallel).
 set -euo pipefail
 
 # shellcheck source=shared.sh
 source "$(dirname "$0")/shared.sh"
 
-echo "🔍 Running pre-push checks..."
+echo "🔍 Pre-push checks..."
 
-run_frontend() {
+_be_lint()  { cd "$ROOT/backend";  uv run ruff check .; }
+_be_mypy()  { cd "$ROOT/backend";  uv run mypy src; }
+_be_tests() { cd "$ROOT/backend";  uv run pytest -q --tb=short --cov --cov-report=term-missing; }
+_fe_types() { cd "$ROOT/frontend"; npm run typecheck --silent; }
+_fe_unit()  { cd "$ROOT/frontend"; npm run test:coverage --silent; }
+_fe_e2e()   {
   cd "$ROOT/frontend"
-  npm run typecheck && \
-  npm run test:coverage && \
-  npm run test:ct && \
+  npm run test:ct --silent
   npx nyc report --reporter=text --check-coverage --temp-dir=.nyc_output
 }
 
-run_parallel "Push blocked"
+run_parallel "Push blocked" \
+  "backend:lint"    _be_lint  \
+  "backend:mypy"    _be_mypy  \
+  "backend:tests"   _be_tests \
+  "frontend:types"  _fe_types \
+  "frontend:unit"   _fe_unit  \
+  "frontend:e2e"    _fe_e2e
+
 echo "✅ All checks passed — pushing."

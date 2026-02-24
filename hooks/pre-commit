@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
-# Pre-commit: lint + typecheck + unit tests with coverage thresholds.
+# Pre-commit: lint + typecheck + unit tests (all parallel).
 set -euo pipefail
 
 # shellcheck source=shared.sh
 source "$(dirname "$0")/shared.sh"
 
-echo "🔍 Running pre-commit checks..."
+echo "🔍 Pre-commit checks..."
 
-run_frontend() {
-  cd "$ROOT/frontend"
-  npm run typecheck && \
-  npm run test:coverage
-}
+_be_lint()  { cd "$ROOT/backend";  uv run ruff check .; }
+_be_mypy()  { cd "$ROOT/backend";  uv run mypy src; }
+_be_tests() { cd "$ROOT/backend";  uv run pytest -q --tb=short --cov --cov-report=term-missing; }
+_fe_types() { cd "$ROOT/frontend"; npm run typecheck --silent; }
+_fe_unit()  { cd "$ROOT/frontend"; npm run test:coverage --silent; }
 
-run_parallel "Commit blocked"
+run_parallel "Commit blocked" \
+  "backend:lint"   _be_lint  \
+  "backend:mypy"   _be_mypy  \
+  "backend:tests"  _be_tests \
+  "frontend:types" _fe_types \
+  "frontend:unit"  _fe_unit
+
 echo "✅ All checks passed — committing."
