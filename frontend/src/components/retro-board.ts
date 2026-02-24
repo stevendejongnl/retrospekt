@@ -1,10 +1,12 @@
 import { LitElement, css, html } from 'lit'
+import type { TemplateResult } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Session, SessionPhase } from '../types'
 import { buildParticipantColorMap } from '../types'
 import { api } from '../api'
 import { storage } from '../storage'
+import { faIconStyles, iconPencil, iconCommentDots, iconLock, iconUsers } from '../icons'
 import './retro-column'
 
 const COLUMN_ACCENTS: Record<string, string> = {
@@ -13,10 +15,10 @@ const COLUMN_ACCENTS: Record<string, string> = {
   'Action Items': '#3b82f6',
 }
 
-const PHASE_LABELS: Record<SessionPhase, string> = {
-  collecting: '✏️ Collecting',
-  discussing: '💬 Discussing',
-  closed: '🔒 Closed',
+const PHASE_LABELS: Record<SessionPhase, () => TemplateResult> = {
+  collecting: () => html`${iconPencil()} Collecting`,
+  discussing: () => html`${iconCommentDots()} Discussing`,
+  closed: () => html`${iconLock()} Closed`,
 }
 
 @customElement('retro-board')
@@ -26,7 +28,7 @@ export class RetroBoard extends LitElement {
 
   @state() private showHelp = false
 
-  static styles = css`
+  static styles = [faIconStyles, css`
     :host {
       display: block;
     }
@@ -230,7 +232,7 @@ export class RetroBoard extends LitElement {
         flex-direction: column;
       }
     }
-  `
+  `]
 
   private get participantColorMap(): Record<string, string> {
     return buildParticipantColorMap(this.session.participants)
@@ -333,21 +335,21 @@ export class RetroBoard extends LitElement {
                 <h3>How Retrospekt works</h3>
                 <p class="subtitle">A session moves through three phases — only you as facilitator can advance or go back.</p>
                 <div class="help-phase">
-                  <span class="help-phase-icon">✏️</span>
+                  <span class="help-phase-icon">${iconPencil()}</span>
                   <div class="help-phase-body">
                     <h4>Collecting</h4>
                     <p>Everyone adds cards to the columns anonymously. Use this phase to gather honest, unfiltered feedback before the team sees each other's responses.</p>
                   </div>
                 </div>
                 <div class="help-phase">
-                  <span class="help-phase-icon">💬</span>
+                  <span class="help-phase-icon">${iconCommentDots()}</span>
                   <div class="help-phase-body">
                     <h4>Discussing</h4>
                     <p>Each participant publishes their own cards to reveal them to the team. Once published, others can vote on them. No new cards can be added.</p>
                   </div>
                 </div>
                 <div class="help-phase">
-                  <span class="help-phase-icon">🔒</span>
+                  <span class="help-phase-icon">${iconLock()}</span>
                   <div class="help-phase-body">
                     <h4>Closed</h4>
                     <p>The session is read-only. Use this phase to wrap up and share results. Voting and card creation are disabled.</p>
@@ -364,7 +366,7 @@ export class RetroBoard extends LitElement {
             <div class="facilitator-bar">
               <span class="bar-label">Phase</span>
               <span class="phase-badge badge-${session.phase}">
-                ${PHASE_LABELS[session.phase]}
+                ${PHASE_LABELS[session.phase]()}
               </span>
               ${session.phase !== 'collecting'
                 ? html`
@@ -387,7 +389,7 @@ export class RetroBoard extends LitElement {
                 ? html`<button class="add-column-btn" @click=${this.onAddColumn}>+ Add column</button>`
                 : ''}
               <span class="participant-count">
-                👥 ${session.participants.length}
+                ${iconUsers()} ${session.participants.length}
                 participant${session.participants.length !== 1 ? 's' : ''}
               </span>
               <button class="help-btn" @click=${() => (this.showHelp = true)}>?</button>

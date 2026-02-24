@@ -28,6 +28,16 @@ export class NotFoundPage extends LitElement {
       color: var(--retro-accent);
       font-size: 15px;
     }
+    .github-link {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--retro-text-muted);
+    }
+    .github-link a {
+      font-size: 12px;
+      color: var(--retro-text-muted);
+      text-decoration: underline;
+    }
   `
 
   render() {
@@ -38,6 +48,9 @@ export class NotFoundPage extends LitElement {
       <a href="/" @click=${(e: Event) => { e.preventDefault(); window.router.navigate('/') }}>
         ← Back to home
       </a>
+      <p class="github-link">
+        <a href="https://github.com/stevendejongnl/retrospekt" target="_blank" rel="noopener noreferrer">github.com/stevendejongnl/retrospekt</a>
+      </p>
     `
   }
 }

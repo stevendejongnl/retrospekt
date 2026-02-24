@@ -7,6 +7,16 @@ import { api } from '../api'
 import { SSEClient } from '../sse'
 import { storage } from '../storage'
 import { getEffectiveTheme, toggleTheme } from '../theme'
+import {
+  faIconStyles,
+  iconPencil,
+  iconCommentDots,
+  iconLock,
+  iconSun,
+  iconMoon,
+  iconLink,
+  iconCheck,
+} from '../icons'
 import '../components/retro-board'
 
 @customElement('session-page')
@@ -26,7 +36,7 @@ export class SessionPage extends LitElement {
   private sseClient: SSEClient | null = null
   private _themeListener!: EventListener
 
-  static styles = css`
+  static styles = [faIconStyles, css`
     :host {
       display: block;
       min-height: 100vh;
@@ -213,6 +223,19 @@ export class SessionPage extends LitElement {
     .help-close-btn:hover {
       background: #c44e00;
     }
+    .help-footer {
+      margin-top: 16px;
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+    }
+    .help-footer a {
+      color: #e85d04;
+      text-decoration: none;
+    }
+    .help-footer a:hover {
+      text-decoration: underline;
+    }
 
     /* ── Main ── */
     main {
@@ -383,7 +406,7 @@ export class SessionPage extends LitElement {
       opacity: 0.5;
       cursor: not-allowed;
     }
-  `
+  `]
 
   async connectedCallback(): Promise<void> {
     super.connectedCallback()
@@ -490,7 +513,7 @@ export class SessionPage extends LitElement {
                   A session moves through three phases, guided by the facilitator.
                 </p>
                 <div class="help-phase">
-                  <span class="help-phase-icon">✏️</span>
+                  <span class="help-phase-icon">${iconPencil()}</span>
                   <div class="help-phase-body">
                     <h4>Collecting</h4>
                     <p>
@@ -500,7 +523,7 @@ export class SessionPage extends LitElement {
                   </div>
                 </div>
                 <div class="help-phase">
-                  <span class="help-phase-icon">💬</span>
+                  <span class="help-phase-icon">${iconCommentDots()}</span>
                   <div class="help-phase-body">
                     <h4>Discussing</h4>
                     <p>
@@ -510,7 +533,7 @@ export class SessionPage extends LitElement {
                   </div>
                 </div>
                 <div class="help-phase">
-                  <span class="help-phase-icon">🔒</span>
+                  <span class="help-phase-icon">${iconLock()}</span>
                   <div class="help-phase-body">
                     <h4>Closed</h4>
                     <p>
@@ -522,6 +545,10 @@ export class SessionPage extends LitElement {
                 <button class="help-close-btn" @click=${() => (this.showHelp = false)}>
                   Got it
                 </button>
+                <p class="help-footer">
+                  Open source &middot;
+                  <a href="https://github.com/stevendejongnl/retrospekt" target="_blank" rel="noopener noreferrer">github.com/stevendejongnl/retrospekt</a>
+                </p>
               </div>
             </div>
           `
@@ -559,7 +586,7 @@ export class SessionPage extends LitElement {
         <span class="session-title">
           ${session.name}<span class="session-date">· ${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
         </span>
-        <button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? '☀️' : '🌙'}</button>
+        <button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>
         ${this.participantName
           ? html`
               <div class="user-chip">
@@ -573,20 +600,20 @@ export class SessionPage extends LitElement {
 
       <main>
         <div class="share-bar">
-          <span class="share-icon">🔗</span>
+          <span class="share-icon">${iconLink()}</span>
           <span class="share-url">${window.location.href}</span>
           <button class="copy-btn" @click=${this.copyUrl}>
-            ${this.copied ? '✓ Copied' : 'Copy link'}
+            ${this.copied ? html`${iconCheck()} Copied` : 'Copy link'}
           </button>
         </div>
 
         ${session.phase === 'discussing'
           ? html`<div class="phase-banner banner-discussing">
-              💬 Discussion phase — vote on the cards that matter most
+              ${iconCommentDots()} Discussion phase — vote on the cards that matter most
             </div>`
           : session.phase === 'closed'
             ? html`<div class="phase-banner banner-closed">
-                🔒 This session is closed
+                ${iconLock()} This session is closed
               </div>`
             : ''}
 

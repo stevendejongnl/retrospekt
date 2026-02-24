@@ -4,6 +4,7 @@ import { customElement, state } from 'lit/decorators.js'
 import { api } from '../api'
 import { storage } from '../storage'
 import { getEffectiveTheme, toggleTheme } from '../theme'
+import { faIconStyles, iconSun, iconMoon } from '../icons'
 
 const COLUMN_TEMPLATES = [
   { label: 'Standard', columns: ['Went Well', 'To Improve', 'Action Items'] },
@@ -36,7 +37,7 @@ export class HomePage extends LitElement {
     window.removeEventListener('retro-theme-change', this._themeListener)
   }
 
-  static styles = css`
+  static styles = [faIconStyles, css`
     :host {
       display: flex;
       align-items: center;
@@ -208,7 +209,7 @@ export class HomePage extends LitElement {
       font-size: 11px;
       color: var(--retro-text-muted);
     }
-  `
+  `]
 
   private async createSession(): Promise<void> {
     const name = this.sessionName.trim()
@@ -243,7 +244,7 @@ export class HomePage extends LitElement {
     const canCreate = !!this.sessionName.trim() && !this.loading
 
     return html`
-      <button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? '☀️' : '🌙'}</button>
+      <button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>
       <div class="hero">
         <div class="logo">🥓</div>
         <h1>Retro<em>spekt</em></h1>
@@ -307,7 +308,11 @@ export class HomePage extends LitElement {
           </button>
         </div>
 
-        <p class="footer">No account required &middot; Share the URL to collaborate</p>
+        <p class="footer">
+          No account required &middot; Share the URL to collaborate &middot;
+          <a href="https://github.com/stevendejongnl/retrospekt" target="_blank" rel="noopener noreferrer">GitHub</a>
+          &middot; v${__APP_VERSION__}
+        </p>
       </div>
     `
   }
