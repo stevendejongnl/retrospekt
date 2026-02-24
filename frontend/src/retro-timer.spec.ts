@@ -1,6 +1,31 @@
 import type { Page } from '@playwright/test'
 import { test, expect } from './playwright-fixtures'
 
+async function mockAudioContext(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any
+    w.__audioCtxCreated = false
+    w.AudioContext = function MockAudioContext(this: Record<string, unknown>) {
+      w.__audioCtxCreated = true
+      this.state = 'running'
+      this.currentTime = 0
+      this.destination = {}
+      this.resume = () => Promise.resolve()
+      this.createOscillator = () => ({
+        frequency: { setValueAtTime: () => {} },
+        connect: () => {},
+        start: () => {},
+        stop: () => {},
+      })
+      this.createGain = () => ({
+        gain: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
+        connect: () => {},
+      })
+    }
+  })
+}
+
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
 const SESSION_ID = 'timer-spec-1'
@@ -375,5 +400,148 @@ test.describe('retro-timer participant view', () => {
     await page.goto(`/session/${SESSION_ID}`)
     // No timer-pill when timer is null
     await expect(page.locator('.timer-pill')).not.toBeVisible()
+  })
+})
+
+// ── Mute toggle – facilitator view ────────────────────────────────────────────
+
+test.describe('retro-timer mute toggle (facilitator)', () => {
+  test.beforeEach(async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
+    const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: null } }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-timer')).toBeVisible()
+  })
+
+  test('mute button is visible in facilitator timer panel', async ({ page }) => {
+    await expect(page.locator('.mute-btn')).toBeVisible()
+  })
+
+  test('mute button title is "Mute timer sound" when unmuted', async ({ page }) => {
+    await expect(page.locator('.mute-btn')).toHaveAttribute('title', 'Mute timer sound')
+  })
+
+  test('clicking mute button adds .muted class and changes title', async ({ page }) => {
+    await page.locator('.mute-btn').click()
+    await expect(page.locator('.mute-btn')).toHaveClass(/muted/)
+    await expect(page.locator('.mute-btn')).toHaveAttribute('title', 'Unmute timer sound')
+  })
+
+  test('mute preference is written to localStorage', async ({ page }) => {
+    await page.locator('.mute-btn').click()
+    const stored = await page.evaluate(() => localStorage.getItem('retro_timer_muted'))
+    expect(stored).toBe('true')
+  })
+
+  test('clicking mute then unmute restores unmuted state', async ({ page }) => {
+    await page.locator('.mute-btn').click()
+    await page.locator('.mute-btn').click()
+    await expect(page.locator('.mute-btn')).not.toHaveClass(/muted/)
+    await expect(page.locator('.mute-btn')).toHaveAttribute('title', 'Mute timer sound')
+    const stored = await page.evaluate(() => localStorage.getItem('retro_timer_muted'))
+    expect(stored).toBe('false')
+  })
+})
+
+test('retro-timer mute button shows muted state when retro_timer_muted pre-set in localStorage', async ({ page }) => {
+  await withName(page, 'Alice', FAC_TOKEN)
+  const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: null } }
+  await mockApi(page, session as unknown as Record<string, unknown>)
+  await page.addInitScript(() => localStorage.setItem('retro_timer_muted', 'true'))
+  await page.goto(`/session/${SESSION_ID}`)
+  await expect(page.locator('.mute-btn')).toHaveClass(/muted/)
+  await expect(page.locator('.mute-btn')).toHaveAttribute('title', 'Unmute timer sound')
+})
+
+// ── Mute toggle – participant pill ────────────────────────────────────────────
+
+test.describe('retro-timer mute toggle (participant pill)', () => {
+  test.beforeEach(async ({ page }) => {
+    await withName(page, 'Alice') // non-facilitator
+    const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: null } }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.timer-pill')).toBeVisible()
+  })
+
+  test('mute button is visible in the participant pill', async ({ page }) => {
+    await expect(page.locator('.mute-btn-pill')).toBeVisible()
+  })
+
+  test('mute button title is "Mute timer sound" when unmuted', async ({ page }) => {
+    await expect(page.locator('.mute-btn-pill')).toHaveAttribute('title', 'Mute timer sound')
+  })
+
+  test('clicking mute in pill changes title to "Unmute timer sound"', async ({ page }) => {
+    await page.locator('.mute-btn-pill').click()
+    await expect(page.locator('.mute-btn-pill')).toHaveAttribute('title', 'Unmute timer sound')
+  })
+})
+
+// ── Ding sound ────────────────────────────────────────────────────────────────
+
+test.describe('retro-timer ding sound', () => {
+  test('AudioContext is not created when page loads with an already-expired timer (wasRunning guard)', async ({ page }) => {
+    await mockAudioContext(page)
+    await withName(page, 'Alice', FAC_TOKEN)
+    const session = {
+      ...BASE,
+      timer: {
+        duration_seconds: 5,
+        started_at: new Date(Date.now() - 60_000).toISOString(), // expired 55s ago
+        paused_remaining: null,
+      },
+    }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-timer')).toBeVisible()
+    await page.waitForTimeout(1500) // let at least one interval tick fire
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
+    expect(created).toBe(false)
+  })
+
+  test('AudioContext is created when a running timer reaches zero', async ({ page }) => {
+    await mockAudioContext(page)
+    await withName(page, 'Alice', FAC_TOKEN)
+    // 30s timer started 28.5s ago → ~1.5s remaining on page load; hits zero within 2s of first tick
+    const session = {
+      ...BASE,
+      timer: {
+        duration_seconds: 30,
+        started_at: new Date(Date.now() - 28_500).toISOString(),
+        paused_remaining: null,
+      },
+    }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-timer')).toBeVisible()
+    await expect(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
+      expect(created).toBe(true)
+    }).toPass({ timeout: 5000 })
+  })
+
+  test('AudioContext is not created when timer reaches zero while muted', async ({ page }) => {
+    await mockAudioContext(page)
+    await withName(page, 'Alice', FAC_TOKEN)
+    await page.addInitScript(() => localStorage.setItem('retro_timer_muted', 'true'))
+    const session = {
+      ...BASE,
+      timer: {
+        duration_seconds: 30,
+        started_at: new Date(Date.now() - 28_500).toISOString(),
+        paused_remaining: null,
+      },
+    }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-timer')).toBeVisible()
+    await page.waitForTimeout(3000) // wait past expiry with margin
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
+    expect(created).toBe(false)
   })
 })
