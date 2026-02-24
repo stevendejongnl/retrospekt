@@ -1,6 +1,6 @@
 [project]
 name = "retrospekt-backend"
-version = "1.9.0"
+version = "1.10.0"
 description = "Backend for Retrospekt retro board"
 requires-python = ">=3.12"
 

@@ -1,3 +1,10 @@
+## [1.10.0](https://github.com/stevendejongnl/retrospekt/compare/v1.9.0...v1.10.0) (2026-02-24)
+
+### Features
+
+* **session:** add emoji reactions, action items, timer, emoji picker, and export ([3e1130b](https://github.com/stevendejongnl/retrospekt/commit/3e1130b2ac4ebf3350e95dddefebf24032dd23a4))
+* **ui:** replace emoji with FA icons and add favicon ([099bd7a](https://github.com/stevendejongnl/retrospekt/commit/099bd7a816ffb63ab319d4f531a97a663b310797))
+
 ## [1.9.0](https://github.com/stevendejongnl/retrospekt/compare/v1.8.1...v1.9.0) (2026-02-24)
 
 ### Features
