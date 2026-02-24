@@ -15,6 +15,7 @@ export class RetroColumn extends LitElement {
   @property({ type: String }) phase: SessionPhase = 'collecting'
   @property({ type: String }) accent = '#e85d04'
   @property({ type: Boolean }) isFacilitator = false
+  @property({ type: Object }) participantColorMap: Record<string, string> = {}
 
   @state() private newCardText = ''
   @state() private isAdding = false
@@ -338,7 +339,7 @@ export class RetroColumn extends LitElement {
                 ?canPublish=${this.phase === 'discussing' &&
                 !card.published &&
                 card.author_name === this.participantName}
-                style="--card-accent:${this.accent}"
+                style="--card-accent:${this.participantColorMap[card.author_name] ?? '#6b7280'}"
               ></retro-card>
             `,
           )}

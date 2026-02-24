@@ -2,6 +2,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Session } from '../types'
+import { buildParticipantColorMap } from '../types'
 import { api } from '../api'
 import { SSEClient } from '../sse'
 import { storage } from '../storage'
@@ -102,7 +103,6 @@ export class SessionPage extends LitElement {
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: var(--retro-accent);
       color: white;
       display: flex;
       align-items: center;
@@ -448,6 +448,12 @@ export class SessionPage extends LitElement {
     window.router.navigate('/')
   }
 
+  private get myColor(): string {
+    if (!this.session || !this.participantName) return 'var(--retro-accent)'
+    const map = buildParticipantColorMap(this.session.participants)
+    return map[this.participantName] ?? 'var(--retro-accent)'
+  }
+
   private onThemeToggle(): void {
     toggleTheme()
   }
@@ -557,7 +563,7 @@ export class SessionPage extends LitElement {
         ${this.participantName
           ? html`
               <div class="user-chip">
-                <div class="avatar">${this.participantName[0].toUpperCase()}</div>
+                <div class="avatar" style="background:${this.myColor}">${this.participantName[0].toUpperCase()}</div>
                 <span class="avatar-name">${this.participantName}</span>
                 <button class="help-btn" @click=${() => (this.showHelp = true)}>?</button>
               </div>

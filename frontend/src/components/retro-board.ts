@@ -2,6 +2,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Session, SessionPhase } from '../types'
+import { buildParticipantColorMap } from '../types'
 import { api } from '../api'
 import { storage } from '../storage'
 import './retro-column'
@@ -231,6 +232,10 @@ export class RetroBoard extends LitElement {
     }
   `
 
+  private get participantColorMap(): Record<string, string> {
+    return buildParticipantColorMap(this.session.participants)
+  }
+
   private get isFacilitator(): boolean {
     return storage.isFacilitator(this.session.id)
   }
@@ -409,6 +414,7 @@ export class RetroBoard extends LitElement {
               .participantName=${this.participantName}
               .phase=${session.phase}
               .accent=${COLUMN_ACCENTS[col] ?? '#e85d04'}
+              .participantColorMap=${this.participantColorMap}
               ?isFacilitator=${this.isFacilitator}
             ></retro-column>
           `,

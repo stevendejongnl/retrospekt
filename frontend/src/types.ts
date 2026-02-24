@@ -33,3 +33,16 @@ export interface Session {
 export interface CreateSessionResponse extends Session {
   facilitator_token: string
 }
+
+export const PARTICIPANT_COLORS = [
+  '#7c3aed', '#0284c7', '#059669', '#d97706', '#db2777',
+  '#0891b2', '#65a30d', '#9333ea', '#ea580c', '#0d9488',
+]
+
+export function buildParticipantColorMap(participants: Participant[]): Record<string, string> {
+  const map: Record<string, string> = {}
+  participants.forEach((p, i) => {
+    map[p.name] = PARTICIPANT_COLORS[i % PARTICIPANT_COLORS.length]
+  })
+  return map
+}

@@ -15,6 +15,7 @@
     "test:wtr": "web-test-runner"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.2.0",
     "lit": "^3.1.0"
   },
   "devDependencies": {
