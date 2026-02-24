@@ -209,6 +209,40 @@ test.describe('not-found page', () => {
   })
 })
 
+// ── reactions_enabled option ──────────────────────────────────────────────────
+
+test.describe('home-page reactions_enabled option', () => {
+  test('emoji reactions checkbox is checked by default', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByRole('checkbox')).toBeChecked()
+  })
+
+  test('sends reactions_enabled=true by default when creating a session', async ({ page }) => {
+    await page.goto('/')
+    let body: Record<string, unknown> = {}
+    await page.route('/api/v1/sessions', async (route) => {
+      body = JSON.parse(route.request().postData() ?? '{}') as Record<string, unknown>
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(MOCK_SESSION) })
+    })
+    await page.getByLabel('Session name').fill('Sprint Retro')
+    await page.getByRole('button', { name: /Create session/ }).click()
+    expect(body.reactions_enabled).toBe(true)
+  })
+
+  test('sends reactions_enabled=false when checkbox is unchecked', async ({ page }) => {
+    await page.goto('/')
+    let body: Record<string, unknown> = {}
+    await page.route('/api/v1/sessions', async (route) => {
+      body = JSON.parse(route.request().postData() ?? '{}') as Record<string, unknown>
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(MOCK_SESSION) })
+    })
+    await page.getByRole('checkbox').uncheck()
+    await page.getByLabel('Session name').fill('Sprint Retro')
+    await page.getByRole('button', { name: /Create session/ }).click()
+    expect(body.reactions_enabled).toBe(false)
+  })
+})
+
 // ── Empty session name guard (home-page.ts line 240) ─────────────────────────
 
 test.describe('home-page empty name guard', () => {

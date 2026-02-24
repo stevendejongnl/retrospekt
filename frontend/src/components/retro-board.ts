@@ -669,6 +669,7 @@ export class RetroBoard extends LitElement {
               .accent=${COLUMN_ACCENTS[col] ?? '#e85d04'}
               .participantColorMap=${this.participantColorMap}
               ?isFacilitator=${this.isFacilitator}
+              .reactionsEnabled=${session.reactions_enabled}
             ></retro-column>
           `,
         )}

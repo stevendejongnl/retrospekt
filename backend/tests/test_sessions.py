@@ -63,3 +63,21 @@ async def test_joining_unknown_session_returns_404(client: AsyncClient):
         json={"participant_name": "Bob"},
     )
     assert response.status_code == 404
+
+
+async def test_creating_a_session_defaults_reactions_enabled_to_true(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions",
+        json={"name": "Sprint 1", "participant_name": "Alice"},
+    )
+    assert response.status_code == 201
+    assert response.json()["reactions_enabled"] is True
+
+
+async def test_creating_a_session_with_reactions_disabled(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions",
+        json={"name": "Sprint 1", "participant_name": "Alice", "reactions_enabled": False},
+    )
+    assert response.status_code == 201
+    assert response.json()["reactions_enabled"] is False

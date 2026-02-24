@@ -41,7 +41,7 @@ describe('createSession', () => {
 
     expect(mockFetch).toHaveBeenCalledWith('/api/v1/sessions', expect.objectContaining({
       method: 'POST',
-      body: JSON.stringify({ name: 'Sprint Retro', participant_name: 'Alice' }),
+      body: JSON.stringify({ name: 'Sprint Retro', participant_name: 'Alice', reactions_enabled: true }),
     }))
   })
 })

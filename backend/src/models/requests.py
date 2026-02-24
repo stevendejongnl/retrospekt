@@ -5,6 +5,7 @@ class CreateSessionRequest(BaseModel):
     name: str
     participant_name: str = "Facilitator"
     columns: list[str] | None = None
+    reactions_enabled: bool = True
 
 
 class JoinSessionRequest(BaseModel):

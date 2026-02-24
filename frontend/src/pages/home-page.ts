@@ -23,6 +23,7 @@ export class HomePage extends LitElement {
   @state() private selectedTemplate = 0
   @state() private isDark = getEffectiveTheme() === 'dark'
   @state() private showHistory = false
+  @state() private reactionsEnabled = true
 
   private _themeListener!: EventListener
 
@@ -232,6 +233,45 @@ export class HomePage extends LitElement {
       font-size: 11px;
       color: var(--retro-text-muted);
     }
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1.5px solid var(--retro-border-default);
+      border-radius: 10px;
+      cursor: pointer;
+      background: var(--retro-bg-subtle);
+      transition: border-color 0.12s, background 0.12s;
+      user-select: none;
+    }
+    .option-row:hover {
+      border-color: var(--retro-accent);
+      background: var(--retro-accent-tint);
+    }
+    .option-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--retro-accent);
+      cursor: pointer;
+      flex-shrink: 0;
+      margin: 0;
+      padding: 0;
+      border: none;
+    }
+    .option-label {
+      font-size: 13px;
+      color: var(--retro-text-primary);
+      font-weight: 500;
+      line-height: 1.4;
+    }
+    .option-label small {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--retro-text-muted);
+      margin-top: 1px;
+    }
   `]
 
   private async createSession(): Promise<void> {
@@ -244,7 +284,7 @@ export class HomePage extends LitElement {
 
     try {
       const columns = COLUMN_TEMPLATES[this.selectedTemplate].columns
-      const session = await api.createSession(name, yourName, columns)
+      const session = await api.createSession(name, yourName, columns, this.reactionsEnabled)
       storage.setFacilitatorToken(session.id, session.facilitator_token)
       storage.setName(session.id, yourName)
       storage.addOrUpdateHistory({
@@ -333,6 +373,22 @@ export class HomePage extends LitElement {
                 `,
               )}
             </div>
+          </div>
+
+          <div class="field">
+            <label>Options</label>
+            <label class="option-row">
+              <input
+                type="checkbox"
+                .checked=${this.reactionsEnabled}
+                @change=${(e: Event) => { this.reactionsEnabled = (e.target as HTMLInputElement).checked }}
+                ?disabled=${this.loading}
+              />
+              <span class="option-label">
+                Emoji reactions on cards
+                <small>Participants can react to published cards with emoji</small>
+              </span>
+            </label>
           </div>
 
           ${this.error ? html`<p class="error-msg">${this.error}</p>` : ''}

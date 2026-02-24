@@ -22,6 +22,7 @@ function makeSession(overrides: Partial<Session> = {}): Session {
     participants: [],
     cards: [],
     timer: null,
+    reactions_enabled: true,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
     ...overrides,

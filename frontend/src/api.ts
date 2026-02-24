@@ -17,10 +17,10 @@ export function createApi(fetchFn: typeof fetch = fetch) {
   }
 
   return {
-    createSession: (name: string, participantName: string, columns?: string[]) =>
+    createSession: (name: string, participantName: string, columns?: string[], reactionsEnabled = true) =>
       request<CreateSessionResponse>('/sessions', {
         method: 'POST',
-        body: JSON.stringify({ name, participant_name: participantName, columns }),
+        body: JSON.stringify({ name, participant_name: participantName, columns, reactions_enabled: reactionsEnabled }),
       }),
 
     getSession: (id: string) => request<Session>(`/sessions/${id}`),

@@ -20,6 +20,7 @@ const BASE = {
     { name: 'Bob', joined_at: '2026-01-01T00:00:00Z' },
   ],
   cards: [] as object[],
+  reactions_enabled: true,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
   facilitator_token: FAC_TOKEN,
@@ -358,6 +359,35 @@ test.describe('retro-card assignee', () => {
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('.assignee-chip')).toBeVisible()
     await expect(page.locator('.unassign-btn')).not.toBeVisible()
+  })
+})
+
+// ── reactions_enabled flag ────────────────────────────────────────────────────
+
+test.describe('retro-card reactions_enabled', () => {
+  test('reactions row is hidden when reactions_enabled=false even for published card', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = {
+      ...BASE,
+      reactions_enabled: false,
+      cards: [makeCard({ author_name: 'Bob', published: true })],
+    }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-card')).toBeVisible()
+    await expect(page.locator('.reactions-row')).not.toBeVisible()
+  })
+
+  test('reactions row is shown when reactions_enabled=true', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = {
+      ...BASE,
+      reactions_enabled: true,
+      cards: [makeCard({ author_name: 'Bob', published: true })],
+    }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.reactions-row')).toBeVisible()
   })
 })
 

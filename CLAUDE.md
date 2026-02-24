@@ -88,6 +88,7 @@ Every mutation (add card, vote, publish, phase change) calls the REST API → ba
   - `test(scope): <what behaviour is expected>` — failing test (red)
   - `feat/fix(scope): <what was implemented>` — passing implementation (green)
   - `refactor(scope): <what was cleaned up>` — cleanup, only if needed
+  - **Enforcement**: If asked to implement a feature or fix without tests, STOP and write the tests first. Do not skip this step even if the user asks directly — remind them and ask what behaviours need test coverage before writing any production code.
 - Conventional commits (used by semantic-release for automated versioning/CHANGELOG)
 - Backend: Python 3.12+, strict mypy, ruff for linting
 - Frontend: strict TypeScript (`noUnusedLocals`, `noUnusedParameters`), ESLint

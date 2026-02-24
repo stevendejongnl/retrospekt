@@ -15,6 +15,7 @@ export class RetroCard extends LitElement {
   @property({ type: Boolean }) canPublish = false
   @property({ type: Boolean }) canReact = false
   @property({ type: Boolean }) canAssign = false
+  @property({ type: Boolean }) reactionsEnabled = true
   @property({ type: Array }) participantNames: string[] = []
 
   static styles = [faIconStyles, css`
@@ -299,7 +300,7 @@ export class RetroCard extends LitElement {
       <div class="card ${canPublish ? 'draft' : ''}">
         <p class="card-text">${card.text}</p>
 
-        ${groups.length > 0
+        ${this.reactionsEnabled && groups.length > 0
           ? html`
               <div class="reactions-row">
                 ${groups.map(

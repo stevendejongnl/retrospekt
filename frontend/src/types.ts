@@ -40,6 +40,7 @@ export interface Session {
   participants: Participant[]
   cards: Card[]
   timer: TimerState | null
+  reactions_enabled: boolean
   created_at: string
   updated_at: string
 }

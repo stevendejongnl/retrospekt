@@ -34,7 +34,7 @@ async def create_session(
     body: CreateSessionRequest,
     repo: SessionRepository = Depends(get_repo),
 ) -> dict:
-    session = Session(id=str(uuid4()), name=body.name)
+    session = Session(id=str(uuid4()), name=body.name, reactions_enabled=body.reactions_enabled)
     if body.columns:
         session.columns = body.columns
     # Seed the creator as first participant
