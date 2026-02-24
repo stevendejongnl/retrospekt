@@ -81,6 +81,34 @@ def typecheck(session: nox.Session) -> None:
         session.run("npm", "run", "typecheck", external=True)
 
 
+@nox.session
+def test_frontend(session: nox.Session) -> None:
+    """Run frontend Vitest unit tests."""
+    with session.chdir(FRONTEND):
+        session.run("npm", "test", external=True)
+
+
+@nox.session
+def test_ct(session: nox.Session) -> None:
+    """Run frontend Playwright component tests (starts its own Vite server)."""
+    with session.chdir(FRONTEND):
+        session.run("npm", "run", "test:ct", external=True)
+
+
+@nox.session
+def test_wtr(session: nox.Session) -> None:
+    """Run frontend Web Test Runner tests."""
+    with session.chdir(FRONTEND):
+        session.run("npm", "run", "test:wtr", external=True)
+
+
+@nox.session
+def coverage_frontend(session: nox.Session) -> None:
+    """Run frontend Vitest with coverage report."""
+    with session.chdir(FRONTEND):
+        session.run("npm", "run", "test:coverage", external=True)
+
+
 # ── E2E ───────────────────────────────────────────────────────────────────────
 
 
@@ -101,7 +129,11 @@ def e2e_ui(session: nox.Session) -> None:
 
 @nox.session
 def check(session: nox.Session) -> None:
-    """Run all static checks and unit tests (default session)."""
+    """Run all checks and tests except E2E (default session).
+
+    E2E tests are excluded because they require a running MongoDB instance.
+    Run `nox -s e2e` separately after `make start`.
+    """
     # Backend
     with session.chdir(BACKEND):
         session.run("uv", "run", "ruff", "check", ".", external=True)
@@ -111,3 +143,6 @@ def check(session: nox.Session) -> None:
     with session.chdir(FRONTEND):
         session.run("npm", "run", "lint", external=True)
         session.run("npm", "run", "typecheck", external=True)
+        session.run("npm", "test", external=True)
+        session.run("npm", "run", "test:ct", external=True)
+        session.run("npm", "run", "test:wtr", external=True)
