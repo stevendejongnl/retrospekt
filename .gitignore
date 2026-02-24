@@ -19,7 +19,9 @@ dist/
 
 # Test artifacts
 backend/.coverage
+frontend/.nyc_output/
 frontend/coverage/
+frontend/playwright-coverage/
 frontend/test-results/
 frontend/playwright-report/
 playwright-report/
