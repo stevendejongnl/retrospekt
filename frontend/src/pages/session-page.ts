@@ -5,6 +5,7 @@ import type { Session } from '../types'
 import { api } from '../api'
 import { SSEClient } from '../sse'
 import { storage } from '../storage'
+import { getEffectiveTheme, toggleTheme } from '../theme'
 import '../components/retro-board'
 
 @customElement('session-page')
@@ -18,14 +19,16 @@ export class SessionPage extends LitElement {
   @state() private error = ''
   @state() private showNamePrompt = false
   @state() private copied = false
+  @state() private isDark = getEffectiveTheme() === 'dark'
 
   private sseClient: SSEClient | null = null
+  private _themeListener!: EventListener
 
   static styles = css`
     :host {
       display: block;
       min-height: 100vh;
-      background: #faf9f7;
+      background: var(--retro-bg-page);
     }
 
     /* ── Header ── */
@@ -34,8 +37,8 @@ export class SessionPage extends LitElement {
       top: 0;
       z-index: 20;
       height: 56px;
-      background: white;
-      border-bottom: 1px solid #f0ede8;
+      background: var(--retro-bg-surface);
+      border-bottom: 1px solid var(--retro-border-subtle);
       padding: 0 24px;
       display: flex;
       align-items: center;
@@ -45,7 +48,7 @@ export class SessionPage extends LitElement {
     .brand {
       font-size: 20px;
       font-weight: 900;
-      color: #111;
+      color: var(--retro-text-primary);
       text-decoration: none;
       letter-spacing: -0.5px;
       cursor: pointer;
@@ -53,11 +56,11 @@ export class SessionPage extends LitElement {
     }
     .brand em {
       font-style: normal;
-      color: #e85d04;
+      color: var(--retro-accent);
     }
     .session-title {
       font-size: 14px;
-      color: #666;
+      color: var(--retro-text-secondary);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -65,10 +68,28 @@ export class SessionPage extends LitElement {
       text-align: center;
     }
     .session-date {
-      color: #bbb;
+      color: var(--retro-text-disabled);
       font-size: 12px;
       font-weight: 400;
       margin-left: 6px;
+    }
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--retro-bg-subtle);
+      border: 1.5px solid var(--retro-border-default);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s, border-color 0.12s;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover {
+      border-color: var(--retro-accent);
+      background: var(--retro-accent-tint);
     }
     .user-chip {
       display: flex;
@@ -80,7 +101,7 @@ export class SessionPage extends LitElement {
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: #e85d04;
+      background: var(--retro-accent);
       color: white;
       display: flex;
       align-items: center;
@@ -91,7 +112,7 @@ export class SessionPage extends LitElement {
     }
     .avatar-name {
       font-size: 13px;
-      color: #666;
+      color: var(--retro-text-secondary);
       max-width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -111,8 +132,8 @@ export class SessionPage extends LitElement {
       align-items: center;
       gap: 10px;
       padding: 9px 14px;
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
+      background: var(--retro-share-bg);
+      border: 1px solid var(--retro-share-border);
       border-radius: 10px;
       margin-bottom: 16px;
     }
@@ -123,7 +144,7 @@ export class SessionPage extends LitElement {
     .share-url {
       flex: 1;
       font-size: 12px;
-      color: #0369a1;
+      color: var(--retro-share-text);
       font-family: 'SF Mono', 'Fira Code', monospace;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -131,18 +152,18 @@ export class SessionPage extends LitElement {
     }
     .copy-btn {
       background: none;
-      border: 1px solid #bae6fd;
+      border: 1px solid var(--retro-share-border);
       border-radius: 6px;
       padding: 4px 10px;
       cursor: pointer;
       font-size: 12px;
-      color: #0369a1;
+      color: var(--retro-share-text);
       font-family: inherit;
       transition: background 0.12s;
       flex-shrink: 0;
     }
     .copy-btn:hover {
-      background: #e0f2fe;
+      background: color-mix(in srgb, var(--retro-share-border) 25%, var(--retro-share-bg));
     }
 
     /* ── Phase banner ── */
@@ -155,14 +176,14 @@ export class SessionPage extends LitElement {
       font-weight: 500;
     }
     .banner-discussing {
-      background: #fff7ed;
-      color: #c2410c;
-      border: 1px solid #fed7aa;
+      background: var(--retro-phase-discussing-bg);
+      color: var(--retro-phase-discussing-text);
+      border: 1px solid var(--retro-facilitator-border);
     }
     .banner-closed {
-      background: #faf5ff;
-      color: #7e22ce;
-      border: 1px solid #e9d5ff;
+      background: var(--retro-phase-closed-bg);
+      color: var(--retro-phase-closed-text);
+      border: 1px solid color-mix(in srgb, var(--retro-phase-closed-text) 25%, transparent);
     }
 
     /* ── States ── */
@@ -173,14 +194,14 @@ export class SessionPage extends LitElement {
       min-height: 50vh;
       flex-direction: column;
       gap: 12px;
-      color: #aaa;
+      color: var(--retro-text-disabled);
       font-size: 16px;
     }
     .spinner {
       width: 32px;
       height: 32px;
-      border: 3px solid #f0ede8;
-      border-top-color: #e85d04;
+      border: 3px solid var(--retro-border-subtle);
+      border-top-color: var(--retro-accent);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
     }
@@ -194,7 +215,7 @@ export class SessionPage extends LitElement {
     .overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.4);
+      background: var(--retro-overlay-bg);
       backdrop-filter: blur(2px);
       display: flex;
       align-items: center;
@@ -203,12 +224,12 @@ export class SessionPage extends LitElement {
       padding: 24px;
     }
     .name-card {
-      background: white;
+      background: var(--retro-bg-surface);
       border-radius: 20px;
       padding: 36px 32px;
       max-width: 400px;
       width: 100%;
-      box-shadow: 0 16px 64px rgba(0, 0, 0, 0.16);
+      box-shadow: 0 16px 64px var(--retro-card-shadow);
     }
     .name-card .logo {
       font-size: 40px;
@@ -217,36 +238,40 @@ export class SessionPage extends LitElement {
     .name-card h2 {
       font-size: 22px;
       font-weight: 800;
-      color: #111;
+      color: var(--retro-text-primary);
       margin-bottom: 6px;
       letter-spacing: -0.5px;
     }
     .name-card p {
       font-size: 14px;
-      color: #888;
+      color: var(--retro-text-muted);
       margin-bottom: 24px;
     }
     .name-card input {
       width: 100%;
       padding: 12px 16px;
-      border: 1.5px solid #e8e8e8;
+      border: 1.5px solid var(--retro-border-default);
       border-radius: 10px;
       font-size: 16px;
       font-family: inherit;
       box-sizing: border-box;
       transition: border-color 0.12s;
-      background: #fafafa;
+      background: var(--retro-bg-subtle);
+      color: var(--retro-text-primary);
     }
     .name-card input:focus {
       outline: none;
-      border-color: #e85d04;
-      background: white;
+      border-color: var(--retro-accent);
+      background: var(--retro-bg-surface);
+    }
+    .name-card input::placeholder {
+      color: var(--retro-text-disabled);
     }
     .name-card button {
       width: 100%;
       margin-top: 10px;
       padding: 13px;
-      background: #e85d04;
+      background: var(--retro-accent);
       color: white;
       border: none;
       border-radius: 10px;
@@ -257,7 +282,7 @@ export class SessionPage extends LitElement {
       transition: background 0.12s;
     }
     .name-card button:hover:not(:disabled) {
-      background: #c44e00;
+      background: var(--retro-accent-hover);
     }
     .name-card button:disabled {
       opacity: 0.5;
@@ -267,12 +292,17 @@ export class SessionPage extends LitElement {
 
   async connectedCallback(): Promise<void> {
     super.connectedCallback()
+    this._themeListener = () => {
+      this.isDark = getEffectiveTheme() === 'dark'
+    }
+    window.addEventListener('retro-theme-change', this._themeListener)
     await this.loadSession()
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback()
     this.sseClient?.disconnect()
+    window.removeEventListener('retro-theme-change', this._themeListener)
   }
 
   private async loadSession(): Promise<void> {
@@ -321,6 +351,10 @@ export class SessionPage extends LitElement {
   private goHome(e: Event): void {
     e.preventDefault()
     window.router.navigate('/')
+  }
+
+  private onThemeToggle(): void {
+    toggleTheme()
   }
 
   render() {
@@ -378,6 +412,7 @@ export class SessionPage extends LitElement {
         <span class="session-title">
           ${session.name}<span class="session-date">· ${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
         </span>
+        <button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? '☀️' : '🌙'}</button>
         ${this.participantName
           ? html`
               <div class="user-chip">

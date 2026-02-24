@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 import { storage } from '../storage'
+import { getEffectiveTheme, toggleTheme } from '../theme'
 
 const COLUMN_TEMPLATES = [
   { label: 'Standard', columns: ['Went Well', 'To Improve', 'Action Items'] },
@@ -18,6 +19,22 @@ export class HomePage extends LitElement {
   @state() private loading = false
   @state() private error = ''
   @state() private selectedTemplate = 0
+  @state() private isDark = getEffectiveTheme() === 'dark'
+
+  private _themeListener!: EventListener
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    this._themeListener = () => {
+      this.isDark = getEffectiveTheme() === 'dark'
+    }
+    window.addEventListener('retro-theme-change', this._themeListener)
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    window.removeEventListener('retro-theme-change', this._themeListener)
+  }
 
   static styles = css`
     :host {
@@ -25,8 +42,29 @@ export class HomePage extends LitElement {
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: linear-gradient(160deg, #faf9f7 0%, #fff3e8 100%);
+      background: linear-gradient(160deg, var(--retro-bg-page) 0%, var(--retro-accent-tint) 100%);
       padding: 24px;
+      position: relative;
+    }
+    .theme-toggle {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--retro-bg-surface);
+      border: 1.5px solid var(--retro-border-default);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .theme-toggle:hover {
+      border-color: var(--retro-accent);
+      background: var(--retro-accent-tint);
     }
     .hero {
       width: 100%;
@@ -42,25 +80,25 @@ export class HomePage extends LitElement {
     h1 {
       font-size: 44px;
       font-weight: 900;
-      color: #111;
+      color: var(--retro-text-primary);
       letter-spacing: -2px;
       line-height: 1;
       margin-bottom: 10px;
     }
     h1 em {
       font-style: normal;
-      color: #e85d04;
+      color: var(--retro-accent);
     }
     .tagline {
       font-size: 16px;
-      color: #888;
+      color: var(--retro-text-muted);
       margin-bottom: 36px;
     }
     .card {
-      background: white;
+      background: var(--retro-bg-surface);
       border-radius: 20px;
       padding: 32px;
-      box-shadow: 0 4px 32px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 4px 32px var(--retro-card-shadow), 0 1px 4px var(--retro-card-shadow);
     }
     .field {
       margin-bottom: 16px;
@@ -70,29 +108,29 @@ export class HomePage extends LitElement {
       display: block;
       font-size: 13px;
       font-weight: 600;
-      color: #555;
+      color: var(--retro-text-secondary);
       margin-bottom: 6px;
       letter-spacing: 0.2px;
     }
     input {
       width: 100%;
       padding: 12px 16px;
-      border: 1.5px solid #e8e8e8;
+      border: 1.5px solid var(--retro-border-default);
       border-radius: 10px;
       font-size: 15px;
       font-family: inherit;
-      color: #111;
+      color: var(--retro-text-primary);
       box-sizing: border-box;
       transition: border-color 0.12s;
-      background: #fafafa;
+      background: var(--retro-bg-subtle);
     }
     input:focus {
       outline: none;
-      border-color: #e85d04;
-      background: white;
+      border-color: var(--retro-accent);
+      background: var(--retro-bg-surface);
     }
     input::placeholder {
-      color: #bbb;
+      color: var(--retro-text-disabled);
     }
     input:disabled {
       opacity: 0.6;
@@ -101,7 +139,7 @@ export class HomePage extends LitElement {
       width: 100%;
       margin-top: 8px;
       padding: 14px;
-      background: #e85d04;
+      background: var(--retro-accent);
       color: white;
       border: none;
       border-radius: 12px;
@@ -113,7 +151,7 @@ export class HomePage extends LitElement {
       letter-spacing: 0.1px;
     }
     .create-btn:hover:not(:disabled) {
-      background: #c44e00;
+      background: var(--retro-accent-hover);
     }
     .create-btn:active:not(:disabled) {
       transform: scale(0.99);
@@ -125,16 +163,16 @@ export class HomePage extends LitElement {
     .error-msg {
       margin-top: 10px;
       font-size: 13px;
-      color: #ef4444;
+      color: var(--retro-error);
       text-align: center;
     }
     .footer {
       margin-top: 28px;
       font-size: 13px;
-      color: #ccc;
+      color: var(--retro-text-disabled);
     }
     .footer a {
-      color: #e85d04;
+      color: var(--retro-accent);
       text-decoration: none;
     }
     .template-grid {
@@ -144,31 +182,31 @@ export class HomePage extends LitElement {
     }
     .template-btn {
       padding: 10px 12px;
-      border: 1.5px solid #e8e8e8;
+      border: 1.5px solid var(--retro-border-default);
       border-radius: 10px;
       cursor: pointer;
-      background: #fafafa;
+      background: var(--retro-bg-subtle);
       text-align: left;
       font-family: inherit;
       transition: border-color 0.12s, background 0.12s;
     }
     .template-btn:hover {
-      border-color: #e85d04;
-      background: #fff8f3;
+      border-color: var(--retro-accent);
+      background: var(--retro-accent-tint);
     }
     .template-btn.selected {
-      border-color: #e85d04;
-      background: #fff3e8;
+      border-color: var(--retro-accent);
+      background: var(--retro-accent-tint);
     }
     .template-btn .t-label {
       font-size: 12px;
       font-weight: 700;
-      color: #333;
+      color: var(--retro-text-secondary);
       margin-bottom: 3px;
     }
     .template-btn .t-cols {
       font-size: 11px;
-      color: #999;
+      color: var(--retro-text-muted);
     }
   `
 
@@ -197,10 +235,15 @@ export class HomePage extends LitElement {
     if (e.key === 'Enter') void this.createSession()
   }
 
+  private onThemeToggle(): void {
+    toggleTheme()
+  }
+
   render() {
     const canCreate = !!this.sessionName.trim() && !this.loading
 
     return html`
+      <button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? '☀️' : '🌙'}</button>
       <div class="hero">
         <div class="logo">🥓</div>
         <h1>Retro<em>spekt</em></h1>
@@ -244,7 +287,9 @@ export class HomePage extends LitElement {
                 (t, i) => html`
                   <button
                     class="template-btn ${this.selectedTemplate === i ? 'selected' : ''}"
-                    @click=${() => { this.selectedTemplate = i }}
+                    @click=${() => {
+                      this.selectedTemplate = i
+                    }}
                     ?disabled=${this.loading}
                   >
                     <div class="t-label">${t.label}</div>

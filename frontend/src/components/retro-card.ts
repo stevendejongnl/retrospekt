@@ -16,21 +16,21 @@ export class RetroCard extends LitElement {
       display: block;
     }
     .card {
-      background: white;
+      background: var(--retro-bg-surface);
       border-radius: 8px;
       padding: 12px 14px;
       margin-bottom: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 1px 3px var(--retro-card-shadow), 0 1px 2px var(--retro-card-shadow);
       border-left: 3px solid var(--card-accent, #e85d04);
     }
     .card.draft {
       border-left-style: dashed;
-      background: #fafafa;
+      background: var(--retro-bg-subtle);
     }
     .card-text {
       font-size: 14px;
       line-height: 1.55;
-      color: #1a1a1a;
+      color: var(--retro-text-primary);
       margin-bottom: 10px;
       word-break: break-word;
     }
@@ -48,17 +48,17 @@ export class RetroCard extends LitElement {
     }
     .card-author {
       font-size: 11px;
-      color: #aaa;
+      color: var(--retro-text-disabled);
       font-weight: 500;
       letter-spacing: 0.2px;
     }
     .draft-badge {
       font-size: 10px;
       font-weight: 700;
-      color: #bbb;
+      color: var(--retro-text-disabled);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      border: 1px solid #e8e8e8;
+      border: 1px solid var(--retro-border-default);
       border-radius: 4px;
       padding: 1px 5px;
     }
@@ -72,12 +72,12 @@ export class RetroCard extends LitElement {
       align-items: center;
       gap: 4px;
       background: none;
-      border: 1px solid #e8e8e8;
+      border: 1px solid var(--retro-border-default);
       border-radius: 20px;
       padding: 3px 10px;
       font-size: 12px;
       cursor: pointer;
-      color: #666;
+      color: var(--retro-text-secondary);
       transition: all 0.12s ease;
       font-family: inherit;
     }
@@ -117,7 +117,7 @@ export class RetroCard extends LitElement {
       background: none;
       border: none;
       cursor: pointer;
-      color: #d0d0d0;
+      color: var(--retro-border-strong);
       font-size: 16px;
       line-height: 1;
       padding: 2px 4px;
@@ -125,7 +125,7 @@ export class RetroCard extends LitElement {
       transition: color 0.12s;
     }
     .delete-btn:hover {
-      color: #ef4444;
+      color: var(--retro-error);
     }
   `
 

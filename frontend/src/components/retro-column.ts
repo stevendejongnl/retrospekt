@@ -29,7 +29,7 @@ export class RetroColumn extends LitElement {
       min-width: 280px;
     }
     .column {
-      background: #f4f4f2;
+      background: var(--retro-bg-subtle);
       border-radius: 14px;
       padding: 16px;
       height: 100%;
@@ -48,7 +48,7 @@ export class RetroColumn extends LitElement {
       gap: 8px;
       font-size: 14px;
       font-weight: 700;
-      color: #1a1a1a;
+      color: var(--retro-text-primary);
       letter-spacing: 0.1px;
     }
     .dot {
@@ -99,11 +99,11 @@ export class RetroColumn extends LitElement {
     .add-btn {
       width: 100%;
       background: none;
-      border: 1.5px dashed #ccc;
+      border: 1.5px dashed var(--retro-border-strong);
       border-radius: 8px;
       padding: 8px 12px;
       cursor: pointer;
-      color: #999;
+      color: var(--retro-text-muted);
       font-size: 13px;
       font-family: inherit;
       transition: all 0.12s;
@@ -120,7 +120,7 @@ export class RetroColumn extends LitElement {
     textarea {
       width: 100%;
       padding: 10px 12px;
-      border: 1.5px solid #ddd;
+      border: 1.5px solid var(--retro-border-default);
       border-radius: 8px;
       font-size: 13px;
       font-family: inherit;
@@ -129,6 +129,8 @@ export class RetroColumn extends LitElement {
       box-sizing: border-box;
       line-height: 1.5;
       transition: border-color 0.12s;
+      color: var(--retro-text-primary);
+      background: var(--retro-bg-surface);
     }
     textarea:focus {
       outline: none;
@@ -155,27 +157,27 @@ export class RetroColumn extends LitElement {
     }
     .btn-cancel {
       background: none;
-      border: 1.5px solid #ddd;
+      border: 1.5px solid var(--retro-border-default);
       border-radius: 7px;
       padding: 7px 14px;
       font-size: 13px;
       cursor: pointer;
-      color: #666;
+      color: var(--retro-text-secondary);
       font-family: inherit;
     }
     .hint {
       font-size: 11px;
-      color: #bbb;
+      color: var(--retro-text-disabled);
       text-align: right;
     }
     .title-input {
       font-size: 14px;
       font-weight: 700;
-      color: #1a1a1a;
+      color: var(--retro-text-primary);
       border: 1.5px solid var(--col-accent);
       border-radius: 6px;
       padding: 1px 6px;
-      background: white;
+      background: var(--retro-bg-surface);
       font-family: inherit;
       width: 100%;
       min-width: 0;
@@ -188,14 +190,14 @@ export class RetroColumn extends LitElement {
       border: none;
       cursor: pointer;
       font-size: 14px;
-      color: #bbb;
+      color: var(--retro-text-disabled);
       padding: 0 2px;
       line-height: 1;
       transition: color 0.12s;
       flex-shrink: 0;
     }
     .delete-col-btn:hover {
-      color: #e85d04;
+      color: var(--retro-accent);
     }
   `
 

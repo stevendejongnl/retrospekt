@@ -11,8 +11,8 @@ export class NotFoundPage extends LitElement {
       min-height: 100vh;
       flex-direction: column;
       gap: 12px;
-      background: #faf9f7;
-      color: #888;
+      background: var(--retro-bg-page);
+      color: var(--retro-text-muted);
       text-align: center;
       padding: 24px;
     }
@@ -21,11 +21,11 @@ export class NotFoundPage extends LitElement {
     }
     h2 {
       font-size: 24px;
-      color: #222;
+      color: var(--retro-text-primary);
       font-weight: 800;
     }
     a {
-      color: #e85d04;
+      color: var(--retro-accent);
       font-size: 15px;
     }
   `

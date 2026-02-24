@@ -35,15 +35,15 @@ export class RetroBoard extends LitElement {
       flex-wrap: wrap;
       gap: 12px;
       padding: 12px 16px;
-      background: #fff8f0;
-      border: 1px solid #fed7aa;
+      background: var(--retro-facilitator-bg);
+      border: 1px solid var(--retro-facilitator-border);
       border-radius: 12px;
       margin-bottom: 20px;
     }
     .bar-label {
       font-size: 12px;
       font-weight: 600;
-      color: #9a6a3a;
+      color: var(--retro-facilitator-text);
       text-transform: uppercase;
       letter-spacing: 0.6px;
     }
@@ -56,19 +56,19 @@ export class RetroBoard extends LitElement {
       font-weight: 500;
     }
     .badge-collecting {
-      background: #dbeafe;
-      color: #1d4ed8;
+      background: var(--retro-phase-collecting-bg);
+      color: var(--retro-phase-collecting-text);
     }
     .badge-discussing {
-      background: #ffedd5;
-      color: #c2410c;
+      background: var(--retro-phase-discussing-bg);
+      color: var(--retro-phase-discussing-text);
     }
     .badge-closed {
-      background: #f3e8ff;
-      color: #7e22ce;
+      background: var(--retro-phase-closed-bg);
+      color: var(--retro-phase-closed-text);
     }
     .phase-btn {
-      background: #e85d04;
+      background: var(--retro-accent);
       color: white;
       border: none;
       border-radius: 8px;
@@ -80,7 +80,7 @@ export class RetroBoard extends LitElement {
       transition: background 0.12s;
     }
     .phase-btn:hover {
-      background: #c44e00;
+      background: var(--retro-accent-hover);
     }
     .phase-btn.close-btn {
       background: #6b7280;
@@ -91,26 +91,26 @@ export class RetroBoard extends LitElement {
     .participant-count {
       margin-left: auto;
       font-size: 12px;
-      color: #b07040;
+      color: var(--retro-facilitator-text);
     }
     .back-btn {
       background: none;
-      border: 1px solid #fed7aa;
+      border: 1px solid var(--retro-facilitator-border);
       border-radius: 8px;
       padding: 7px 14px;
       font-size: 13px;
       font-weight: 500;
-      color: #9a6a3a;
+      color: var(--retro-facilitator-text);
       cursor: pointer;
       font-family: inherit;
       transition: background 0.12s;
     }
     .back-btn:hover {
-      background: #fef3e8;
+      background: var(--retro-bg-hover);
     }
     .help-btn {
       background: none;
-      border: 1px solid #fed7aa;
+      border: 1px solid var(--retro-facilitator-border);
       border-radius: 50%;
       width: 26px;
       height: 26px;
@@ -119,21 +119,21 @@ export class RetroBoard extends LitElement {
       justify-content: center;
       font-size: 13px;
       font-weight: 700;
-      color: #9a6a3a;
+      color: var(--retro-facilitator-text);
       cursor: pointer;
       font-family: inherit;
       flex-shrink: 0;
       transition: background 0.12s;
     }
     .help-btn:hover {
-      background: #fef3e8;
+      background: var(--retro-bg-hover);
     }
 
     /* ── Help overlay ── */
     .help-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.4);
+      background: var(--retro-overlay-bg);
       backdrop-filter: blur(2px);
       display: flex;
       align-items: center;
@@ -142,23 +142,23 @@ export class RetroBoard extends LitElement {
       padding: 24px;
     }
     .help-card {
-      background: white;
+      background: var(--retro-bg-surface);
       border-radius: 20px;
       padding: 32px;
       max-width: 480px;
       width: 100%;
-      box-shadow: 0 16px 64px rgba(0, 0, 0, 0.16);
+      box-shadow: 0 16px 64px var(--retro-card-shadow);
     }
     .help-card h3 {
       font-size: 18px;
       font-weight: 800;
-      color: #111;
+      color: var(--retro-text-primary);
       margin: 0 0 6px;
       letter-spacing: -0.4px;
     }
     .help-card .subtitle {
       font-size: 13px;
-      color: #888;
+      color: var(--retro-text-muted);
       margin-bottom: 24px;
     }
     .help-phase {
@@ -166,7 +166,7 @@ export class RetroBoard extends LitElement {
       gap: 14px;
       align-items: flex-start;
       padding: 14px 0;
-      border-top: 1px solid #f0ede8;
+      border-top: 1px solid var(--retro-border-subtle);
     }
     .help-phase-icon {
       font-size: 24px;
@@ -176,12 +176,12 @@ export class RetroBoard extends LitElement {
     .help-phase-body h4 {
       font-size: 14px;
       font-weight: 700;
-      color: #111;
+      color: var(--retro-text-primary);
       margin: 0 0 4px;
     }
     .help-phase-body p {
       font-size: 13px;
-      color: #666;
+      color: var(--retro-text-secondary);
       margin: 0;
       line-height: 1.5;
     }
@@ -189,7 +189,7 @@ export class RetroBoard extends LitElement {
       margin-top: 24px;
       width: 100%;
       padding: 11px;
-      background: #e85d04;
+      background: var(--retro-accent);
       color: white;
       border: none;
       border-radius: 10px;
@@ -200,23 +200,23 @@ export class RetroBoard extends LitElement {
       transition: background 0.12s;
     }
     .help-close-btn:hover {
-      background: #c44e00;
+      background: var(--retro-accent-hover);
     }
     .add-column-btn {
       background: none;
-      border: 1.5px dashed #fed7aa;
+      border: 1.5px dashed var(--retro-facilitator-border);
       border-radius: 8px;
       padding: 7px 16px;
       font-size: 13px;
       font-weight: 500;
-      color: #9a6a3a;
+      color: var(--retro-facilitator-text);
       cursor: pointer;
       font-family: inherit;
       transition: all 0.12s;
     }
     .add-column-btn:hover {
-      border-color: #e85d04;
-      color: #e85d04;
+      border-color: var(--retro-accent);
+      color: var(--retro-accent);
     }
     .columns {
       display: flex;
