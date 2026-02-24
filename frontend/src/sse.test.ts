@@ -84,4 +84,10 @@ describe('SSEClient', () => {
     const client = new SSEClient('session-abc', onUpdate)
     expect(() => client.disconnect()).not.toThrow()
   })
+
+  it('onerror handler is a safe no-op', () => {
+    const client = new SSEClient('session-abc', onUpdate)
+    client.connect()
+    expect(() => MockEventSource.instance!.onerror?.()).not.toThrow()
+  })
 })

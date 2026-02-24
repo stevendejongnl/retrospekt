@@ -44,6 +44,13 @@ describe('Router', () => {
     expect(app.children[0].tagName.toLowerCase()).toBe('not-found-page')
   })
 
+  it('start() performs the initial route render', () => {
+    window.history.pushState({}, '', '/session/start-test')
+    ;(router as unknown as { start: () => void }).start()
+    const app = document.getElementById('app')!
+    expect(app.children[0].tagName.toLowerCase()).toBe('session-page')
+  })
+
   it('re-routes when a popstate event fires', () => {
     // Push a URL that matches a known route
     window.history.pushState({}, '', '/session/xyz')

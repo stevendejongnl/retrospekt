@@ -88,6 +88,14 @@ describe('initTheme', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
   })
 
+  it('applies light theme when system preference changes to light and no stored theme', () => {
+    const mql = mockMatchMedia(true)
+    initTheme()
+    const changeHandler = mql.addEventListener.mock.calls[0][1] as (e: MediaQueryListEvent) => void
+    changeHandler({ matches: false } as MediaQueryListEvent) // system → light
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light')
+  })
+
   it('ignores system preference changes when a theme is explicitly stored', () => {
     const mql = mockMatchMedia(false)
     localStorage.setItem('retro_theme', 'light')

@@ -8,7 +8,7 @@ const apiTarget = process.env.VITE_BACKEND_URL ?? 'http://localhost:8000'
 
 export default defineConfig({
   plugins: process.env.VITE_COVERAGE === 'true'
-    ? [istanbul({ include: 'src/*', exclude: ['node_modules'], requireEnv: false })]
+    ? [istanbul({ include: 'src/**', exclude: ['node_modules', '**/*.test.ts', '**/*.spec.ts', '**/*.wtr.ts'], requireEnv: false })]
     : [],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
@@ -20,7 +20,16 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov'],
       include: ['src/**/*.ts'],
-      exclude: ['src/main.ts', '**/*.spec.ts', '**/*.wtr.ts', 'src/types.ts'],
+      exclude: [
+        'src/main.ts',
+        'src/types.ts',
+        'src/env.d.ts',
+        '**/*.spec.ts',
+        '**/*.wtr.ts',
+        'src/playwright-fixtures.ts',
+        'src/components/**',
+        'src/pages/**',
+      ],
     },
   },
   server: {
