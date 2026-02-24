@@ -17,8 +17,10 @@ class SSEManager:
     def __init__(self) -> None:
         self._subscribers: dict[str, list[asyncio.Queue[str]]] = {}
 
-    def subscribe(self, session_id: str) -> asyncio.Queue[str]:
+    def subscribe(self, session_id: str, initial_data: dict | None = None) -> asyncio.Queue[str]:
         queue: asyncio.Queue[str] = asyncio.Queue()
+        if initial_data is not None:
+            queue.put_nowait(json.dumps(initial_data, default=str))
         self._subscribers.setdefault(session_id, []).append(queue)
         count = len(self._subscribers[session_id])
         logger.debug("SSE subscriber added for session %s (total: %d)", session_id, count)
