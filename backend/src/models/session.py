@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from uuid import uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 REACTION_EMOJI = frozenset(["❤️", "😂", "😮", "🎉", "🤔", "👀"])
 
@@ -38,6 +38,14 @@ class TimerState(BaseModel):
     duration_seconds: int
     started_at: datetime | None = None
     paused_remaining: int | None = None
+
+    @field_validator("started_at", mode="before")
+    @classmethod
+    def ensure_utc(cls, v: datetime | None) -> datetime | None:
+        """MongoDB returns naive UTC datetimes — normalize to timezone-aware."""
+        if v is not None and isinstance(v, datetime) and v.tzinfo is None:
+            return v.replace(tzinfo=UTC)
+        return v
 
 
 class Participant(BaseModel):
