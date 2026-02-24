@@ -1,3 +1,9 @@
+## [1.8.1](https://github.com/stevendejongnl/retrospekt/compare/v1.8.0...v1.8.1) (2026-02-24)
+
+### Bug Fixes
+
+* **docker:** use uv sync from lockfile instead of hardcoded deps ([dfc6ffc](https://github.com/stevendejongnl/retrospekt/commit/dfc6ffc01afd2fab876a63107c9e3db16619eda5))
+
 ## [1.8.0](https://github.com/stevendejongnl/retrospekt/compare/v1.7.1...v1.8.0) (2026-02-24)
 
 ### Features
