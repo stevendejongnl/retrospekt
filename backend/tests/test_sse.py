@@ -9,6 +9,7 @@ subscribe to Redis, trigger an HTTP mutation, then wait for the collected chunk.
 
 import asyncio
 import json
+import unittest.mock as mock
 
 from httpx import AsyncClient
 
@@ -175,6 +176,50 @@ async def test_join_mutation_broadcasts_new_participant(client: AsyncClient):
 
     names = [p["name"] for p in json.loads(received[0].removeprefix("data: ").strip())["participants"]]
     assert "Bob" in names
+
+
+async def test_stream_sends_keepalive_on_queue_timeout(fake_redis):
+    """When queue.get() times out (30 s idle), the generator yields a keepalive comment.
+    We patch asyncio.wait_for to raise TimeoutError on the first call so the test
+    doesn't have to wait 30 seconds."""
+    manager = SSEManager()
+    manager.set_client(fake_redis)
+
+    original_wait_for = asyncio.wait_for
+    call_count = [0]
+
+    async def mock_wait_for(coro, timeout=None, **kwargs):
+        call_count[0] += 1
+        if call_count[0] == 1:
+            coro.close()  # discard coroutine cleanly
+            raise TimeoutError()
+        return await original_wait_for(coro, timeout=timeout, **kwargs)
+
+    gen = manager.stream("s1")
+    with mock.patch.object(asyncio, "wait_for", mock_wait_for):
+        chunk = await original_wait_for(gen.__anext__(), timeout=2.0)
+    await gen.aclose()
+
+    assert chunk == ": keepalive\n\n"
+
+
+async def test_stream_handles_outer_cancellation(fake_redis):
+    """When the task consuming stream() is cancelled, the CancelledError handler
+    (lines 61-62) cancels the internal reader task and re-raises."""
+    manager = SSEManager()
+    manager.set_client(fake_redis)
+
+    async def consume() -> None:
+        async for _ in manager.stream("s1"):
+            pass  # consumes forever until cancelled
+
+    task = asyncio.create_task(consume())
+    await asyncio.sleep(0.05)  # let reader subscribe
+    task.cancel()
+    try:
+        await asyncio.wait_for(task, timeout=1.0)
+    except asyncio.CancelledError:
+        pass  # expected — task was cancelled
 
 
 async def test_multiple_subscribers_all_receive_broadcast(client: AsyncClient):

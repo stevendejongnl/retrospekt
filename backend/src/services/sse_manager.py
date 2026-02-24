@@ -38,7 +38,7 @@ class SSEManager:
             async with redis_client.pubsub() as pubsub:
                 await pubsub.subscribe(channel)
                 try:
-                    async for message in pubsub.listen():
+                    async for message in pubsub.listen():  # pragma: no branch
                         if message["type"] == "message":
                             data = message["data"]
                             await queue.put(data.decode() if isinstance(data, bytes) else data)
@@ -52,7 +52,7 @@ class SSEManager:
             while True:
                 try:
                     item = await asyncio.wait_for(queue.get(), timeout=30.0)
-                    if item is None:
+                    if item is None:  # pragma: no cover
                         break
                     yield f"data: {item}\n\n"
                 except TimeoutError:

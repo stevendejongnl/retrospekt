@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './playwright-fixtures'
 
 // The Vite dev server serves index.html for all paths (SPA fallback),
 // so router.start() handles routing based on the pathname.

@@ -66,3 +66,26 @@ async def test_deleting_missing_card_returns_404(client: AsyncClient):
         headers={"X-Participant-Name": "Alice"},
     )
     assert response.status_code == 404
+
+
+async def test_add_card_unknown_session_returns_404(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions/no-such/cards",
+        json={"column": "Went Well", "text": "Oops", "author_name": "Alice"},
+    )
+    assert response.status_code == 404
+
+
+async def test_delete_card_missing_participant_name_returns_400(client: AsyncClient):
+    session = await make_session(client)
+    card = await _add_card(client, session.id)
+    response = await client.delete(f"/api/v1/sessions/{session.id}/cards/{card['id']}")
+    assert response.status_code == 400
+
+
+async def test_delete_card_unknown_session_returns_404(client: AsyncClient):
+    response = await client.delete(
+        "/api/v1/sessions/no-such/cards/no-such-card",
+        headers={"X-Participant-Name": "Alice"},
+    )
+    assert response.status_code == 404

@@ -219,3 +219,64 @@ async def test_remove_column_blocked_after_collecting(client: AsyncClient):
         headers={"X-Facilitator-Token": session.facilitator_token},
     )
     assert response.status_code == 409
+
+
+async def test_add_column_unknown_session_returns_404(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions/no-such/columns",
+        json={"name": "Kudos"},
+        headers={"X-Facilitator-Token": "any"},
+    )
+    assert response.status_code == 404
+
+
+async def test_rename_column_unknown_session_returns_404(client: AsyncClient):
+    response = await client.patch(
+        col_url("no-such", "Went Well"),
+        json={"name": "Renamed"},
+        headers={"X-Facilitator-Token": "any"},
+    )
+    assert response.status_code == 404
+
+
+async def test_rename_column_does_not_affect_cards_in_other_columns(client: AsyncClient):
+    """Covers the branch where card.column != column_name during rename."""
+    session = await make_session(client)
+    await client.post(
+        f"/api/v1/sessions/{session.id}/cards",
+        json={"column": "Went Well", "text": "Keep", "author_name": "Alice"},
+    )
+    await client.post(
+        f"/api/v1/sessions/{session.id}/cards",
+        json={"column": "To Improve", "text": "Other column", "author_name": "Alice"},
+    )
+    response = await client.patch(
+        col_url(session.id, "Went Well"),
+        json={"name": "Highlights"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 200
+    columns = [c["column"] for c in response.json()["cards"]]
+    assert "Highlights" in columns
+    assert "To Improve" in columns
+
+
+async def test_rename_column_to_same_name_is_a_no_op(client: AsyncClient):
+    """Renaming to the same name should succeed — the 'name already in use' check
+    has a guard for body.name != column_name, so same-name is allowed through."""
+    session = await make_session(client)
+    response = await client.patch(
+        col_url(session.id, "Went Well"),
+        json={"name": "Went Well"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 200
+    assert "Went Well" in response.json()["columns"]
+
+
+async def test_remove_column_unknown_session_returns_404(client: AsyncClient):
+    response = await client.delete(
+        col_url("no-such", "Went Well"),
+        headers={"X-Facilitator-Token": "any"},
+    )
+    assert response.status_code == 404

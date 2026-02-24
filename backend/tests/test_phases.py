@@ -58,3 +58,12 @@ async def test_invalid_phase_value_returns_400(client: AsyncClient):
         headers={"X-Facilitator-Token": session.facilitator_token},
     )
     assert response.status_code == 400
+
+
+async def test_phase_change_unknown_session_returns_404(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions/no-such/phase",
+        json={"phase": "discussing"},
+        headers={"X-Facilitator-Token": "any"},
+    )
+    assert response.status_code == 404

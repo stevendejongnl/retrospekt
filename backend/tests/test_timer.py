@@ -233,3 +233,21 @@ async def test_reset_timer_unknown_session_returns_404(client: AsyncClient):
         headers={"X-Facilitator-Token": "any"},
     )
     assert response.status_code == 404
+
+
+async def test_start_expired_timer_returns_409(client: AsyncClient, db):
+    """A timer with paused_remaining=0 (fully expired) cannot be restarted — must reset first.
+    We seed the session directly into the shared in-memory DB that `client` is wired to."""
+    from src.models.session import Session, TimerState
+    from src.repositories.session_repo import SessionRepository
+
+    repo = SessionRepository(db)
+    session = Session(id="expired-s", name="Expired Timer Test")
+    session.timer = TimerState(duration_seconds=30, paused_remaining=0)
+    await repo.create(session)
+
+    response = await client.post(
+        f"/api/v1/sessions/{session.id}/timer/start",
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 409

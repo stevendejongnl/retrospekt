@@ -44,12 +44,16 @@ asyncio_mode = "auto"
 [tool.coverage.run]
 source = ["src"]
 branch = true
-omit = ["src/main.py"]  # uvicorn entry point — covered by E2E
+omit = [
+    "src/main.py",         # uvicorn entry point — covered by E2E
+    "src/database.py",     # Motor client lifecycle — covered by E2E
+    "src/dependencies.py", # DI wire-up — overridden in all unit tests
+]
 
 [tool.coverage.report]
 show_missing = true
 skip_covered = false
-fail_under = 85
+fail_under = 90
 
 [tool.mypy]
 python_version = "3.12"

@@ -46,3 +46,20 @@ async def test_joining_with_an_existing_name_is_idempotent(client: AsyncClient):
     await client.post(f"/api/v1/sessions/{session.id}/join", json={"participant_name": "Alice"})
     response = await client.get(f"/api/v1/sessions/{session.id}")
     assert len(response.json()["participants"]) == 1
+
+
+async def test_creating_a_session_with_custom_columns(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions",
+        json={"name": "Custom", "participant_name": "Alice", "columns": ["Roses", "Thorns", "Buds"]},
+    )
+    assert response.status_code == 201
+    assert response.json()["columns"] == ["Roses", "Thorns", "Buds"]
+
+
+async def test_joining_unknown_session_returns_404(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions/no-such/join",
+        json={"participant_name": "Bob"},
+    )
+    assert response.status_code == 404

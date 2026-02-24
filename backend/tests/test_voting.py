@@ -92,3 +92,63 @@ async def test_removing_a_nonexistent_vote_is_a_no_op(client: AsyncClient):
     )
     assert response.status_code == 200
     assert response.json()["votes"] == []
+
+
+async def test_add_vote_missing_participant_name_returns_400(client: AsyncClient):
+    session_id, _, card_id = await _session_with_card(client)
+    response = await client.post(f"/api/v1/sessions/{session_id}/cards/{card_id}/votes")
+    assert response.status_code == 400
+
+
+async def test_add_vote_unknown_session_returns_404(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions/no-such/cards/no-such/votes",
+        headers={"X-Participant-Name": "Bob"},
+    )
+    assert response.status_code == 404
+
+
+async def test_add_vote_unknown_card_returns_404(client: AsyncClient):
+    session_id, _, _ = await _session_with_card(client)
+    response = await client.post(
+        f"/api/v1/sessions/{session_id}/cards/no-such-card/votes",
+        headers={"X-Participant-Name": "Bob"},
+    )
+    assert response.status_code == 404
+
+
+async def test_voting_not_allowed_in_collecting_phase(client: AsyncClient):
+    session = await make_session(client)
+    card_resp = await client.post(
+        f"/api/v1/sessions/{session.id}/cards",
+        json={"column": "Went Well", "text": "Too early", "author_name": "Alice"},
+    )
+    card_id = card_resp.json()["id"]
+    response = await client.post(
+        f"/api/v1/sessions/{session.id}/cards/{card_id}/votes",
+        headers={"X-Participant-Name": "Bob"},
+    )
+    assert response.status_code == 409
+
+
+async def test_remove_vote_missing_participant_name_returns_400(client: AsyncClient):
+    session_id, _, card_id = await _session_with_card(client)
+    response = await client.delete(f"/api/v1/sessions/{session_id}/cards/{card_id}/votes")
+    assert response.status_code == 400
+
+
+async def test_remove_vote_unknown_session_returns_404(client: AsyncClient):
+    response = await client.delete(
+        "/api/v1/sessions/no-such/cards/no-such/votes",
+        headers={"X-Participant-Name": "Bob"},
+    )
+    assert response.status_code == 404
+
+
+async def test_remove_vote_unknown_card_returns_404(client: AsyncClient):
+    session_id, _, _ = await _session_with_card(client)
+    response = await client.delete(
+        f"/api/v1/sessions/{session_id}/cards/no-such-card/votes",
+        headers={"X-Participant-Name": "Bob"},
+    )
+    assert response.status_code == 404

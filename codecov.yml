@@ -1,0 +1,36 @@
+coverage:
+  status:
+    project:
+      default:
+        enabled: false
+      backend:
+        flags: [backend]
+        target: 90%
+        threshold: 1%
+      frontend-unit:
+        flags: [frontend-unit]
+        target: auto
+        threshold: 5%
+      frontend-playwright:
+        flags: [frontend-playwright]
+        target: auto
+        threshold: 5%
+
+flags:
+  backend:
+    carryforward: false
+    paths:
+      - backend/
+  frontend-unit:
+    carryforward: false
+    paths:
+      - frontend/src/
+  frontend-playwright:
+    carryforward: true
+    paths:
+      - frontend/src/
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: true

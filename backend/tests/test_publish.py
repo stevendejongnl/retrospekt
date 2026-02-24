@@ -145,3 +145,11 @@ async def test_publish_all_unknown_session_returns_404(client: AsyncClient):
         headers={"X-Participant-Name": "Alice"},
     )
     assert response.status_code == 404
+
+
+async def test_publish_card_unknown_session_returns_404(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions/no-such/cards/no-such-card/publish",
+        headers={"X-Participant-Name": "Alice"},
+    )
+    assert response.status_code == 404

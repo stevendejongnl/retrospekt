@@ -6,7 +6,10 @@ from tests.conftest import make_session
 
 
 async def _published_card(client: AsyncClient) -> tuple[str, str, str]:
-    """Create session, add + publish a card in discussing phase. Returns (session_id, facilitator_token, card_id)."""
+    """Create session, add + publish a card in discussing phase.
+
+    Returns (session_id, facilitator_token, card_id).
+    """
     session = await make_session(client)
     card = (
         await client.post(

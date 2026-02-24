@@ -1,11 +1,15 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import { readFileSync } from 'fs'
+import istanbul from 'vite-plugin-istanbul'
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8')) as { version: string }
 const apiTarget = process.env.VITE_BACKEND_URL ?? 'http://localhost:8000'
 
 export default defineConfig({
+  plugins: process.env.VITE_COVERAGE === 'true'
+    ? [istanbul({ include: 'src/*', exclude: ['node_modules'], requireEnv: false })]
+    : [],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
