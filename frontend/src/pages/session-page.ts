@@ -20,6 +20,7 @@ export class SessionPage extends LitElement {
   @state() private showNamePrompt = false
   @state() private copied = false
   @state() private isDark = getEffectiveTheme() === 'dark'
+  @state() private showHelp = false
 
   private sseClient: SSEClient | null = null
   private _themeListener!: EventListener
@@ -117,6 +118,100 @@ export class SessionPage extends LitElement {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+    .help-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1.5px solid #e0dbd4;
+      background: none;
+      font-size: 13px;
+      font-weight: 700;
+      color: #9a6a3a;
+      cursor: pointer;
+      font-family: inherit;
+      flex-shrink: 0;
+      transition: background 0.12s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .help-btn:hover {
+      background: #f5f0eb;
+    }
+
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(2px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 24px;
+    }
+    .help-card {
+      background: white;
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 16px 64px rgba(0, 0, 0, 0.16);
+    }
+    .help-card h3 {
+      font-size: 18px;
+      font-weight: 800;
+      color: #111;
+      margin: 0 0 6px;
+      letter-spacing: -0.4px;
+    }
+    .help-card .subtitle {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 24px;
+    }
+    .help-phase {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-top: 1px solid #f0ede8;
+    }
+    .help-phase-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .help-phase-body h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111;
+      margin: 0 0 4px;
+    }
+    .help-phase-body p {
+      font-size: 13px;
+      color: #666;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .help-close-btn {
+      margin-top: 24px;
+      width: 100%;
+      padding: 11px;
+      background: #e85d04;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.12s;
+    }
+    .help-close-btn:hover {
+      background: #c44e00;
     }
 
     /* ── Main ── */
@@ -380,6 +475,52 @@ export class SessionPage extends LitElement {
     const { session } = this
 
     return html`
+      ${this.showHelp
+        ? html`
+            <div class="help-overlay" @click=${() => (this.showHelp = false)}>
+              <div class="help-card" @click=${(e: Event) => e.stopPropagation()}>
+                <h3>How Retrospekt works</h3>
+                <p class="subtitle">
+                  A session moves through three phases, guided by the facilitator.
+                </p>
+                <div class="help-phase">
+                  <span class="help-phase-icon">✏️</span>
+                  <div class="help-phase-body">
+                    <h4>Collecting</h4>
+                    <p>
+                      Add cards to the columns privately. Your cards are only visible to you until
+                      you publish them — be honest!
+                    </p>
+                  </div>
+                </div>
+                <div class="help-phase">
+                  <span class="help-phase-icon">💬</span>
+                  <div class="help-phase-body">
+                    <h4>Discussing</h4>
+                    <p>
+                      Publish your cards to share them with the team. Once visible, others can vote
+                      on them. No new cards can be added.
+                    </p>
+                  </div>
+                </div>
+                <div class="help-phase">
+                  <span class="help-phase-icon">🔒</span>
+                  <div class="help-phase-body">
+                    <h4>Closed</h4>
+                    <p>
+                      The session is read-only. The facilitator has wrapped up — results are
+                      available to review.
+                    </p>
+                  </div>
+                </div>
+                <button class="help-close-btn" @click=${() => (this.showHelp = false)}>
+                  Got it
+                </button>
+              </div>
+            </div>
+          `
+        : ''}
+
       ${this.showNamePrompt
         ? html`
             <div class="overlay">
@@ -418,6 +559,7 @@ export class SessionPage extends LitElement {
               <div class="user-chip">
                 <div class="avatar">${this.participantName[0].toUpperCase()}</div>
                 <span class="avatar-name">${this.participantName}</span>
+                <button class="help-btn" @click=${() => (this.showHelp = true)}>?</button>
               </div>
             `
           : ''}
