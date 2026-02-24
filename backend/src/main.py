@@ -6,6 +6,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 
+import redis.asyncio as aioredis
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +15,7 @@ from .config import settings
 from .database import database
 from .repositories.session_repo import SessionRepository
 from .routers import cards, health, sessions
+from .services.sse_manager import sse_manager
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # type: ignore[
     assert database.db is not None
     repo = SessionRepository(database.db)
     await repo.ensure_indexes()
+    redis_client = aioredis.from_url(settings.redis_url, decode_responses=False)
+    sse_manager.set_client(redis_client)
     task = asyncio.create_task(_cleanup_loop(repo))
     try:
         yield
@@ -48,6 +52,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # type: ignore[
             await task
         except asyncio.CancelledError:
             pass
+        await redis_client.aclose()
         await database.disconnect()
 
 

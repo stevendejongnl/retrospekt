@@ -45,6 +45,8 @@ spec:
                   key: mongodb-url
             - name: MONGODB_DATABASE
               value: "retrospekt"
+            - name: REDIS_URL
+              value: "redis://retrospekt-redis:6379"
           resources:
             requests:
               memory: "64Mi"
@@ -138,6 +140,50 @@ spec:
     - name: http
       port: 80
       targetPort: http
+
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: retrospekt-redis
+  namespace: retrospekt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: retrospekt-redis
+  template:
+    metadata:
+      labels:
+        app: retrospekt-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:8-alpine
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: retrospekt-redis
+  namespace: retrospekt
+spec:
+  selector:
+    app: retrospekt-redis
+  ports:
+    - port: 6379
+      targetPort: 6379
 
 ---
 # Ingress

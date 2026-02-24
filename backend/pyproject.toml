@@ -10,6 +10,7 @@ dependencies = [
     "motor>=3.6.0",
     "pydantic-settings>=2.0.0",
     "sse-starlette>=2.1.0",
+    "redis>=5.0.0",
 ]
 
 [dependency-groups]
@@ -22,6 +23,7 @@ dev = [
     "nox>=2024.10.9",
     "ruff>=0.8.0",
     "mypy>=1.9.0",
+    "fakeredis>=2.20.0",
 ]
 
 [project.scripts]

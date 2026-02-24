@@ -8,6 +8,7 @@ DI strategy:
 
 from dataclasses import dataclass
 
+import fakeredis.aioredis
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from mongomock_motor import AsyncMongoMockClient
@@ -15,6 +16,17 @@ from mongomock_motor import AsyncMongoMockClient
 from src.dependencies import get_repo
 from src.main import create_app
 from src.repositories.session_repo import SessionRepository
+from src.services.sse_manager import sse_manager
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def fake_redis():
+    """Wire a fresh in-memory Redis into the sse_manager singleton for each test."""
+    client = fakeredis.aioredis.FakeRedis()
+    sse_manager.set_client(client)
+    yield client
+    await client.aclose()
+    sse_manager.set_client(None)
 
 
 @pytest_asyncio.fixture

@@ -182,10 +182,8 @@ async def stream_session(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    queue = sse_manager.subscribe(session_id, _public(session))
-
     async def event_stream() -> AsyncGenerator[str, None]:
-        async for chunk in sse_manager.stream(session_id, queue):
+        async for chunk in sse_manager.stream(session_id, initial_data=_public(session)):
             yield chunk
 
     return StreamingResponse(
