@@ -64,6 +64,12 @@ export class SessionPage extends LitElement {
       flex: 1;
       text-align: center;
     }
+    .session-date {
+      color: #bbb;
+      font-size: 12px;
+      font-weight: 400;
+      margin-left: 6px;
+    }
     .user-chip {
       display: flex;
       align-items: center;
@@ -369,7 +375,9 @@ export class SessionPage extends LitElement {
 
       <header>
         <span class="brand" @click=${this.goHome}>🥓 Retro<em>spekt</em></span>
-        <span class="session-title">${session.name}</span>
+        <span class="session-title">
+          ${session.name}<span class="session-date">· ${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+        </span>
         ${this.participantName
           ? html`
               <div class="user-chip">
