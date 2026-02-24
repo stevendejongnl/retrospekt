@@ -1,3 +1,9 @@
+## [1.10.2](https://github.com/stevendejongnl/retrospekt/compare/v1.10.1...v1.10.2) (2026-02-24)
+
+### Bug Fixes
+
+* **frontend:** run envsubst on nginx template in custom entrypoint ([0b79824](https://github.com/stevendejongnl/retrospekt/commit/0b79824c78d292ff58c9debacdbe36bfa6cd2517))
+
 ## [1.10.1](https://github.com/stevendejongnl/retrospekt/compare/v1.10.0...v1.10.1) (2026-02-24)
 
 ### Bug Fixes
