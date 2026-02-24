@@ -1,5 +1,8 @@
 # Retrospekt 🥓
 
+[![CI](https://github.com/stevendejongnl/retrospekt/actions/workflows/ci.yml/badge.svg)](https://github.com/stevendejongnl/retrospekt/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/stevendejongnl/retrospekt/graph/badge.svg)](https://codecov.io/gh/stevendejongnl/retrospekt)
+
 A simple, self-hosted retrospective board. Built as a replacement for retrotool.io.
 
 **retro_spek_t** — *spek* is Dutch for bacon.
@@ -13,7 +16,12 @@ A simple, self-hosted retrospective board. Built as a replacement for retrotool.
 - Per-session name (remembered in localStorage)
 - Color-coded participants and cards — 10-color palette, consistent per participant
 - Vote on cards (idempotent, one vote per participant per card)
+- Emoji reactions on published cards (6 fixed emoji, toggle per participant)
+- Emoji picker for card text input
 - Card publishing: each author publishes their own cards during discussing phase
+- Action items: assign cards to participants; action items panel for quick review
+- Session timer: facilitator-controlled countdown (30 s – 2 h), with pause/resume/reset
+- Export session as Markdown (published cards, reactions, assignees)
 - Facilitator controls: collecting ↔ discussing ↔ closed phases (bidirectional)
 - Real-time updates via Server-Sent Events (auto-reconnects)
 - Session history sidebar: up to 50 past sessions persisted in localStorage
@@ -33,7 +41,8 @@ A simple, self-hosted retrospective board. Built as a replacement for retrotool.
 ## Running locally
 
 ```bash
-make start        # builds images and starts MongoDB + backend + frontend
+make install      # install dependencies + git hooks
+make start        # build images and start MongoDB + backend + frontend
 make logs         # tail logs from all services
 make stop         # stop everything
 ```
@@ -49,22 +58,30 @@ make stop         # stop everything
 ```
 GET  /health
 
-POST   /api/v1/sessions                                     create session (columns optional)
-GET    /api/v1/sessions/{id}                                get session (no facilitator_token)
-POST   /api/v1/sessions/{id}/join                          join session (adds participant)
-POST   /api/v1/sessions/{id}/phase                         set phase (X-Facilitator-Token required)
-GET    /api/v1/sessions/{id}/stream                        SSE stream
+POST   /api/v1/sessions                                          create session (columns optional)
+GET    /api/v1/sessions/{id}                                     get session (no facilitator_token)
+POST   /api/v1/sessions/{id}/join                               join session (adds participant)
+POST   /api/v1/sessions/{id}/phase                              set phase (X-Facilitator-Token required)
+GET    /api/v1/sessions/{id}/stream                             SSE stream
 
-POST   /api/v1/sessions/{id}/columns                       add column (facilitator, collecting only)
-PATCH  /api/v1/sessions/{id}/columns/{name}                rename column (facilitator, collecting only)
-DELETE /api/v1/sessions/{id}/columns/{name}                remove column + its cards (facilitator, collecting only)
+POST   /api/v1/sessions/{id}/columns                            add column (facilitator, collecting only)
+PATCH  /api/v1/sessions/{id}/columns/{name}                     rename column (facilitator, collecting only)
+DELETE /api/v1/sessions/{id}/columns/{name}                     remove column + its cards (facilitator, collecting only)
 
-POST   /api/v1/sessions/{id}/cards                         add card (collecting phase)
-DELETE /api/v1/sessions/{id}/cards/{card_id}               delete own card
-POST   /api/v1/sessions/{id}/cards/{card_id}/votes         vote (idempotent)
-DELETE /api/v1/sessions/{id}/cards/{card_id}/votes         remove vote
-POST   /api/v1/sessions/{id}/cards/{card_id}/publish       publish own card (discussing phase)
-POST   /api/v1/sessions/{id}/cards/publish-all             publish all own cards in a column (discussing phase)
+POST   /api/v1/sessions/{id}/cards                              add card (collecting phase)
+DELETE /api/v1/sessions/{id}/cards/{card_id}                    delete own card
+POST   /api/v1/sessions/{id}/cards/{card_id}/votes              vote (idempotent)
+DELETE /api/v1/sessions/{id}/cards/{card_id}/votes              remove vote
+POST   /api/v1/sessions/{id}/cards/{card_id}/publish            publish own card (discussing phase)
+POST   /api/v1/sessions/{id}/cards/publish-all                  publish all own cards in a column (discussing phase)
+POST   /api/v1/sessions/{id}/cards/{card_id}/reactions          add emoji reaction (discussing/closed)
+DELETE /api/v1/sessions/{id}/cards/{card_id}/reactions          remove emoji reaction (?emoji=...)
+PATCH  /api/v1/sessions/{id}/cards/{card_id}/assignee           set or clear assignee (author or facilitator)
+
+PATCH  /api/v1/sessions/{id}/timer                              set timer duration (facilitator)
+POST   /api/v1/sessions/{id}/timer/start                        start or resume timer (facilitator)
+POST   /api/v1/sessions/{id}/timer/pause                        pause timer (facilitator)
+POST   /api/v1/sessions/{id}/timer/reset                        reset timer (facilitator)
 ```
 
 Every mutation broadcasts the full updated session JSON to all connected SSE clients.
@@ -77,7 +94,7 @@ Every mutation broadcasts the full updated session JSON to all connected SSE cli
 4. Facilitator can add, rename, or delete columns during the **Collecting** phase
 5. Add cards privately during **Collecting** — only you see your own cards
 6. Facilitator moves to **Discussing** — participants publish their own cards; facilitator can publish-all per column
-7. Vote on published cards that matter most
+7. Vote and react to published cards; assign action items to participants
 8. Facilitator moves to **Closed** when done (or steps back to any earlier phase if needed)
 
 Only the creator (identified by `facilitator_token` in localStorage) sees the phase controls.
@@ -85,11 +102,11 @@ Only the creator (identified by `facilitator_token` in localStorage) sees the ph
 ## Development
 
 ```bash
-make install      # uv sync + npm install
-make test         # pytest
-make lint         # ruff
-make typecheck    # tsc --noEmit
+make install      # uv sync + npm install + git hooks
+nox               # run all checks: lint + mypy + pytest (backend), lint + typecheck (frontend)
 ```
+
+See [CLAUDE.md](CLAUDE.md) for the full command reference (per-layer test runs, coverage, E2E).
 
 ## Deployment
 
