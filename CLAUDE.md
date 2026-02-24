@@ -84,6 +84,10 @@ Every mutation (add card, vote, publish, phase change) calls the REST API → ba
 
 ## Key Conventions
 
+- **TDD (red → green → refactor)**: Always write a failing test first, make it pass with minimal code, then refactor. No production code without a test driving it. This applies to both backend (pytest) and frontend (Vitest unit tests + Playwright CT). Commit at each phase:
+  - `test(scope): <what behaviour is expected>` — failing test (red)
+  - `feat/fix(scope): <what was implemented>` — passing implementation (green)
+  - `refactor(scope): <what was cleaned up>` — cleanup, only if needed
 - Conventional commits (used by semantic-release for automated versioning/CHANGELOG)
 - Backend: Python 3.12+, strict mypy, ruff for linting
 - Frontend: strict TypeScript (`noUnusedLocals`, `noUnusedParameters`), ESLint
