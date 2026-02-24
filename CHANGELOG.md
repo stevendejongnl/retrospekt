@@ -1,3 +1,9 @@
+## [1.5.0](https://github.com/stevendejongnl/retrospekt/compare/v1.4.0...v1.5.0) (2026-02-24)
+
+### Features
+
+* **session-page:** show creation date next to session title ([503fbd1](https://github.com/stevendejongnl/retrospekt/commit/503fbd17efaab93e499808107409b29f164bf198))
+
 ## [1.4.0](https://github.com/stevendejongnl/retrospekt/compare/v1.3.0...v1.4.0) (2026-02-24)
 
 ### Features
