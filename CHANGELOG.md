@@ -1,3 +1,15 @@
+## [1.10.1](https://github.com/stevendejongnl/retrospekt/compare/v1.10.0...v1.10.1) (2026-02-24)
+
+### Bug Fixes
+
+* **config:** replace deprecated class-based Config with SettingsConfigDict ([6b282de](https://github.com/stevendejongnl/retrospekt/commit/6b282ded02c017462f71d76aced92e3813effed3))
+
+### Documentation
+
+* **readme:** add GitHub release badge ([03ca435](https://github.com/stevendejongnl/retrospekt/commit/03ca435d2cbcb1ea2439c3cf17219f2a13e57de8))
+* **readme:** fix CI badge to use release workflow ([13235d9](https://github.com/stevendejongnl/retrospekt/commit/13235d9584f7af862ed52046ce933c97bf053b41))
+* **readme:** revalidate and add codecov badge ([44de8e5](https://github.com/stevendejongnl/retrospekt/commit/44de8e51fc0be7308dc71bf71444e339cf57dd7b))
+
 ## [1.10.0](https://github.com/stevendejongnl/retrospekt/compare/v1.9.0...v1.10.0) (2026-02-24)
 
 ### Features
