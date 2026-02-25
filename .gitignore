@@ -31,3 +31,7 @@ test-results/
 .playwright-mcp/
 *.jpg
 *.png
+
+# Keep docs assets
+!docs/assets/*.jpg
+!docs/assets/*.png

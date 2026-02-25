@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Project Is
 
-Retrospekt is a self-hosted, real-time retrospective board (replacement for retrotool.io). Sessions go through three phases: **collecting** (add cards privately), **discussing** (vote + publish cards), **closed**.
+Retrospekt is a self-hosted, real-time retrospective board. Sessions go through three phases: **collecting** (add cards privately), **discussing** (vote + publish cards), **closed**.
 
 ## Commands
 
@@ -54,7 +54,7 @@ nox                             # lint + mypy + pytest (backend), lint + typeche
 - **FastAPI** REST API with **Motor** (async MongoDB) and **sse-starlette** for Server-Sent Events
 - `main.py` — app factory; `config.py` — pydantic-settings; `database.py` — Motor connection
 - `models/session.py` — Domain models: `Session`, `Card`, `Participant`, `Vote`, `SessionPhase`
-- `repositories/session_repo.py` — All MongoDB access; `services/sse_manager.py` — pub/sub for SSE broadcasts
+- `repositories/session_repo.py` — All MongoDB access; `services/sse_manager.py` — Redis pub/sub for SSE broadcasts
 - `routers/sessions.py` — Session CRUD + phase transitions (bidirectional) + column management (add/rename/delete) + SSE stream endpoint
 - `routers/cards.py` — Card CRUD + voting + per-card publish (author) + publish-all in column (participant's own cards)
 
@@ -64,7 +64,8 @@ nox                             # lint + mypy + pytest (backend), lint + typeche
 - `storage.ts` — localStorage helper: per-session keys (`retro_name_{id}`, `retro_facilitator_{id}`) + cross-session `retro_history` (array of up to 50 `SessionHistoryEntry`)
 - `theme.ts` — theme init, toggle, and persistence (`retro_theme` in localStorage); `initTheme()` called before router start to prevent FOUC
 - `icons.ts` — Font Awesome Free 7.2.0 SVG icons as inline Lit `TemplateResult` values; `faIconStyles` shared CSS for sizing/alignment
-- Pages: `home-page` (session creation + template picker + history sidebar), `session-page` (main board + SSE lifecycle)
+- `types.ts` — TypeScript interfaces: `Session`, `Card`, `Participant`, `Vote`, `Reaction`, `TimerState`, `SessionPhase`
+- Pages: `home-page` (session creation + template picker + history sidebar), `session-page` (main board + SSE lifecycle), `not-found-page` (404 + redirect)
 - Components: `session-history` (sidebar panel, used in both pages), `retro-board` (facilitator controls + columns) → `retro-column` → `retro-card`
 - **State**: component-local `@state()` + SSE pushes full `Session` object on every change — backend is the single source of truth. No global store.
 
@@ -98,6 +99,6 @@ Every mutation (add card, vote, publish, phase change) calls the REST API → ba
 ## Deployment
 
 - **Docker Compose** for local dev (`compose.yml`); watch mounts for hot reload
-- **Kubernetes** in production (`kubernetes.yaml`); deployed to `retrospekt.madebysteven.nl`
+- **Kubernetes** in production (`kubernetes.yaml`); update the Ingress host in `kubernetes.yaml` before deploying
 - CI/CD via GitHub Actions: `release.yml` (tests + semantic-release) → `docker-publish.yml` (build images + K8s rollout)
-- Backend config via env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default 30); K8s reads from `retrospekt-mongodb-secret`
+- Backend config via env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default 30), `REDIS_URL`, `SENTRY_DSN` (optional); K8s reads from `retrospekt-mongodb-secret`

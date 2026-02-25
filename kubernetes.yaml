@@ -209,7 +209,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: retrospekt.madebysteven.nl
+    - host: your.domain.example  # TODO: replace with your domain
       http:
         paths:
           - path: /api

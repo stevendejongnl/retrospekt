@@ -4,9 +4,17 @@
 [![Release](https://img.shields.io/github/v/release/stevendejongnl/retrospekt)](https://github.com/stevendejongnl/retrospekt/releases)
 [![codecov](https://codecov.io/gh/stevendejongnl/retrospekt/graph/badge.svg)](https://codecov.io/gh/stevendejongnl/retrospekt)
 
-A simple, self-hosted retrospective board. Built as a replacement for retrotool.io.
+A simple, self-hosted retrospective board.
 
 **retro_spek_t** — *spek* is Dutch for bacon.
+
+## Preview
+
+**Live demo:** [retrospekt.madebysteven.nl](https://retrospekt.madebysteven.nl)
+
+| Home | Board (discussing phase) |
+|------|--------------------------|
+| ![Home page](docs/assets/screenshot-home.jpg) | ![Session board](docs/assets/screenshot-board.jpg) |
 
 ## Features
 
@@ -36,7 +44,8 @@ A simple, self-hosted retrospective board. Built as a replacement for retrotool.
 | Frontend | Vite + Lit + TypeScript |
 | Backend | Python FastAPI + uv |
 | Database | MongoDB (Motor async driver) |
-| Real-time | Server-Sent Events (SSE) |
+| Real-time | Server-Sent Events (SSE) + Redis pub/sub |
+| Monitoring | Sentry (frontend + backend) |
 | Deployment | Docker Compose / Kubernetes |
 
 ## Running locally
@@ -111,7 +120,7 @@ See [CLAUDE.md](CLAUDE.md) for the full command reference (per-layer test runs, 
 
 ## Deployment
 
-A `kubernetes.yaml` is included with Namespace, Deployments, Services, and an Ingress pointing to `retrospekt.madebysteven.nl`. The Ingress sets `proxy-buffering: off` and a long `proxy-read-timeout` to keep SSE connections alive through nginx.
+A `kubernetes.yaml` is included with Namespace, Deployments, Services, and an Ingress. Update the `host` field in the Ingress spec to your own domain before applying. The Ingress sets `proxy-buffering: off` and a long `proxy-read-timeout` to keep SSE connections alive through nginx.
 
 Create the MongoDB secret before applying:
 
@@ -123,4 +132,4 @@ kubectl create secret generic retrospekt-mongodb-secret \
 kubectl apply -f kubernetes.yaml
 ```
 
-Backend env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default: 30).
+Backend env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default: 30), `REDIS_URL`, `SENTRY_DSN` (optional).
