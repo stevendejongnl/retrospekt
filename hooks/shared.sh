@@ -4,10 +4,17 @@
 
 ROOT="$(git rev-parse --show-toplevel)"
 
-# ANSI colours (used in results summary)
-_RED='\033[0;31m'
-_GRN='\033[0;32m'
-_RST='\033[0m'
+# ANSI colours — only when stdout is a real terminal; empty strings otherwise
+# so captured output (pipes, files, CI logs) stays plain text.
+if [ -t 1 ]; then
+  _RED='\033[0;31m'
+  _GRN='\033[0;32m'
+  _RST='\033[0m'
+else
+  _RED=''
+  _GRN=''
+  _RST=''
+fi
 
 # run_parallel <blocked_msg> [label fn] [label fn] ...
 #
