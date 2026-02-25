@@ -33,24 +33,28 @@ run_parallel() {
     pids+=($!)
   done
 
-  # Spinner loop — overwrites the same line until all jobs finish
-  local frame=0
-  while true; do
-    local any_running=false line=""
-    for ((i=0; i<n; i++)); do
-      if kill -0 "${pids[$i]}" 2>/dev/null; then
-        any_running=true
-        line+="  ${frames[$((frame % 10))]} ${names[$i]}"
-      else
-        line+="  · ${names[$i]}"
-      fi
+  # Spinner loop — overwrites the same line until all jobs finish.
+  # Only run when stdout is a real terminal; captured output (pipes, files,
+  # Claude tool captures) would record every \r frame as a new line.
+  if [ -t 1 ]; then
+    local frame=0
+    while true; do
+      local any_running=false line=""
+      for ((i=0; i<n; i++)); do
+        if kill -0 "${pids[$i]}" 2>/dev/null; then
+          any_running=true
+          line+="  ${frames[$((frame % 10))]} ${names[$i]}"
+        else
+          line+="  · ${names[$i]}"
+        fi
+      done
+      printf "\r%s" "$line"
+      [[ "$any_running" == false ]] && break
+      sleep 0.1
+      ((frame++)) || true
     done
-    printf "\r%s" "$line"
-    [[ "$any_running" == false ]] && break
-    sleep 0.1
-    ((frame++)) || true
-  done
-  printf "\r\033[K"   # clear spinner line
+    printf "\r\033[K"   # clear spinner line
+  fi
 
   # Collect results and print summary
   local any_failed=false
