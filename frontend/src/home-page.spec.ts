@@ -16,19 +16,23 @@ async function mockCreateSession(
   page: Parameters<Parameters<typeof test>[1]>[0]['page'],
   overrides: Partial<typeof MOCK_SESSION> = {},
 ) {
+  const session = { ...MOCK_SESSION, ...overrides }
   await page.route('/api/v1/sessions', (route) =>
-    route.fulfill({
-      status: 201,
-      contentType: 'application/json',
-      body: JSON.stringify({ ...MOCK_SESSION, ...overrides }),
-    }),
+    route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(session) }),
+  )
+  await page.route(`/api/v1/sessions/${session.id}/stream`, (route) => route.abort())
+  await page.route(`/api/v1/sessions/${session.id}`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(session) }),
+  )
+  await page.route(`/api/v1/sessions/${session.id}/**`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(session) }),
   )
 }
 
 test.describe('home-page static content', () => {
   test('renders title, tagline and form fields', async ({ page }) => {
     await page.goto('/')
-    await expect(page).toHaveTitle('Retrospekt 🥓')
+    await expect(page).toHaveTitle('Retrospekt')
     await expect(page.getByText('A simple, self-hosted retrospective board')).toBeVisible()
     await expect(page.getByLabel('Session name')).toBeVisible()
     await expect(page.getByLabel('Your name')).toBeVisible()
@@ -178,6 +182,13 @@ test.describe('home-page create session', () => {
   })
 
   test('create button shows loading state while request is in flight', async ({ page }) => {
+    await page.route(`/api/v1/sessions/${MOCK_SESSION.id}/stream`, (route) => route.abort())
+    await page.route(`/api/v1/sessions/${MOCK_SESSION.id}`, (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_SESSION) }),
+    )
+    await page.route(`/api/v1/sessions/${MOCK_SESSION.id}/**`, (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_SESSION) }),
+    )
     await page.goto('/')
     let resolveRequest!: () => void
     await page.route('/api/v1/sessions', (route) =>
@@ -204,7 +215,7 @@ test.describe('not-found page', () => {
   test('"Back to home" link navigates to home page', async ({ page }) => {
     await page.goto('/does-not-exist')
     await page.getByRole('link', { name: '← Back to home' }).click()
-    await expect(page).toHaveTitle('Retrospekt 🥓')
+    await expect(page).toHaveTitle('Retrospekt')
     expect(page.url()).toMatch(/\/$/)
   })
 })
@@ -251,7 +262,7 @@ test.describe('home-page empty name guard', () => {
     // Do NOT fill the session name — pressing Enter calls createSession() which hits `if (!name) return`
     await page.getByLabel('Session name').press('Enter')
     // Page stays on home page (no navigation)
-    await expect(page).toHaveTitle('Retrospekt 🥓')
+    await expect(page).toHaveTitle('Retrospekt')
   })
 })
 
@@ -373,5 +384,26 @@ test.describe('home-page corrupted history', () => {
     await page.locator('.history-toggle').click()
     await expect(page.locator('.sidebar.open')).toBeVisible()
     await expect(page.getByText('No sessions yet')).toBeVisible()
+  })
+})
+
+// ── session-not-found banner ──────────────────────────────────────────────────
+
+test.describe('home-page session-not-found banner', () => {
+  test('shows banner when session_not_found param is present', async ({ page }) => {
+    await page.goto('/?session_not_found')
+    await expect(page.getByText(/session.*not found/i)).toBeVisible()
+  })
+
+  test('removes the query param from the URL on load', async ({ page }) => {
+    await page.goto('/?session_not_found')
+    await expect(page).toHaveURL('/')
+  })
+
+  test('banner is dismissed when the close button is clicked', async ({ page }) => {
+    await page.goto('/?session_not_found')
+    await expect(page.getByText(/session.*not found/i)).toBeVisible()
+    await page.getByRole('button', { name: /dismiss/i }).click()
+    await expect(page.getByText(/session.*not found/i)).not.toBeVisible()
   })
 })

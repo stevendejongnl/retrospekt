@@ -27,7 +27,7 @@ describe('Router', () => {
     router.navigate('/')
     const app = document.getElementById('app')!
     expect(app.children[0].tagName.toLowerCase()).toBe('home-page')
-    expect(document.title).toBe('Retrospekt 🥓')
+    expect(document.title).toBe('Retrospekt')
   })
 
   it('routes /session/:id to <session-page> with session-id attribute', () => {

@@ -1,4 +1,4 @@
-import { LitElement, css, html } from 'lit'
+import { LitElement, css, html, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Session } from '../types'
@@ -30,7 +30,6 @@ export class SessionPage extends LitElement {
   @state() private participantName = ''
   @state() private nameInput = ''
   @state() private loading = true
-  @state() private error = ''
   @state() private showNamePrompt = false
   @state() private copied = false
   @state() private isDark = getEffectiveTheme() === 'dark'
@@ -464,7 +463,6 @@ export class SessionPage extends LitElement {
 
   private async loadSession(): Promise<void> {
     this.loading = true
-    this.error = ''
 
     try {
       const session = await api.getSession(this.sessionId)
@@ -487,7 +485,7 @@ export class SessionPage extends LitElement {
       })
       this.sseClient.connect()
     } catch {
-      this.error = 'Session not found or could not be loaded.'
+      window.router.navigate('/?session_not_found')
     } finally {
       this.loading = false
     }
@@ -584,15 +582,7 @@ export class SessionPage extends LitElement {
       `
     }
 
-    if (this.error || !this.session) {
-      return html`
-        <div class="state-center">
-          <span style="font-size:48px">🥓</span>
-          <strong>Session not found</strong>
-          <span style="font-size:14px">${this.error}</span>
-        </div>
-      `
-    }
+    if (!this.session) return nothing
 
     const { session } = this
 

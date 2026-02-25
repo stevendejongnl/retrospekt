@@ -5,7 +5,7 @@ export interface Route {
 }
 
 const routes: Route[] = [
-  { path: '/', component: 'home-page', title: 'Retrospekt 🥓' },
+  { path: '/', component: 'home-page', title: 'Retrospekt' },
   { path: '/session/:id', component: 'session-page', title: 'Retrospekt — Session' },
   { path: '*', component: 'not-found-page', title: 'Not Found — Retrospekt' },
 ]

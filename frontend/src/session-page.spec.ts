@@ -74,13 +74,13 @@ test.describe('session-page loading and errors', () => {
     resolveRequest()
   })
 
-  test('shows "Session not found" when API returns an error', async ({ page }) => {
+  test('redirects to home when session is not found', async ({ page }) => {
     await page.route(`/api/v1/sessions/${SESSION_ID}`, (route) =>
       route.fulfill({ status: 404, body: 'Not Found' }),
     )
     await page.route(`/api/v1/sessions/${SESSION_ID}/stream`, (route) => route.abort())
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.getByText('Session not found', { exact: true })).toBeVisible()
+    await expect(page).toHaveURL('/')
   })
 })
 
@@ -171,7 +171,7 @@ test.describe('session-page board (participant)', () => {
 
   test('clicking the brand navigates home and disconnects SSE', async ({ page }) => {
     await page.locator('.brand').click()
-    await expect(page).toHaveTitle('Retrospekt 🥓')
+    await expect(page).toHaveTitle('Retrospekt')
   })
 
   test('"?" button in user chip opens the help overlay', async ({ page }) => {

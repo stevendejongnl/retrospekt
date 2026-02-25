@@ -189,10 +189,16 @@ test.describe('session-history on home-page', () => {
         created_at: '2026-01-15T10:00:00Z',
       },
     ])
-    // Mock the session API so navigation doesn't error
-    await page.route('/api/v1/sessions/hist-8', route =>
-      route.fulfill({ status: 404, body: 'Not found' }))
+    // Mock the session API so session-page loads without redirecting
     await page.route('/api/v1/sessions/hist-8/stream', route => route.abort())
+    await page.route('/api/v1/sessions/hist-8', route =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+        id: 'hist-8', name: 'Navigate Session', columns: [], phase: 'closed',
+        participants: [], cards: [], created_at: '2026-01-15T10:00:00Z',
+        updated_at: '2026-01-15T10:00:00Z', facilitator_token: 'tok', timer: null,
+      }) }))
+    await page.route('/api/v1/sessions/hist-8/**', route =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }))
 
     await page.goto('/')
     await page.locator('.history-toggle').click()

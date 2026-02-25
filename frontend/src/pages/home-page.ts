@@ -24,6 +24,7 @@ export class HomePage extends LitElement {
   @state() private isDark = getEffectiveTheme() === 'dark'
   @state() private showHistory = false
   @state() private reactionsEnabled = true
+  @state() private sessionNotFound = false
 
   private _themeListener!: EventListener
 
@@ -33,6 +34,11 @@ export class HomePage extends LitElement {
       this.isDark = getEffectiveTheme() === 'dark'
     }
     window.addEventListener('retro-theme-change', this._themeListener)
+    const params = new URLSearchParams(window.location.search)
+    if (params.has('session_not_found')) {
+      this.sessionNotFound = true
+      history.replaceState(null, '', '/')
+    }
   }
 
   disconnectedCallback(): void {
@@ -272,6 +278,36 @@ export class HomePage extends LitElement {
       color: var(--retro-text-muted);
       margin-top: 1px;
     }
+    .not-found-banner {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--retro-bg-surface);
+      border: 1.5px solid var(--retro-error);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--retro-text-primary);
+      white-space: nowrap;
+      box-shadow: 0 2px 8px var(--retro-card-shadow);
+      z-index: 10;
+    }
+    .not-found-banner .dismiss {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--retro-text-muted);
+      font-size: 18px;
+      line-height: 1;
+      padding: 0;
+    }
+    .not-found-banner .dismiss:hover {
+      color: var(--retro-text-primary);
+    }
   `]
 
   private async createSession(): Promise<void> {
@@ -316,6 +352,12 @@ export class HomePage extends LitElement {
     const canCreate = !!this.sessionName.trim() && !this.loading
 
     return html`
+      ${this.sessionNotFound ? html`
+        <div class="not-found-banner">
+          <span>Session not found — it may have expired or the link is broken.</span>
+          <button class="dismiss" aria-label="dismiss" @click=${() => { this.sessionNotFound = false }}>×</button>
+        </div>
+      ` : ''}
       <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
       <button class="history-toggle" @click=${() => { this.showHistory = true }} title="Your sessions">${iconClockRotateLeft()}</button>
       <button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>

@@ -43,8 +43,8 @@ export class NotFoundPage extends LitElement {
   render() {
     return html`
       <span class="emoji">🥓</span>
-      <h2>Page not found</h2>
-      <p>This page doesn't exist.</p>
+      <h2>404 — Nothing to retrospekt</h2>
+      <p>This page never made it past the collecting phase.</p>
       <a href="/" @click=${(e: Event) => { e.preventDefault(); window.router.navigate('/') }}>
         ← Back to home
       </a>
