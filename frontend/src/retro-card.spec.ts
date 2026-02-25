@@ -51,6 +51,41 @@ async function withName(page: Page, name: string, token = '') {
   )
 }
 
+/**
+ * Navigate to a session page and inject session state directly into the Lit
+ * component, bypassing the async load chain (GET → join → SSE → loading=false).
+ *
+ * This eliminates the race condition where `participantName` hasn't propagated
+ * down to `retro-card` by the time assertions run, causing `canAssign`-dependent
+ * elements (e.g. `.unassign-btn`, `.assign-select` with options) to be absent.
+ *
+ * After `loadSession` resolves, the component is in a deterministic ready state:
+ * `session`, `participantName`, and `loading=false` are all set, and Lit's render
+ * cycle has completed (`updateComplete`).
+ */
+async function loadSession(
+  page: Page,
+  session: Record<string, unknown>,
+  participantName: string,
+  token = '',
+): Promise<void> {
+  await withName(page, participantName, token)
+  await mockApi(page, session)
+  await page.goto(`/session/${session.id as string}`)
+  await page.waitForSelector('session-page')
+  await page.evaluate(
+    ({ sess, name }) =>
+      new Promise<void>(resolve => {
+        const el = document.querySelector('session-page') as any
+        el.session = sess
+        el.participantName = name
+        el.loading = false
+        void el.updateComplete.then(() => resolve())
+      }),
+    { sess: session, name: participantName },
+  )
+}
+
 function makeCard(overrides: Record<string, unknown> = {}) {
   return {
     id: 'card-1',
@@ -289,60 +324,50 @@ test.describe('retro-card reactions', () => {
 
 test.describe('retro-card assignee', () => {
   test('assign select is shown when canAssign and card has no assignee', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: true, assignee: null })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.assign-select')).toBeVisible()
   })
 
   test('selecting an option from assign-select calls PATCH /assignee', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: true, assignee: null })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     const req = page.waitForRequest(r => r.url().includes('/assignee') && r.method() === 'PATCH')
     await page.locator('.assign-select').selectOption('Bob')
     await req
   })
 
   test('assignee chip is shown when card.assignee is set', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: true, assignee: 'Bob' })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.assignee-chip')).toBeVisible()
     await expect(page.locator('.assignee-chip')).toContainText('Bob')
   })
 
   test('unassign button is shown when assignee is set and canAssign', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: true, assignee: 'Bob' })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.unassign-btn')).toBeVisible()
   })
 
   test('clicking unassign button calls PATCH /assignee', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: true, assignee: 'Bob' })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     const req = page.waitForRequest(r => r.url().includes('/assignee') && r.method() === 'PATCH')
     await page.locator('.unassign-btn').click()
     await req
@@ -350,13 +375,11 @@ test.describe('retro-card assignee', () => {
 
   test('unassign button is NOT shown when viewing another participant card with assignee', async ({ page }) => {
     // Bob is viewing Alice's card (canAssign=false), but card has assignee set → chip visible, no unassign btn
-    await withName(page, 'Bob')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: true, assignee: 'Alice' })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Bob')
     await expect(page.locator('.assignee-chip')).toBeVisible()
     await expect(page.locator('.unassign-btn')).not.toBeVisible()
   })
