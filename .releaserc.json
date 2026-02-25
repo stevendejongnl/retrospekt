@@ -39,7 +39,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "npm version ${nextRelease.version} --prefix frontend --no-git-tag-version && sed -i 's/^version = .*/version = \"${nextRelease.version}\"/' backend/pyproject.toml && cd backend && uv sync"
+        "prepareCmd": "npm version ${nextRelease.version} --no-git-tag-version && npm version ${nextRelease.version} --prefix frontend --no-git-tag-version && sed -i 's/^version = .*/version = \"${nextRelease.version}\"/' backend/pyproject.toml && cd backend && uv sync"
       }
     ],
     "@semantic-release/github",
@@ -54,6 +54,8 @@
       {
         "assets": [
           "CHANGELOG.md",
+          "package.json",
+          "package-lock.json",
           "frontend/package.json",
           "frontend/package-lock.json",
           "backend/pyproject.toml",
