@@ -1,3 +1,9 @@
+## [1.12.0](https://github.com/stevendejongnl/retrospekt/compare/v1.11.0...v1.12.0) (2026-02-25)
+
+### Features
+
+* **ux:** redirect to home with banner on invalid session, improve 404 page ([b1dfc98](https://github.com/stevendejongnl/retrospekt/commit/b1dfc98d8a5fd671e4249b4d86d3c9ebba669b58))
+
 ## [1.11.0](https://github.com/stevendejongnl/retrospekt/compare/v1.10.2...v1.11.0) (2026-02-24)
 
 ### Features
