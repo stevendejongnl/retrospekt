@@ -1,7 +1,0 @@
-[     110ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:3001/node_modules/.vite/deps/chunk-O5TE7N4R.js?v=f532eac0:93
-[     250ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3001/favicon.ico:0
-[  343279ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:3001/api/v1/sessions/be10b9cf-00f2-4626-9706-842f1a3e9439/stream:0
-[  343282ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://localhost:3001/:0
-[  344285ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/:0
-[  345578ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:3001/node_modules/.vite/deps/chunk-O5TE7N4R.js?v=6cbd0796:93
-[  345610ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3001/api/v1/sessions/be10b9cf-00f2-4626-9706-842f1a3e9439:0

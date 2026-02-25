@@ -1,5 +1,0 @@
-[      56ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:3001/node_modules/.vite/deps/chunk-O5TE7N4R.js?v=6cbd0796:93
-[   34261ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3001/api/v1/sessions/a59a020c-8c02-4dfc-ad22-15810e59e7c3/columns/New%20Column:0
-[   34264ms] Error: API 404: {"detail":"Column not found"}
-    at request (http://localhost:3001/src/api.ts:10:13)
-    at async RetroBoard.onRenameColumn (http://localhost:3001/src/components/retro-board.ts:88:5)
