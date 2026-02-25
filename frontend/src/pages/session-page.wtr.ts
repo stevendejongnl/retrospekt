@@ -59,18 +59,20 @@ describe('session-page', () => {
     expect(el.shadowRoot!.querySelector('.spinner')).to.not.be.null
   })
 
-  it('shows an error state when api.getSession() rejects', async () => {
+  it('redirects to home when api.getSession() rejects', async () => {
     api.getSession = () => Promise.reject(new Error('not found'))
-    ;(window as { router?: unknown }).router = { navigate: () => {} }
+    let navigatedTo: string | null = null
+    ;(window as { router?: unknown }).router = {
+      navigate: (path: string) => { navigatedTo = path },
+    }
 
-    const el = await fixture<SessionPage>(
+    await fixture<SessionPage>(
       html`<session-page session-id="test-session"></session-page>`,
     )
-    // Wait for the rejection to propagate through loadSession and re-render
+    // Wait for the rejection to propagate through loadSession
     await new Promise((r) => setTimeout(r, 0))
-    await el.updateComplete
 
-    expect(el.shadowRoot!.querySelector('.state-center')).to.not.be.null
+    expect(navigatedTo).to.equal('/?session_not_found')
   })
 
   it('shows the name-prompt overlay when no name is stored for the session', async () => {

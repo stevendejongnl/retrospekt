@@ -8,11 +8,11 @@ afterEach(() => {
 })
 
 describe('not-found-page', () => {
-  it('renders a "Page not found" heading', async () => {
+  it('renders the 404 heading', async () => {
     ;(window as { router?: unknown }).router = { navigate: () => {} }
     const el = await fixture<NotFoundPage>(html`<not-found-page></not-found-page>`)
     const heading = el.shadowRoot!.querySelector('h2')
-    expect(heading?.textContent?.trim()).to.equal('Page not found')
+    expect(heading?.textContent?.trim()).to.equal('404 — Nothing to retrospekt')
   })
 
   it('clicking the back link calls window.router.navigate("/")', async () => {
