@@ -56,12 +56,17 @@ async function withName(page: Page, name: string, token = '') {
  * component, bypassing the async load chain (GET → join → SSE → loading=false).
  *
  * This eliminates the race condition where `participantName` hasn't propagated
- * down to `retro-card` by the time assertions run, causing `canAssign`-dependent
- * elements (e.g. `.unassign-btn`, `.assign-select` with options) to be absent.
+ * down to `retro-card` by the time assertions run, causing capability-flag-dependent
+ * elements (`.unassign-btn`, `.publish-btn`, `.delete-btn`, `.vote-btn` disabled
+ * state, etc.) to be absent or in the wrong state.
  *
  * After `loadSession` resolves, the component is in a deterministic ready state:
  * `session`, `participantName`, and `loading=false` are all set, and Lit's render
  * cycle has completed (`updateComplete`).
+ *
+ * Implementation: a single `evaluate` call polls for the element's existence then
+ * injects state — one browser round-trip avoids concurrency overhead from a
+ * separate `waitForSelector` + `evaluate` pair under heavy parallel load.
  */
 async function loadSession(
   page: Page,
@@ -72,15 +77,21 @@ async function loadSession(
   await withName(page, participantName, token)
   await mockApi(page, session)
   await page.goto(`/session/${session.id as string}`)
-  await page.waitForSelector('session-page')
+  // Single evaluate call: poll until session-page is in the DOM, then inject state
+  // directly into the Lit component. One round-trip avoids concurrency overhead
+  // from separate waitForSelector + evaluate calls under heavy parallel load.
   await page.evaluate(
     ({ sess, name }) =>
       new Promise<void>(resolve => {
-        const el = document.querySelector('session-page') as any
-        el.session = sess
-        el.participantName = name
-        el.loading = false
-        void el.updateComplete.then(() => resolve())
+        function attempt() {
+          const el = document.querySelector('session-page') as any
+          if (!el) { setTimeout(attempt, 50); return }
+          el.session = sess
+          el.participantName = name
+          el.loading = false
+          void el.updateComplete.then(resolve)
+        }
+        attempt()
       }),
     { sess: session, name: participantName },
   )
@@ -105,51 +116,41 @@ function makeCard(overrides: Record<string, unknown> = {}) {
 
 test.describe('retro-card vote button', () => {
   test('vote button is visible for a published card from another participant', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = { ...BASE, cards: [makeCard({ author_name: 'Bob', published: true })] }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('retro-card')).toBeVisible()
     await expect(page.locator('.vote-btn')).toBeVisible()
   })
 
   test('vote button is disabled for own card (canVote=false)', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = { ...BASE, cards: [makeCard({ author_name: 'Alice', published: true })] }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.vote-btn')).toBeDisabled()
   })
 
   test('clicking vote button calls POST /votes', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = { ...BASE, cards: [makeCard({ author_name: 'Bob', published: true })] }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     const req = page.waitForRequest(r => r.url().includes('/votes') && r.method() === 'POST')
     await page.locator('.vote-btn').click()
     await req
   })
 
   test('voted state: vote button has .voted class when participant already voted', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Bob', published: true, votes: [{ participant_name: 'Alice' }] })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.vote-btn.voted')).toBeVisible()
   })
 
   test('clicking voted button calls DELETE /votes (unvote)', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Bob', published: true, votes: [{ participant_name: 'Alice' }] })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     const req = page.waitForRequest(r => r.url().includes('/votes') && r.method() === 'DELETE')
     await page.locator('.vote-btn.voted').click()
     await req
@@ -160,48 +161,40 @@ test.describe('retro-card vote button', () => {
 
 test.describe('retro-card publish button', () => {
   test('publish button is shown for own unpublished card in discussing phase', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: false })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.publish-btn')).toBeVisible()
   })
 
   test('draft badge is shown when canPublish', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: false })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.draft-badge')).toBeVisible()
   })
 
   test('clicking publish button calls POST /publish', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: false })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     const req = page.waitForRequest(r => r.url().includes('/publish') && r.method() === 'POST')
     await page.locator('.publish-btn').click()
     await req
   })
 
   test('publish button is not shown for already-published card', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: true })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.publish-btn')).not.toBeVisible()
   })
 })
@@ -210,38 +203,32 @@ test.describe('retro-card publish button', () => {
 
 test.describe('retro-card delete button', () => {
   test('delete button is shown for own card in collecting phase', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       phase: 'collecting',
       cards: [makeCard({ author_name: 'Alice', published: false })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.delete-btn')).toBeVisible()
   })
 
   test('delete button is NOT shown for another participant card', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       phase: 'collecting',
       cards: [makeCard({ author_name: 'Bob', published: false })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.delete-btn')).not.toBeVisible()
   })
 
   test('clicking delete button calls DELETE on the card endpoint', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       phase: 'collecting',
       cards: [makeCard({ author_name: 'Alice', published: false })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     const req = page.waitForRequest(r => r.url().includes('/cards/') && r.method() === 'DELETE')
     await page.locator('.delete-btn').click()
     await req
@@ -252,32 +239,27 @@ test.describe('retro-card delete button', () => {
 
 test.describe('retro-card reactions', () => {
   test('reactions row is shown for published card in discussing phase', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Bob', published: true })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.reactions-row')).toBeVisible()
     await expect(page.locator('.reaction-btn')).toHaveCount(6)
   })
 
   test('clicking a reaction button calls POST /reactions', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Bob', published: true })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     const req = page.waitForRequest(r => r.url().includes('/reactions') && r.method() === 'POST')
     await page.locator('.reaction-btn').first().click()
     await req
   })
 
   test('reacted button has .reacted class', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({
@@ -286,13 +268,11 @@ test.describe('retro-card reactions', () => {
         reactions: [{ emoji: '❤️', participant_name: 'Alice' }],
       })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.reaction-btn.reacted')).toBeVisible()
   })
 
   test('clicking reacted button calls DELETE /reactions', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({
@@ -301,21 +281,18 @@ test.describe('retro-card reactions', () => {
         reactions: [{ emoji: '❤️', participant_name: 'Alice' }],
       })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     const req = page.waitForRequest(r => r.url().includes('/reactions') && r.method() === 'DELETE')
     await page.locator('.reaction-btn.reacted').click()
     await req
   })
 
   test('reactions are not shown for unpublished card', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: false })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.reactions-row')).not.toBeVisible()
   })
 })
@@ -389,27 +366,23 @@ test.describe('retro-card assignee', () => {
 
 test.describe('retro-card reactions_enabled', () => {
   test('reactions row is hidden when reactions_enabled=false even for published card', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       reactions_enabled: false,
       cards: [makeCard({ author_name: 'Bob', published: true })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('retro-card')).toBeVisible()
     await expect(page.locator('.reactions-row')).not.toBeVisible()
   })
 
   test('reactions row is shown when reactions_enabled=true', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       reactions_enabled: true,
       cards: [makeCard({ author_name: 'Bob', published: true })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.reactions-row')).toBeVisible()
   })
 })
@@ -418,13 +391,11 @@ test.describe('retro-card reactions_enabled', () => {
 
 test.describe('retro-card reactions null handling', () => {
   test('renders reactions row when card.reactions is null (treats as empty)', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Bob', published: true, reactions: null })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     // canReact=true (discussing, published, not own card) — all 6 buttons shown with count=0
     await expect(page.locator('.reaction-btn')).toHaveCount(6)
   })
@@ -434,13 +405,11 @@ test.describe('retro-card reactions null handling', () => {
 
 test.describe('retro-card assign select empty option', () => {
   test('selecting empty option in assign-select does not call PATCH /assignee', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: true, assignee: null })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.assign-select')).toBeVisible()
 
     // Trigger onAssignChange with empty value — hits the `if (!assignee) return` guard (line 274)
@@ -470,19 +439,17 @@ test.describe('retro-card assign select empty option', () => {
 
 test.describe('retro-card delete 204 response', () => {
   test('DELETE card endpoint returning 204 is handled gracefully', async ({ page }) => {
-    await withName(page, 'Alice')
     const session = {
       ...BASE,
       phase: 'collecting',
       cards: [makeCard({ author_name: 'Alice', published: false })],
     }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    // Override delete to return 204 (no body)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    // Override delete to return 204 (no body) — registered after loadSession but before the click
     await page.route(
       `/api/v1/sessions/${SESSION_ID}/cards/card-1`,
       (route) => route.fulfill({ status: 204 }),
     )
-    await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('.delete-btn')).toBeVisible()
     // Should not throw — 204 path in api.ts returns undefined
     await page.locator('.delete-btn').click()
