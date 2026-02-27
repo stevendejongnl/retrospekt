@@ -1,3 +1,9 @@
+## [1.14.2](https://github.com/stevendejongnl/retrospekt/compare/v1.14.1...v1.14.2) (2026-02-27)
+
+### Bug Fixes
+
+* **ui:** fix mobile header overflow, dark-mode icon color, and CS brand light-only mode ([837e1b1](https://github.com/stevendejongnl/retrospekt/commit/837e1b14965c509cc27a9790da19534449488d7c))
+
 ## [1.14.1](https://github.com/stevendejongnl/retrospekt/compare/v1.14.0...v1.14.1) (2026-02-27)
 
 ### Bug Fixes
