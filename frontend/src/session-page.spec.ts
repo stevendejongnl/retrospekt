@@ -623,6 +623,33 @@ test.describe('session-page board (facilitator, closed)', () => {
   })
 })
 
+// ── CS brand logo in header ───────────────────────────────────────────────────
+
+test.describe('session-page CS brand logo', () => {
+  test('CS logo is NOT shown without brand theme', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.brand .cs-collab')).not.toBeVisible()
+  })
+
+  test('CS logo IS shown when brand=cs is stored', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('retro_brand', 'cs'))
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.brand .cs-collab')).toBeVisible()
+  })
+
+  test('CS logo contains the CloudSuite SVG', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('retro_brand', 'cs'))
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.brand .cs-collab [aria-label="CloudSuite"]')).toBeVisible()
+  })
+})
+
 // ── Add column deduplication ──────────────────────────────────────────────────
 
 test.describe('retro-board add column deduplication', () => {
