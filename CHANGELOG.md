@@ -1,3 +1,9 @@
+## [1.14.0](https://github.com/stevendejongnl/retrospekt/compare/v1.13.0...v1.14.0) (2026-02-27)
+
+### Features
+
+* **session-page:** show CloudSuite logo in header when brand=cs ([2ec9364](https://github.com/stevendejongnl/retrospekt/commit/2ec936456970b50c5fa87047d086f13fc37b4da5))
+
 ## [1.13.0](https://github.com/stevendejongnl/retrospekt/compare/v1.12.0...v1.13.0) (2026-02-27)
 
 ### Features
