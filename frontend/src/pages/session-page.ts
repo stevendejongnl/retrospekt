@@ -6,7 +6,7 @@ import { buildParticipantColorMap } from '../types'
 import { api } from '../api'
 import { SSEClient } from '../sse'
 import { storage } from '../storage'
-import { getEffectiveTheme, toggleTheme } from '../theme'
+import { getEffectiveTheme, toggleTheme, getBrand } from '../theme'
 import {
   faIconStyles,
   iconPencil,
@@ -18,6 +18,7 @@ import {
   iconCheck,
   iconClockRotateLeft,
   iconFileArrowDown,
+  csLogo,
 } from '../icons'
 import '../components/retro-board'
 import '../components/session-history'
@@ -72,6 +73,21 @@ export class SessionPage extends LitElement {
     .brand em {
       font-style: normal;
       color: var(--retro-accent);
+    }
+    .cs-collab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--retro-text-muted);
+      letter-spacing: 0;
+    }
+    .cs-logo {
+      height: 1.1em;
+      width: auto;
+      flex-shrink: 0;
+      vertical-align: middle;
     }
     .session-title {
       font-size: 14px;
@@ -667,7 +683,7 @@ export class SessionPage extends LitElement {
         : ''}
 
       <header>
-        <span class="brand" @click=${this.goHome}>🥓 Retro<em>spekt</em></span>
+        <span class="brand" @click=${this.goHome}>🥓 Retro<em>spekt</em>${getBrand() === 'cs' ? html`<span class="cs-collab">× ${csLogo()}</span>` : nothing}</span>
         <span class="session-title">
           ${session.name}<span class="session-date">· ${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
         </span>
