@@ -387,6 +387,42 @@ test.describe('home-page corrupted history', () => {
   })
 })
 
+// ── URL brand theme (?theme=cs) ───────────────────────────────────────────────
+
+test.describe('URL brand theme (?theme=cs)', () => {
+  test('/?theme=cs sets data-brand="cs" on documentElement', async ({ page }) => {
+    await page.goto('/?theme=cs')
+    const brand = await page.evaluate(() => document.documentElement.getAttribute('data-brand'))
+    expect(brand).toBe('cs')
+  })
+
+  test('/?theme=cs removes query param from URL', async ({ page }) => {
+    await page.goto('/?theme=cs')
+    await expect(page).toHaveURL('/')
+  })
+
+  test('CS brand persists across page loads (stored in localStorage)', async ({ page }) => {
+    await page.goto('/?theme=cs')
+    await page.goto('/')
+    const brand = await page.evaluate(() => document.documentElement.getAttribute('data-brand'))
+    expect(brand).toBe('cs')
+  })
+
+  test('unknown /?theme=unknown does not set data-brand', async ({ page }) => {
+    await page.goto('/?theme=unknown')
+    const brand = await page.evaluate(() => document.documentElement.getAttribute('data-brand'))
+    expect(brand).toBeNull()
+  })
+
+  test('[data-brand="cs"] overrides --retro-accent to #2f3f5b', async ({ page }) => {
+    await page.goto('/?theme=cs')
+    const accent = await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--retro-accent').trim(),
+    )
+    expect(accent).toBe('#2f3f5b')
+  })
+})
+
 // ── session-not-found banner ──────────────────────────────────────────────────
 
 test.describe('home-page session-not-found banner', () => {

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getEffectiveTheme, toggleTheme, initTheme } from './theme'
+import { getEffectiveTheme, toggleTheme, initTheme, getBrand, initBrand } from './theme'
 
 // jsdom doesn't implement matchMedia — stub it
 function mockMatchMedia(prefersDark: boolean) {
@@ -15,6 +15,8 @@ function mockMatchMedia(prefersDark: boolean) {
 beforeEach(() => {
   localStorage.clear()
   document.documentElement.removeAttribute('data-theme')
+  document.documentElement.removeAttribute('data-brand')
+  window.history.replaceState(null, '', '/')
   vi.unstubAllGlobals()
 })
 
@@ -103,5 +105,66 @@ describe('initTheme', () => {
     const changeHandler = mql.addEventListener.mock.calls[0][1] as (e: MediaQueryListEvent) => void
     changeHandler({ matches: true } as MediaQueryListEvent) // system → dark, but stored = light
     expect(document.documentElement.getAttribute('data-theme')).toBe('light')
+  })
+})
+
+describe('getBrand', () => {
+  it('returns null when no localStorage entry exists', () => {
+    expect(getBrand()).toBeNull()
+  })
+
+  it('returns "cs" when retro_brand = "cs"', () => {
+    localStorage.setItem('retro_brand', 'cs')
+    expect(getBrand()).toBe('cs')
+  })
+
+  it('returns null for unrecognised stored value', () => {
+    localStorage.setItem('retro_brand', 'unknown')
+    expect(getBrand()).toBeNull()
+  })
+})
+
+describe('initBrand', () => {
+  it('sets data-brand="cs" on documentElement from localStorage on startup', () => {
+    localStorage.setItem('retro_brand', 'cs')
+    initBrand()
+    expect(document.documentElement.getAttribute('data-brand')).toBe('cs')
+  })
+
+  it('does not set data-brand when localStorage is empty', () => {
+    initBrand()
+    expect(document.documentElement.getAttribute('data-brand')).toBeNull()
+  })
+
+  it('reads ?theme=cs URL param, stores "cs" in localStorage, sets data-brand', () => {
+    window.history.replaceState(null, '', '/?theme=cs')
+    initBrand()
+    expect(localStorage.getItem('retro_brand')).toBe('cs')
+    expect(document.documentElement.getAttribute('data-brand')).toBe('cs')
+  })
+
+  it('ignores unknown ?theme=unknown — no storage written, no attribute set', () => {
+    window.history.replaceState(null, '', '/?theme=unknown')
+    initBrand()
+    expect(localStorage.getItem('retro_brand')).toBeNull()
+    expect(document.documentElement.getAttribute('data-brand')).toBeNull()
+  })
+
+  it('does not overwrite existing localStorage when no URL param is present', () => {
+    localStorage.setItem('retro_brand', 'cs')
+    initBrand()
+    expect(localStorage.getItem('retro_brand')).toBe('cs')
+  })
+
+  it('strips ?theme= from URL via history.replaceState after processing', () => {
+    window.history.replaceState(null, '', '/?theme=cs')
+    initBrand()
+    expect(window.location.search).toBe('')
+  })
+
+  it('strips unknown ?theme= from URL even when value is invalid', () => {
+    window.history.replaceState(null, '', '/?theme=unknown')
+    initBrand()
+    expect(window.location.search).toBe('')
   })
 })

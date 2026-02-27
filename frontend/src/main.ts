@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/browser'
-import { initTheme } from './theme'
+import { initTheme, initBrand } from './theme'
 
 if (window.__SENTRY_DSN__) {
   Sentry.init({ dsn: window.__SENTRY_DSN__, tracesSampleRate: 0 })
@@ -13,4 +13,5 @@ import './components/retro-card'
 import { router } from './router'
 
 initTheme()
+initBrand()
 router.start()
