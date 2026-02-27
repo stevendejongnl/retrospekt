@@ -1,3 +1,13 @@
+## [1.13.0](https://github.com/stevendejongnl/retrospekt/compare/v1.12.0...v1.13.0) (2026-02-27)
+
+### Features
+
+* **theme:** add URL-based CS brand theme (?theme=cs) ([b200796](https://github.com/stevendejongnl/retrospekt/commit/b2007968e97f05f3243f986db8d623afbe16b74b))
+
+### Documentation
+
+* add preview screenshots and clean up docs ([94ef756](https://github.com/stevendejongnl/retrospekt/commit/94ef7561fce3548f0174460f076389ff41a1a6bc))
+
 ## [1.12.0](https://github.com/stevendejongnl/retrospekt/compare/v1.11.0...v1.12.0) (2026-02-25)
 
 ### Features
