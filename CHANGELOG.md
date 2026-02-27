@@ -1,3 +1,9 @@
+## [1.14.1](https://github.com/stevendejongnl/retrospekt/compare/v1.14.0...v1.14.1) (2026-02-27)
+
+### Bug Fixes
+
+* **mobile:** make toggle buttons clickable and fix column width on mobile ([6455900](https://github.com/stevendejongnl/retrospekt/commit/645590060057bce35ed2329f02ae0cec9b9418cf))
+
 ## [1.14.0](https://github.com/stevendejongnl/retrospekt/compare/v1.13.0...v1.14.0) (2026-02-27)
 
 ### Features
