@@ -71,6 +71,7 @@ export class HomePage extends LitElement {
       align-items: center;
       justify-content: center;
       transition: background 0.12s, border-color 0.12s;
+      z-index: 1;
     }
     .history-toggle:hover {
       border-color: var(--retro-accent);
@@ -92,6 +93,7 @@ export class HomePage extends LitElement {
       align-items: center;
       justify-content: center;
       transition: background 0.12s, border-color 0.12s;
+      z-index: 1;
     }
     .theme-toggle:hover {
       border-color: var(--retro-accent);

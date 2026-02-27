@@ -650,6 +650,24 @@ test.describe('session-page CS brand logo', () => {
   })
 })
 
+// ── Mobile layout ────────────────────────────────────────────────────────────
+
+test.describe('session-page mobile layout', () => {
+  test('retro columns fill the full content width on mobile viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    // 390px viewport with 24px side padding = 342px available content width.
+    // With align-items: stretch, each column fills the full width (~342px).
+    // Without the fix, align-items: flex-start keeps columns at min-width (280px).
+    const col = page.locator('retro-column').first()
+    const box = await col.boundingBox()
+    expect(box!.width).toBeGreaterThan(330)
+  })
+})
+
 // ── Add column deduplication ──────────────────────────────────────────────────
 
 test.describe('retro-board add column deduplication', () => {

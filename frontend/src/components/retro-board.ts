@@ -342,6 +342,7 @@ export class RetroBoard extends LitElement {
     @media (max-width: 800px) {
       .columns {
         flex-direction: column;
+        align-items: stretch;
       }
     }
 

@@ -423,6 +423,30 @@ test.describe('URL brand theme (?theme=cs)', () => {
   })
 })
 
+// ── Mobile layout ────────────────────────────────────────────────────────────
+
+test.describe('home-page mobile layout', () => {
+  test('history toggle is clickable on mobile viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/')
+    await page.locator('.history-toggle').click()
+    await expect(page.locator('.sidebar.open')).toBeVisible()
+  })
+
+  test('theme toggle is clickable on mobile viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/')
+    const before = await page.evaluate(
+      () => document.documentElement.getAttribute('data-theme') ?? 'light',
+    )
+    await page.locator('.theme-toggle').click()
+    const after = await page.evaluate(
+      () => document.documentElement.getAttribute('data-theme'),
+    )
+    expect(after).not.toBe(before)
+  })
+})
+
 // ── session-not-found banner ──────────────────────────────────────────────────
 
 test.describe('home-page session-not-found banner', () => {
