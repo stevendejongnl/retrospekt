@@ -414,6 +414,28 @@ test.describe('URL brand theme (?theme=cs)', () => {
     expect(brand).toBeNull()
   })
 
+  test('CS brand forces light theme even when dark was stored', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('retro_theme', 'dark'))
+    await page.goto('/?theme=cs')
+    const theme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'))
+    expect(theme).toBe('light')
+  })
+
+  test('CS brand shows brand-reset button instead of theme toggle', async ({ page }) => {
+    await page.goto('/?theme=cs')
+    await expect(page.locator('.brand-reset')).toBeVisible()
+    await expect(page.locator('.theme-toggle')).not.toBeVisible()
+  })
+
+  test('clicking brand-reset on home page removes CS brand and shows theme toggle', async ({ page }) => {
+    await page.goto('/?theme=cs')
+    await page.locator('.brand-reset').click()
+    await expect(page.locator('.theme-toggle')).toBeVisible()
+    await expect(page.locator('.brand-reset')).not.toBeVisible()
+    const brand = await page.evaluate(() => document.documentElement.getAttribute('data-brand'))
+    expect(brand).toBeNull()
+  })
+
   test('[data-brand="cs"] overrides --retro-accent to #2f3f5b', async ({ page }) => {
     await page.goto('/?theme=cs')
     const accent = await page.evaluate(() =>

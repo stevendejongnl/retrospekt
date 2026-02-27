@@ -32,6 +32,14 @@ function applyBrand(brand: Brand | null): void {
   else document.documentElement.removeAttribute('data-brand')
 }
 
+export function clearBrand(): void {
+  localStorage.removeItem(BRAND_STORAGE_KEY)
+  applyBrand(null)
+  applyTheme(getEffectiveTheme())
+  window.dispatchEvent(new CustomEvent('retro-brand-change'))
+  window.dispatchEvent(new CustomEvent('retro-theme-change'))
+}
+
 export function initBrand(): void {
   const params = new URLSearchParams(window.location.search)
   const urlTheme = params.get('theme')
@@ -43,6 +51,7 @@ export function initBrand(): void {
     history.replaceState(null, '', clean.toString())
   }
   applyBrand(getBrand())
+  if (getBrand() === 'cs') applyTheme('light')
 }
 
 export function initTheme(): void {

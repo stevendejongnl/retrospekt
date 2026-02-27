@@ -6,7 +6,7 @@ import { buildParticipantColorMap } from '../types'
 import { api } from '../api'
 import { SSEClient } from '../sse'
 import { storage } from '../storage'
-import { getEffectiveTheme, toggleTheme, getBrand } from '../theme'
+import { getEffectiveTheme, toggleTheme, getBrand, clearBrand } from '../theme'
 import {
   faIconStyles,
   iconPencil,
@@ -18,6 +18,7 @@ import {
   iconCheck,
   iconClockRotateLeft,
   iconFileArrowDown,
+  iconRotateLeft,
   csLogo,
 } from '../icons'
 import '../components/retro-board'
@@ -34,11 +35,13 @@ export class SessionPage extends LitElement {
   @state() private showNamePrompt = false
   @state() private copied = false
   @state() private isDark = getEffectiveTheme() === 'dark'
+  @state() private brand = getBrand()
   @state() private showHelp = false
   @state() private showHistory = false
 
   private sseClient: SSEClient | null = null
   private _themeListener!: EventListener
+  private _brandListener!: EventListener
 
   static styles = [faIconStyles, css`
     :host {
@@ -110,6 +113,7 @@ export class SessionPage extends LitElement {
       border-radius: 50%;
       background: var(--retro-bg-subtle);
       border: 1.5px solid var(--retro-border-default);
+      color: var(--retro-text-primary);
       cursor: pointer;
       font-size: 16px;
       display: flex;
@@ -129,6 +133,7 @@ export class SessionPage extends LitElement {
       border-radius: 50%;
       background: var(--retro-bg-subtle);
       border: 1.5px solid var(--retro-border-default);
+      color: var(--retro-text-primary);
       cursor: pointer;
       font-size: 16px;
       display: flex;
@@ -187,6 +192,22 @@ export class SessionPage extends LitElement {
     }
     .help-btn:hover {
       background: #f5f0eb;
+    }
+
+    @media (max-width: 640px) {
+      header {
+        padding: 0 12px;
+        gap: 8px;
+      }
+      .session-title {
+        display: none;
+      }
+      .avatar-name {
+        display: none;
+      }
+      .cs-collab {
+        display: none;
+      }
     }
 
     .help-overlay {
@@ -467,7 +488,11 @@ export class SessionPage extends LitElement {
     this._themeListener = () => {
       this.isDark = getEffectiveTheme() === 'dark'
     }
+    this._brandListener = () => {
+      this.brand = getBrand()
+    }
     window.addEventListener('retro-theme-change', this._themeListener)
+    window.addEventListener('retro-brand-change', this._brandListener)
     await this.loadSession()
   }
 
@@ -475,6 +500,7 @@ export class SessionPage extends LitElement {
     super.disconnectedCallback()
     this.sseClient?.disconnect()
     window.removeEventListener('retro-theme-change', this._themeListener)
+    window.removeEventListener('retro-brand-change', this._brandListener)
   }
 
   private async loadSession(): Promise<void> {
@@ -588,6 +614,10 @@ export class SessionPage extends LitElement {
     toggleTheme()
   }
 
+  private onBrandReset(): void {
+    clearBrand()
+  }
+
   render() {
     if (this.loading) {
       return html`
@@ -688,7 +718,9 @@ export class SessionPage extends LitElement {
           ${session.name}<span class="session-date">· ${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
         </span>
         <button class="icon-btn" @click=${() => { this.showHistory = true }} title="Your sessions">${iconClockRotateLeft()}</button>
-        <button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>
+        ${this.brand === 'cs'
+          ? html`<button class="icon-btn brand-reset" @click=${this.onBrandReset} title="Reset to default theme">${iconRotateLeft()}</button>`
+          : html`<button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>`}
         ${this.participantName
           ? html`
               <div class="user-chip">

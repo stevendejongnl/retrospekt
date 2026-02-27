@@ -648,11 +648,60 @@ test.describe('session-page CS brand logo', () => {
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('.brand .cs-collab [aria-label="CloudSuite"]')).toBeVisible()
   })
+
+  test('CS brand forces light theme even when dark was stored', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('retro_brand', 'cs')
+      localStorage.setItem('retro_theme', 'dark')
+    })
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    const theme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'))
+    expect(theme).toBe('light')
+  })
+
+  test('CS brand shows brand-reset button instead of theme toggle', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('retro_brand', 'cs'))
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.brand-reset')).toBeVisible()
+    await expect(page.locator('.theme-toggle')).not.toBeVisible()
+  })
+
+  test('clicking brand-reset removes CS brand and shows theme toggle', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('retro_brand', 'cs'))
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.locator('.brand-reset').click()
+    await expect(page.locator('.theme-toggle')).toBeVisible()
+    await expect(page.locator('.brand-reset')).not.toBeVisible()
+    const brand = await page.evaluate(() => document.documentElement.getAttribute('data-brand'))
+    expect(brand).toBeNull()
+  })
 })
 
 // ── Mobile layout ────────────────────────────────────────────────────────────
 
 test.describe('session-page mobile layout', () => {
+  test('session title is hidden on mobile viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.session-title')).not.toBeVisible()
+  })
+
+  test('avatar-name is hidden on mobile viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.avatar-name')).not.toBeVisible()
+  })
+
   test('retro columns fill the full content width on mobile viewport', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await withName(page, 'Alice')

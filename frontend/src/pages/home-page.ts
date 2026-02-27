@@ -3,8 +3,8 @@ import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 import { storage } from '../storage'
-import { getEffectiveTheme, toggleTheme } from '../theme'
-import { faIconStyles, iconSun, iconMoon, iconClockRotateLeft } from '../icons'
+import { getEffectiveTheme, toggleTheme, getBrand, clearBrand } from '../theme'
+import { faIconStyles, iconSun, iconMoon, iconClockRotateLeft, iconRotateLeft } from '../icons'
 import '../components/session-history'
 
 const COLUMN_TEMPLATES = [
@@ -22,18 +22,24 @@ export class HomePage extends LitElement {
   @state() private error = ''
   @state() private selectedTemplate = 0
   @state() private isDark = getEffectiveTheme() === 'dark'
+  @state() private brand = getBrand()
   @state() private showHistory = false
   @state() private reactionsEnabled = true
   @state() private sessionNotFound = false
 
   private _themeListener!: EventListener
+  private _brandListener!: EventListener
 
   connectedCallback(): void {
     super.connectedCallback()
     this._themeListener = () => {
       this.isDark = getEffectiveTheme() === 'dark'
     }
+    this._brandListener = () => {
+      this.brand = getBrand()
+    }
     window.addEventListener('retro-theme-change', this._themeListener)
+    window.addEventListener('retro-brand-change', this._brandListener)
     const params = new URLSearchParams(window.location.search)
     if (params.has('session_not_found')) {
       this.sessionNotFound = true
@@ -44,6 +50,7 @@ export class HomePage extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback()
     window.removeEventListener('retro-theme-change', this._themeListener)
+    window.removeEventListener('retro-brand-change', this._brandListener)
   }
 
   static styles = [faIconStyles, css`
@@ -87,6 +94,7 @@ export class HomePage extends LitElement {
       border-radius: 50%;
       background: var(--retro-bg-surface);
       border: 1.5px solid var(--retro-border-default);
+      color: var(--retro-text-primary);
       cursor: pointer;
       font-size: 16px;
       display: flex;
@@ -94,6 +102,28 @@ export class HomePage extends LitElement {
       justify-content: center;
       transition: background 0.12s, border-color 0.12s;
       z-index: 1;
+    }
+    .brand-reset {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--retro-bg-surface);
+      border: 1.5px solid var(--retro-border-default);
+      color: var(--retro-text-primary);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s, border-color 0.12s;
+      z-index: 1;
+    }
+    .brand-reset:hover {
+      border-color: var(--retro-accent);
+      background: var(--retro-accent-tint);
     }
     .theme-toggle:hover {
       border-color: var(--retro-accent);
@@ -350,6 +380,10 @@ export class HomePage extends LitElement {
     toggleTheme()
   }
 
+  private onBrandReset(): void {
+    clearBrand()
+  }
+
   render() {
     const canCreate = !!this.sessionName.trim() && !this.loading
 
@@ -362,7 +396,9 @@ export class HomePage extends LitElement {
       ` : ''}
       <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
       <button class="history-toggle" @click=${() => { this.showHistory = true }} title="Your sessions">${iconClockRotateLeft()}</button>
-      <button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>
+      ${this.brand === 'cs'
+        ? html`<button class="brand-reset" @click=${this.onBrandReset} title="Reset to default theme">${iconRotateLeft()}</button>`
+        : html`<button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>`}
       <div class="hero">
         <div class="logo">🥓</div>
         <h1>Retro<em>spekt</em></h1>
