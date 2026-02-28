@@ -1,3 +1,13 @@
+## [1.17.0](https://github.com/stevendejongnl/retrospekt/compare/v1.16.0...v1.17.0) (2026-02-28)
+
+### Features
+
+* **stats:** add Sentry health to admin stats ([e8a7c48](https://github.com/stevendejongnl/retrospekt/commit/e8a7c48d194d484d0b94e82e8b881b63bc3cbbc6))
+
+### Documentation
+
+* sync README and CLAUDE.md with current feature set ([e8c278a](https://github.com/stevendejongnl/retrospekt/commit/e8c278a9062ef7934aae782ee0f0403ec1391de6))
+
 ## [1.16.0](https://github.com/stevendejongnl/retrospekt/compare/v1.15.0...v1.16.0) (2026-02-28)
 
 ### Features
