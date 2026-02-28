@@ -534,6 +534,66 @@ test.describe('stats-page sentry health section', () => {
     await expect(rects).toHaveCount(7)
   })
 
+  test('error rate chart handles null value data points', async ({ page }) => {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    const sentryWithNulls = {
+      ...MOCK_SENTRY_HEALTH,
+      error_rate_7d: [
+        { date: '2026-02-22', value: null },
+        { date: '2026-02-23', value: 5 },
+        { date: '2026-02-24', value: null },
+        { date: '2026-02-25', value: 8 },
+        { date: '2026-02-26', value: null },
+        { date: '2026-02-27', value: 3 },
+        { date: '2026-02-28', value: null },
+      ],
+    }
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ...MOCK_ADMIN_STATS, sentry: sentryWithNulls }),
+      }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText(/Sentry Health/i)).toBeVisible()
+    await expect(page.locator('stats-page').locator('#sentry-error-chart')).toBeVisible()
+  })
+
+  test('sentry charts handle all-null data gracefully (empty filtered list)', async ({ page }) => {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    const sentryAllNulls = {
+      ...MOCK_SENTRY_HEALTH,
+      error_rate_7d: [
+        { date: '2026-02-22', value: null },
+        { date: '2026-02-23', value: null },
+      ],
+      p95_latency_7d: [
+        { date: '2026-02-22', value: null },
+        { date: '2026-02-23', value: null },
+      ],
+    }
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ...MOCK_ADMIN_STATS, sentry: sentryAllNulls }),
+      }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText(/Sentry Health/i)).toBeVisible()
+    const rects = page.locator('stats-page').locator('#sentry-error-chart rect')
+    await expect(rects).toHaveCount(0)
+  })
+
   test('shows error banner when sentry.error is set', async ({ page }) => {
     await mockStats(page)
     await mockAdminAuth(page)
