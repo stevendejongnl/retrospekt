@@ -4,7 +4,7 @@ import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 import { faIconStyles } from '../icons'
-import type { AdminStats, LifetimeBucket, PublicStats } from '../types'
+import type { AdminStats, LifetimeBucket, PublicStats, SentryDataPoint } from '../types'
 
 type AdminPhase = 'locked' | 'loading' | 'unlocked' | 'error'
 
@@ -194,6 +194,66 @@ export class StatsPage extends LitElement {
   private _renderAdminCharts(): void {
     this._renderReactionChart()
     this._renderLifetimeChart()
+    if (this.adminStats?.sentry) {
+      this._renderSentryBarChart('#sentry-error-chart', this.adminStats.sentry.error_rate_7d, 'danger')
+      this._renderSentryBarChart('#sentry-p95-chart', this.adminStats.sentry.p95_latency_7d, 'accent')
+    }
+  }
+
+  private _renderSentryBarChart(id: string, data: SentryDataPoint[], colorVar: 'danger' | 'accent'): void {
+    const el = this.shadowRoot!.querySelector<SVGSVGElement>(id)
+    if (!el) return
+
+    const svg = d3.select(el)
+    svg.selectAll('*').remove()
+
+    const filtered = data.filter((d) => d.value !== null)
+    if (filtered.length === 0) return
+
+    const margin = { top: 6, right: 10, bottom: 20, left: 36 }
+    const svgW = 280
+    const svgH = 100
+    const width = svgW - margin.left - margin.right
+    const height = svgH - margin.top - margin.bottom
+
+    svg.attr('width', svgW).attr('height', svgH)
+
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
+
+    const x = d3.scaleBand().domain(data.map((d) => d.date)).range([0, width]).padding(0.15)
+    const maxVal = d3.max(filtered, (d) => d.value as number) ?? 1
+    const y = d3.scaleLinear().domain([0, maxVal]).nice().range([height, 0])
+
+    const color =
+      colorVar === 'danger'
+        ? getComputedStyle(this).getPropertyValue('--retro-danger').trim() || '#ef4444'
+        : getComputedStyle(this).getPropertyValue('--retro-accent').trim()
+
+    g.selectAll('rect')
+      .data(data)
+      .enter()
+      .append('rect')
+      .attr('x', (d) => x(d.date) as number)
+      .attr('y', (d) => (d.value !== null ? y(d.value) : height))
+      .attr('width', x.bandwidth())
+      .attr('height', (d) => (d.value !== null ? height - y(d.value) : 0))
+      .attr('fill', color)
+      .attr('rx', 2)
+
+    g.append('g')
+      .attr('transform', `translate(0,${height})`)
+      .call(d3.axisBottom(x).tickValues([data[0]?.date, data[data.length - 1]?.date].filter(Boolean)))
+      .attr('color', 'var(--retro-text-muted)')
+      .attr('font-size', '9px')
+      .select('.domain')
+      .remove()
+
+    g.append('g')
+      .call(d3.axisLeft(y).ticks(3).tickSize(-width))
+      .attr('color', 'var(--retro-border-default)')
+      .attr('font-size', '9px')
+      .select('.domain')
+      .remove()
   }
 
   private _renderReactionChart(): void {
@@ -374,6 +434,52 @@ export class StatsPage extends LitElement {
     `
   }
 
+  private _renderSentryHealth() {
+    if (!this.adminStats?.sentry) return nothing
+    const s = this.adminStats.sentry
+
+    return html`
+      <div class="sentry-block chart-block">
+        <h3 class="chart-title">Sentry Health</h3>
+
+        ${s.error
+          ? html`<p class="sentry-error-banner">${s.error}</p>`
+          : html`
+              <div class="stat-grid sentry-stat-grid">
+                ${this._renderStatCard('Unresolved Issues', s.unresolved_count)}
+              </div>
+
+              ${s.top_issues.length > 0
+                ? html`
+                    <h4 class="chart-title" style="margin-top: 12px;">Top Issues</h4>
+                    <ul class="sentry-issue-list">
+                      ${s.top_issues.map(
+                        (issue) => html`
+                          <li class="sentry-issue-item">
+                            <span class="sentry-issue-title">${issue.title}</span>
+                            <span class="sentry-issue-meta">${issue.count} events</span>
+                          </li>
+                        `,
+                      )}
+                    </ul>
+                  `
+                : nothing}
+
+              <div class="sentry-charts-row">
+                <div>
+                  <h4 class="chart-title" style="margin-top: 12px;">Error Rate (7d)</h4>
+                  <svg id="sentry-error-chart" width="280" height="100" class="chart-svg"></svg>
+                </div>
+                <div>
+                  <h4 class="chart-title" style="margin-top: 12px;">p95 Latency (7d, ms)</h4>
+                  <svg id="sentry-p95-chart" width="280" height="100" class="chart-svg"></svg>
+                </div>
+              </div>
+            `}
+      </div>
+    `
+  }
+
   private _renderAdminStats() {
     if (this.adminPhase !== 'unlocked' || !this.adminStats) return nothing
 
@@ -427,6 +533,7 @@ export class StatsPage extends LitElement {
         </div>
 
         ${this._renderLifetimeStats()}
+        ${this._renderSentryHealth()}
       </section>
     `
   }
@@ -790,6 +897,74 @@ export class StatsPage extends LitElement {
       .avg-duration-item {
         font-size: 13px;
         color: var(--retro-text-muted);
+      }
+
+      /* --- Sentry Health --- */
+      .sentry-block {
+        margin-top: 16px;
+      }
+
+      .sentry-stat-grid {
+        grid-template-columns: auto;
+        display: inline-grid;
+        margin-bottom: 12px;
+      }
+
+      .sentry-issue-list {
+        list-style: none;
+        margin: 0 0 12px;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .sentry-issue-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        padding: 4px 8px;
+        background: var(--retro-bg-page);
+        border-radius: 6px;
+      }
+
+      .sentry-issue-title {
+        color: var(--retro-text-primary);
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .sentry-issue-meta {
+        color: var(--retro-text-muted);
+        white-space: nowrap;
+        font-size: 11px;
+      }
+
+      .sentry-charts-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 4px;
+      }
+
+      @media (max-width: 640px) {
+        .sentry-charts-row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .sentry-error-banner {
+        font-size: 13px;
+        color: var(--retro-danger, #ef4444);
+        background: color-mix(in srgb, var(--retro-danger, #ef4444) 10%, transparent);
+        border: 1px solid color-mix(in srgb, var(--retro-danger, #ef4444) 30%, transparent);
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin: 0;
       }
     `,
   ]

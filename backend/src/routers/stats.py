@@ -12,7 +12,8 @@ from pydantic import BaseModel
 from ..config import settings
 from ..dependencies import get_expiry_days, get_redis, get_repo
 from ..repositories.session_repo import SessionRepository
-from ..repositories.stats_repo import AdminStats, PublicStats, StatsRepository
+from ..repositories.stats_repo import AdminStats, PublicStats, SentryHealth, StatsRepository
+from ..services.sentry_service import SentryService
 
 router = APIRouter(prefix="/api/v1/stats", tags=["stats"])
 
@@ -60,4 +61,21 @@ async def get_admin_stats(
     exists = await redis.exists(f"admin_token:{x_admin_token}")
     if not exists:
         raise HTTPException(status_code=401, detail="Invalid or expired admin token")
-    return await stats.get_admin_stats(expiry_days=expiry_days)
+    result = await stats.get_admin_stats(expiry_days=expiry_days)
+    if settings.sentry_api_configured:
+        svc = SentryService(
+            settings.sentry_auth_token,
+            settings.sentry_org_slug,
+            settings.sentry_project_slug,
+        )
+        try:
+            result.sentry = await svc.get_health()
+        except Exception as exc:
+            result.sentry = SentryHealth(
+                unresolved_count=0,
+                top_issues=[],
+                error_rate_7d=[],
+                p95_latency_7d=[],
+                error=str(exc),
+            )
+    return result

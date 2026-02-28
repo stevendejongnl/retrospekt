@@ -10,6 +10,13 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379"
     sentry_dsn: str = ""
     admin_password_hash: str = ""  # empty = admin disabled (safe default)
+    sentry_auth_token: str = ""
+    sentry_org_slug: str = ""
+    sentry_project_slug: str = ""
+
+    @property
+    def sentry_api_configured(self) -> bool:
+        return bool(self.sentry_auth_token and self.sentry_org_slug and self.sentry_project_slug)
 
 
 settings = Settings()

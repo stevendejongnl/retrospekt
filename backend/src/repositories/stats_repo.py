@@ -74,12 +74,33 @@ class PublicStats(BaseModel):
     total_reactions: int
 
 
+class SentryIssue(BaseModel):
+    id: str
+    title: str
+    count: int
+    last_seen: str  # ISO string from Sentry
+
+
+class SentryDataPoint(BaseModel):
+    date: str       # "YYYY-MM-DD"
+    value: float | None
+
+
+class SentryHealth(BaseModel):
+    unresolved_count: int
+    top_issues: list[SentryIssue]
+    error_rate_7d: list[SentryDataPoint]   # errors per day
+    p95_latency_7d: list[SentryDataPoint]  # ms per day
+    error: str | None = None               # set on partial fetch failure
+
+
 class AdminStats(BaseModel):
     reaction_breakdown: list[ReactionCount]
     cards_per_column: list[ColumnCount]
     activity_heatmap: list[HeatmapCell]
     engagement_funnel: FunnelStats
     session_lifetime: SessionLifetimeStats
+    sentry: SentryHealth | None = None
 
 
 class StatsRepository:

@@ -119,12 +119,33 @@ export interface SessionLifetimeStats {
   avg_time_to_close_hours: number | null
 }
 
+export interface SentryIssue {
+  id: string
+  title: string
+  count: number
+  last_seen: string
+}
+
+export interface SentryDataPoint {
+  date: string
+  value: number | null
+}
+
+export interface SentryHealth {
+  unresolved_count: number
+  top_issues: SentryIssue[]
+  error_rate_7d: SentryDataPoint[]
+  p95_latency_7d: SentryDataPoint[]
+  error: string | null
+}
+
 export interface AdminStats {
   reaction_breakdown: ReactionCount[]
   cards_per_column: ColumnCount[]
   activity_heatmap: HeatmapCell[]
   engagement_funnel: FunnelStats
   session_lifetime: SessionLifetimeStats
+  sentry: SentryHealth | null
 }
 
 export const PARTICIPANT_COLORS = [

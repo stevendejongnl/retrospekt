@@ -36,7 +36,7 @@ A simple, self-hosted retrospective board.
 - Session history sidebar: up to 50 past sessions persisted in localStorage
 - Dark mode with persisted preference (CSS custom properties)
 - Session auto-expiry: sessions deleted after 30 days of inactivity
-- Stats dashboard at `/stats`: public session counts + admin analytics (engagement funnel, reaction breakdown, session lifetime)
+- Stats dashboard at `/stats`: public session counts + admin analytics (engagement funnel, reaction breakdown, session lifetime, Sentry health)
 - Brand theming: visit `/?theme=cs` to activate an alternate visual theme (stored in localStorage)
 
 ## Stack
@@ -128,14 +128,22 @@ See [CLAUDE.md](CLAUDE.md) for the full command reference (per-layer test runs, 
 
 A `kubernetes.yaml` is included with Namespace, Deployments, Services, and an Ingress. Update the `host` field in the Ingress spec to your own domain before applying. The Ingress sets `proxy-buffering: off` and a long `proxy-read-timeout` to keep SSE connections alive through nginx.
 
-Create the MongoDB secret before applying:
+Create the secrets before applying:
 
 ```bash
 kubectl create secret generic retrospekt-mongodb-secret \
   --namespace retrospekt \
   --from-literal=mongodb-url='mongodb+srv://...'
 
+# Optional: Sentry Health in admin stats (all three keys required to enable)
+kubectl create secret generic retrospekt-sentry-secret \
+  --namespace retrospekt \
+  --from-literal=backend-dsn='https://...' \
+  --from-literal=auth-token='sntrys_...' \
+  --from-literal=org-slug='my-org' \
+  --from-literal=project-slug='retrospekt'
+
 kubectl apply -f kubernetes.yaml
 ```
 
-Backend env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default: 30), `REDIS_URL`, `SENTRY_DSN` (optional), `ADMIN_PASSWORD_HASH` (optional, argon2 hash; empty = admin stats disabled).
+Backend env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default: 30), `REDIS_URL`, `SENTRY_DSN` (optional), `ADMIN_PASSWORD_HASH` (optional, argon2 hash; empty = admin stats disabled), `SENTRY_AUTH_TOKEN` + `SENTRY_ORG_SLUG` + `SENTRY_PROJECT_SLUG` (optional; all three required to enable Sentry Health in admin stats).

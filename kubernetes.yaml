@@ -58,6 +58,24 @@ spec:
                   name: retrospekt-admin-secret
                   key: admin-password-hash
                   optional: true
+            - name: SENTRY_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: retrospekt-sentry-secret
+                  key: auth-token
+                  optional: true
+            - name: SENTRY_ORG_SLUG
+              valueFrom:
+                secretKeyRef:
+                  name: retrospekt-sentry-secret
+                  key: org-slug
+                  optional: true
+            - name: SENTRY_PROJECT_SLUG
+              valueFrom:
+                secretKeyRef:
+                  name: retrospekt-sentry-secret
+                  key: project-slug
+                  optional: true
           resources:
             requests:
               memory: "128Mi"
