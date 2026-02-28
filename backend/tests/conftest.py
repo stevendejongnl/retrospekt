@@ -7,13 +7,15 @@ DI strategy:
 """
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
+from uuid import uuid4
 
 import fakeredis.aioredis
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from mongomock_motor import AsyncMongoMockClient
 
-from src.dependencies import get_redis, get_repo
+from src.dependencies import get_expiry_days, get_redis, get_repo
 from src.main import create_app
 from src.repositories.session_repo import SessionRepository
 from src.services.sse_manager import sse_manager
@@ -42,9 +44,45 @@ async def client(db, fake_redis):
     app = create_app()
     app.dependency_overrides[get_repo] = lambda: SessionRepository(db)
     app.dependency_overrides[get_redis] = lambda: fake_redis
+    app.dependency_overrides[get_expiry_days] = lambda: 30
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+def session_factory(db):
+    """Factory for inserting session documents with custom timestamps directly into MongoDB.
+
+    Usage:
+        await session_factory(phase="closed", created_at=now - timedelta(hours=48))
+    """
+    async def make(
+        *,
+        phase: str = "collecting",
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
+        last_accessed_at: datetime | None = None,
+    ) -> dict:
+        now = datetime.now(UTC)
+        doc = {
+            "id": str(uuid4()),
+            "name": "Test Session",
+            "columns": ["Went Well", "To Improve"],
+            "phase": phase,
+            "facilitator_token": str(uuid4()),
+            "participants": [],
+            "cards": [],
+            "timer": None,
+            "reactions_enabled": True,
+            "created_at": created_at or now,
+            "updated_at": updated_at or now,
+            "last_accessed_at": last_accessed_at or now,
+        }
+        await db["sessions"].insert_one(doc)
+        return doc
+
+    return make
 
 
 # ---------------------------------------------------------------------------

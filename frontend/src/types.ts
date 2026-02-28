@@ -97,11 +97,34 @@ export interface PublicStats {
   total_reactions: number
 }
 
+export interface LifetimeBucket {
+  label: string
+  count: number
+}
+
+export interface ExpiryCountdown {
+  expiring_within_7_days: number
+  expiring_within_30_days: number
+}
+
+export interface AvgDurationByPhase {
+  open_avg_hours: number | null
+  closed_avg_hours: number | null
+}
+
+export interface SessionLifetimeStats {
+  expiry_countdown: ExpiryCountdown
+  lifetime_distribution: LifetimeBucket[]
+  avg_duration: AvgDurationByPhase
+  avg_time_to_close_hours: number | null
+}
+
 export interface AdminStats {
   reaction_breakdown: ReactionCount[]
   cards_per_column: ColumnCount[]
   activity_heatmap: HeatmapCell[]
   engagement_funnel: FunnelStats
+  session_lifetime: SessionLifetimeStats
 }
 
 export const PARTICIPANT_COLORS = [

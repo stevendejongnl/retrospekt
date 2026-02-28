@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
 from ..config import settings
-from ..dependencies import get_redis, get_repo
+from ..dependencies import get_expiry_days, get_redis, get_repo
 from ..repositories.session_repo import SessionRepository
 from ..repositories.stats_repo import AdminStats, PublicStats, StatsRepository
 
@@ -52,6 +52,7 @@ async def admin_auth(
 async def get_admin_stats(
     stats: Annotated[StatsRepository, Depends(_stats_repo)],
     redis: Annotated[aioredis.Redis, Depends(get_redis)],
+    expiry_days: Annotated[int, Depends(get_expiry_days)],
     x_admin_token: Annotated[str, Header()] = "",
 ) -> AdminStats:
     if not x_admin_token:
@@ -59,4 +60,4 @@ async def get_admin_stats(
     exists = await redis.exists(f"admin_token:{x_admin_token}")
     if not exists:
         raise HTTPException(status_code=401, detail="Invalid or expired admin token")
-    return await stats.get_admin_stats()
+    return await stats.get_admin_stats(expiry_days=expiry_days)

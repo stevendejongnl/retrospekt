@@ -4,7 +4,7 @@ import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 import { faIconStyles } from '../icons'
-import type { AdminStats, PublicStats } from '../types'
+import type { AdminStats, LifetimeBucket, PublicStats } from '../types'
 
 type AdminPhase = 'locked' | 'loading' | 'unlocked' | 'error'
 
@@ -193,6 +193,7 @@ export class StatsPage extends LitElement {
 
   private _renderAdminCharts(): void {
     this._renderReactionChart()
+    this._renderLifetimeChart()
   }
 
   private _renderReactionChart(): void {
@@ -242,6 +243,57 @@ export class StatsPage extends LitElement {
       .attr('text-anchor', 'end')
       .attr('font-size', '14px')
       .text((d) => d.emoji)
+  }
+
+  private _renderLifetimeChart(): void {
+    const data = this.adminStats!.session_lifetime.lifetime_distribution
+    const el = this.shadowRoot!.querySelector<SVGSVGElement>('#lifetime-chart')
+    if (!el) return
+
+    const svg = d3.select(el)
+    svg.selectAll('*').remove()
+
+    const margin = { top: 4, right: 20, bottom: 4, left: 52 }
+    const width = 260 - margin.left - margin.right
+    const rowH = 28
+    const height = data.length * rowH
+
+    svg.attr('height', height + margin.top + margin.bottom)
+
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
+
+    const maxCount = d3.max(data, (d) => d.count) ?? 1
+    const x = d3.scaleLinear().domain([0, maxCount]).range([0, width])
+    const y = d3
+      .scaleBand()
+      .domain(data.map((d: LifetimeBucket) => d.label))
+      .range([0, height])
+      .padding(0.15)
+
+    const accent = getComputedStyle(this).getPropertyValue('--retro-accent').trim()
+
+    g.selectAll('rect')
+      .data(data)
+      .enter()
+      .append('rect')
+      .attr('y', (d: LifetimeBucket) => y(d.label) as number)
+      .attr('x', 0)
+      .attr('height', y.bandwidth())
+      .attr('width', (d: LifetimeBucket) => x(d.count))
+      .attr('fill', accent)
+      .attr('rx', 2)
+
+    g.selectAll<SVGTextElement, LifetimeBucket>('text.bucket-label')
+      .data(data)
+      .enter()
+      .append('text')
+      .attr('class', 'bucket-label')
+      .attr('x', -4)
+      .attr('y', (d: LifetimeBucket) => (y(d.label) as number) + y.bandwidth() / 2 + 4)
+      .attr('text-anchor', 'end')
+      .attr('font-size', '11px')
+      .attr('fill', 'var(--retro-text-muted)')
+      .text((d: LifetimeBucket) => d.label)
   }
 
   // ---------------------------------------------------------------------------
@@ -296,6 +348,32 @@ export class StatsPage extends LitElement {
     `
   }
 
+  private _renderLifetimeStats() {
+    if (!this.adminStats) return nothing
+    const lt = this.adminStats.session_lifetime
+    const fmtHours = (h: number | null) => (h === null ? '–' : String(h))
+
+    return html`
+      <div class="lifetime-block chart-block">
+        <h3 class="chart-title">Session Lifetime</h3>
+
+        <div class="stat-grid">
+          ${this._renderStatCard('Expiring in 7d', lt.expiry_countdown.expiring_within_7_days)}
+          ${this._renderStatCard('Expiring in 30d', lt.expiry_countdown.expiring_within_30_days)}
+          ${this._renderStatCard('Avg time to close (h)', fmtHours(lt.avg_time_to_close_hours))}
+        </div>
+
+        <div class="avg-duration-row">
+          <span class="avg-duration-item">Open sessions: ${fmtHours(lt.avg_duration.open_avg_hours)} h</span>
+          <span class="avg-duration-item">Closed sessions: ${fmtHours(lt.avg_duration.closed_avg_hours)} h</span>
+        </div>
+
+        <h4 class="chart-title" style="margin-top: 12px;">Lifetime Distribution</h4>
+        <svg id="lifetime-chart" width="280" height="40" class="chart-svg"></svg>
+      </div>
+    `
+  }
+
   private _renderAdminStats() {
     if (this.adminPhase !== 'unlocked' || !this.adminStats) return nothing
 
@@ -347,6 +425,8 @@ export class StatsPage extends LitElement {
             (r) => html`<span class="reaction-chip">${r.emoji} ${r.count}</span>`,
           )}
         </div>
+
+        ${this._renderLifetimeStats()}
       </section>
     `
   }
@@ -680,6 +760,36 @@ export class StatsPage extends LitElement {
         border-radius: 20px;
         font-size: 13px;
         color: var(--retro-text-primary);
+      }
+
+      /* --- Session lifetime --- */
+      .lifetime-block {
+        margin-top: 16px;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      @media (max-width: 640px) {
+        .stat-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .avg-duration-row {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+
+      .avg-duration-item {
+        font-size: 13px;
+        color: var(--retro-text-muted);
       }
     `,
   ]

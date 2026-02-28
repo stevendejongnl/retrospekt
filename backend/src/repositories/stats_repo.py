@@ -5,6 +5,8 @@ from datetime import UTC, datetime, timedelta
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel
 
+BUCKET_ORDER = ["<1 day", "1–7 days", "7–30 days", "30+ days"]
+
 
 class PhaseCount(BaseModel):
     phase: str
@@ -39,6 +41,28 @@ class FunnelStats(BaseModel):
     closed: int
 
 
+class LifetimeBucket(BaseModel):
+    label: str  # "<1 day" | "1–7 days" | "7–30 days" | "30+ days"
+    count: int
+
+
+class ExpiryCountdown(BaseModel):
+    expiring_within_7_days: int
+    expiring_within_30_days: int
+
+
+class AvgDurationByPhase(BaseModel):
+    open_avg_hours: float | None   # None = no open sessions
+    closed_avg_hours: float | None  # None = no closed sessions
+
+
+class SessionLifetimeStats(BaseModel):
+    expiry_countdown: ExpiryCountdown
+    lifetime_distribution: list[LifetimeBucket]  # always 4 entries
+    avg_duration: AvgDurationByPhase
+    avg_time_to_close_hours: float | None  # None = no closed sessions
+
+
 class PublicStats(BaseModel):
     total_sessions: int
     active_sessions: int
@@ -55,6 +79,7 @@ class AdminStats(BaseModel):
     cards_per_column: list[ColumnCount]
     activity_heatmap: list[HeatmapCell]
     engagement_funnel: FunnelStats
+    session_lifetime: SessionLifetimeStats
 
 
 class StatsRepository:
@@ -165,7 +190,12 @@ class StatsRepository:
             total_reactions=total_reactions,
         )
 
-    async def get_admin_stats(self) -> AdminStats:
+    async def get_admin_stats(self, expiry_days: int = 30) -> AdminStats:
+        # Use naive UTC for pipeline constants — MongoDB stores datetimes as UTC without tzinfo,
+        # and $subtract arithmetic requires both operands to have the same tzinfo status.
+        now = datetime.now(UTC).replace(tzinfo=None)
+        expiry_delta = timedelta(days=expiry_days)
+
         pipeline: list[dict] = [
             {
                 "$facet": {
@@ -239,6 +269,111 @@ class StatsRepository:
                         {"$match": {"phase": "closed"}},
                         {"$count": "n"},
                     ],
+                    # Sessions expiring within 7 days: created_at in (now-expiry, now-expiry+7d]
+                    "expiry_7": [
+                        {
+                            "$match": {
+                                "phase": {"$ne": "closed"},
+                                "created_at": {
+                                    "$gt": now - expiry_delta,
+                                    "$lte": now - expiry_delta + timedelta(days=7),
+                                },
+                            }
+                        },
+                        {"$count": "n"},
+                    ],
+                    # All non-expired, non-closed sessions (within 30 days of expiry)
+                    "expiry_30": [
+                        {
+                            "$match": {
+                                "phase": {"$ne": "closed"},
+                                "created_at": {"$gt": now - expiry_delta},
+                            }
+                        },
+                        {"$count": "n"},
+                    ],
+                    # Lifetime distribution: bucket by age (now - created_at) in hours
+                    # Uses $subtract (ms diff) / 3600000 — broadly supported vs $dateDiff (Mongo 5.0+)
+                    "lifetime_dist": [
+                        {
+                            "$addFields": {
+                                "age_hours": {
+                                    "$divide": [
+                                        {"$subtract": [now, "$created_at"]},
+                                        3_600_000,
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": {
+                                    "$switch": {
+                                        "branches": [
+                                            {
+                                                "case": {"$lt": ["$age_hours", 24]},
+                                                "then": "<1 day",
+                                            },
+                                            {
+                                                "case": {"$lt": ["$age_hours", 168]},
+                                                "then": "1–7 days",
+                                            },
+                                            {
+                                                "case": {"$lt": ["$age_hours", 720]},
+                                                "then": "7–30 days",
+                                            },
+                                        ],
+                                        "default": "30+ days",
+                                    }
+                                },
+                                "count": {"$sum": 1},
+                            }
+                        },
+                    ],
+                    # Avg duration (created_at → last_accessed_at) by open/closed
+                    "avg_duration_open": [
+                        {"$match": {"phase": {"$ne": "closed"}}},
+                        {
+                            "$addFields": {
+                                "h": {
+                                    "$divide": [
+                                        {"$subtract": ["$last_accessed_at", "$created_at"]},
+                                        3_600_000,
+                                    ]
+                                }
+                            }
+                        },
+                        {"$group": {"_id": None, "avg": {"$avg": "$h"}}},
+                    ],
+                    "avg_duration_closed": [
+                        {"$match": {"phase": "closed"}},
+                        {
+                            "$addFields": {
+                                "h": {
+                                    "$divide": [
+                                        {"$subtract": ["$last_accessed_at", "$created_at"]},
+                                        3_600_000,
+                                    ]
+                                }
+                            }
+                        },
+                        {"$group": {"_id": None, "avg": {"$avg": "$h"}}},
+                    ],
+                    # Avg time to close: created_at → updated_at (closed sessions only)
+                    "time_to_close": [
+                        {"$match": {"phase": "closed"}},
+                        {
+                            "$addFields": {
+                                "h": {
+                                    "$divide": [
+                                        {"$subtract": ["$updated_at", "$created_at"]},
+                                        3_600_000,
+                                    ]
+                                }
+                            }
+                        },
+                        {"$group": {"_id": None, "avg": {"$avg": "$h"}}},
+                    ],
                 }
             }
         ]
@@ -276,11 +411,45 @@ class StatsRepository:
             closed=facets["funnel_closed"][0]["n"] if facets["funnel_closed"] else 0,
         )
 
+        # Lifetime distribution — always emit 4 ordered buckets
+        dist_map = {d["_id"]: d["count"] for d in facets["lifetime_dist"]}
+        lifetime_distribution = [
+            LifetimeBucket(label=label, count=dist_map.get(label, 0))
+            for label in BUCKET_ORDER
+        ]
+
+        # Avg duration by phase
+        open_raw = facets["avg_duration_open"][0]["avg"] if facets["avg_duration_open"] else None
+        closed_raw = facets["avg_duration_closed"][0]["avg"] if facets["avg_duration_closed"] else None
+        avg_duration = AvgDurationByPhase(
+            open_avg_hours=round(open_raw, 2) if open_raw is not None else None,
+            closed_avg_hours=round(closed_raw, 2) if closed_raw is not None else None,
+        )
+
+        # Avg time to close
+        ttc_raw = facets["time_to_close"][0]["avg"] if facets["time_to_close"] else None
+        avg_time_to_close = round(ttc_raw, 2) if ttc_raw is not None else None
+
+        session_lifetime = SessionLifetimeStats(
+            expiry_countdown=ExpiryCountdown(
+                expiring_within_7_days=(
+                    facets["expiry_7"][0]["n"] if facets["expiry_7"] else 0
+                ),
+                expiring_within_30_days=(
+                    facets["expiry_30"][0]["n"] if facets["expiry_30"] else 0
+                ),
+            ),
+            lifetime_distribution=lifetime_distribution,
+            avg_duration=avg_duration,
+            avg_time_to_close_hours=avg_time_to_close,
+        )
+
         return AdminStats(
             reaction_breakdown=reaction_breakdown,
             cards_per_column=cards_per_column,
             activity_heatmap=activity_heatmap,
             engagement_funnel=funnel,
+            session_lifetime=session_lifetime,
         )
 
 
@@ -303,4 +472,18 @@ def _empty_admin_stats() -> AdminStats:
         cards_per_column=[],
         activity_heatmap=[],
         engagement_funnel=FunnelStats(created=0, has_cards=0, has_votes=0, closed=0),
+        session_lifetime=SessionLifetimeStats(
+            expiry_countdown=ExpiryCountdown(
+                expiring_within_7_days=0,
+                expiring_within_30_days=0,
+            ),
+            lifetime_distribution=[
+                LifetimeBucket(label=label, count=0) for label in BUCKET_ORDER
+            ],
+            avg_duration=AvgDurationByPhase(
+                open_avg_hours=None,
+                closed_avg_hours=None,
+            ),
+            avg_time_to_close_hours=None,
+        ),
     )

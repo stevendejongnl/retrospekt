@@ -35,6 +35,17 @@ const MOCK_ADMIN_STATS = {
   ],
   activity_heatmap: [{ day_of_week: 2, hour_bucket: 14, count: 5 }],
   engagement_funnel: { created: 42, has_cards: 35, has_votes: 20, closed: 27 },
+  session_lifetime: {
+    expiry_countdown: { expiring_within_7_days: 3, expiring_within_30_days: 12 },
+    lifetime_distribution: [
+      { label: '<1 day', count: 5 },
+      { label: '1–7 days', count: 10 },
+      { label: '7–30 days', count: 20 },
+      { label: '30+ days', count: 7 },
+    ],
+    avg_duration: { open_avg_hours: 14.5, closed_avg_hours: 48.25 },
+    avg_time_to_close_hours: 36.0,
+  },
 }
 
 async function mockStats(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
@@ -334,5 +345,93 @@ test.describe('stats-page admin unlock', () => {
     await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
     await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
     await expect(page.locator('stats-page').getByText(/Engagement Funnel/i)).toBeVisible()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Session Lifetime section
+// ---------------------------------------------------------------------------
+
+async function unlockAdmin(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+  await mockStats(page)
+  await mockAdminAuth(page)
+  await mockAdminStats(page)
+  await page.goto('/stats')
+  await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+  await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+  await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+  // wait for admin section to be visible
+  await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
+}
+
+test.describe('stats-page session lifetime section', () => {
+  test('shows section heading Session Lifetime', async ({ page }) => {
+    await unlockAdmin(page)
+    await expect(page.locator('stats-page').getByText('Session Lifetime', { exact: false })).toBeVisible()
+  })
+
+  test('shows expiring within 7 days count', async ({ page }) => {
+    await unlockAdmin(page)
+    // expiring_within_7_days = 3 — check the label to disambiguate from other numbers
+    await expect(page.locator('stats-page').getByText('Expiring in 7d', { exact: true })).toBeVisible()
+    await expect(page.locator('stats-page').getByText('3', { exact: true }).first()).toBeVisible()
+  })
+
+  test('shows expiring within 30 days count', async ({ page }) => {
+    await unlockAdmin(page)
+    // expiring_within_30_days = 12 — exact match avoids matching '126'
+    await expect(page.locator('stats-page').getByText('12', { exact: true })).toBeVisible()
+  })
+
+  test('shows avg time to close', async ({ page }) => {
+    await unlockAdmin(page)
+    // avg_time_to_close_hours = 36.0 → displayed as "36"
+    await expect(page.locator('stats-page').getByText(/Avg time to close/i)).toBeVisible()
+  })
+
+  test('shows em dash for null avg time to close', async ({ page }) => {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    const nullStats = {
+      ...MOCK_ADMIN_STATS,
+      session_lifetime: {
+        ...MOCK_ADMIN_STATS.session_lifetime,
+        avg_time_to_close_hours: null,
+      },
+    }
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(nullStats) }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
+    // null → rendered as em dash "–" (exact to avoid matching "1–7 days" chart labels)
+    await expect(page.locator('stats-page').getByText('–', { exact: true })).toBeVisible()
+  })
+
+  test('shows avg open session duration', async ({ page }) => {
+    await unlockAdmin(page)
+    // open_avg_hours = 14.5
+    await expect(page.locator('stats-page').getByText(/Open sessions/i)).toBeVisible()
+  })
+
+  test('shows avg closed session duration', async ({ page }) => {
+    await unlockAdmin(page)
+    // closed_avg_hours = 48.25
+    await expect(page.locator('stats-page').getByText(/Closed sessions/i)).toBeVisible()
+  })
+
+  test('shows lifetime distribution chart svg', async ({ page }) => {
+    await unlockAdmin(page)
+    const svg = page.locator('stats-page').locator('#lifetime-chart')
+    await expect(svg).toBeVisible()
+  })
+
+  test('lifetime chart renders 4 bars for 4 buckets', async ({ page }) => {
+    await unlockAdmin(page)
+    const rects = page.locator('stats-page').locator('#lifetime-chart rect')
+    await expect(rects).toHaveCount(4)
   })
 })
