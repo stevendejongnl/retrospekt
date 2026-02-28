@@ -574,3 +574,112 @@ class TestAdminStatsSentry:
         assert data["sentry"]["unresolved_count"] == 0
         assert data["sentry"]["top_issues"] == []
         assert data["sentry"]["error"] == "Sentry down"
+
+
+# ---------------------------------------------------------------------------
+# Sentry frontend health — GET /api/v1/stats/admin (sentry_frontend field)
+# ---------------------------------------------------------------------------
+
+FRONTEND_TOKEN = "frontend-test-token"
+
+MOCK_FRONTEND_SENTRY_HEALTH = {
+    "unresolved_count": 1,
+    "top_issues": [
+        {
+            "id": "FE-1",
+            "title": "TypeError: Cannot read properties of undefined",
+            "count": 3,
+            "last_seen": "2026-02-28T11:00:00Z",
+        }
+    ],
+    "error_rate_7d": [{"date": "2026-02-28", "value": 1.0}],
+    "p95_latency_7d": [{"date": "2026-02-28", "value": None}],
+    "error": None,
+}
+
+
+class TestAdminStatsSentryFrontend:
+    """sentry_frontend field is included in admin stats when frontend project slug is configured."""
+
+    async def _get_admin(self, client, fake_redis) -> dict:
+        await fake_redis.set(f"admin_token:{FRONTEND_TOKEN}", "1", ex=86400)
+        response = await client.get(
+            "/api/v1/stats/admin", headers={"X-Admin-Token": FRONTEND_TOKEN}
+        )
+        assert response.status_code == 200
+        return response.json()
+
+    async def test_sentry_frontend_null_when_slug_not_configured(
+        self, client, fake_redis, monkeypatch
+    ):
+        from src.config import settings
+
+        monkeypatch.setattr(settings, "sentry_auth_token", "tok")
+        monkeypatch.setattr(settings, "sentry_org_slug", "myorg")
+        monkeypatch.setattr(settings, "sentry_project_slug", "myproject")
+        monkeypatch.setattr(settings, "sentry_frontend_project_slug", "")
+        data = await self._get_admin(client, fake_redis)
+        assert data["sentry_frontend"] is None
+
+    async def test_sentry_frontend_present_when_configured(
+        self, client, fake_redis, monkeypatch
+    ):
+        from unittest.mock import AsyncMock, patch
+
+        from src.config import settings
+        from src.repositories.stats_repo import SentryDataPoint, SentryHealth, SentryIssue
+
+        monkeypatch.setattr(settings, "sentry_auth_token", "tok")
+        monkeypatch.setattr(settings, "sentry_org_slug", "myorg")
+        monkeypatch.setattr(settings, "sentry_project_slug", "myproject")
+        monkeypatch.setattr(settings, "sentry_frontend_project_slug", "retrospekt-frontend")
+
+        mock_health = SentryHealth(
+            unresolved_count=1,
+            top_issues=[
+                SentryIssue(
+                    id="FE-1",
+                    title="TypeError: Cannot read properties of undefined",
+                    count=3,
+                    last_seen="2026-02-28T11:00:00Z",
+                )
+            ],
+            error_rate_7d=[SentryDataPoint(date="2026-02-28", value=1.0)],
+            p95_latency_7d=[SentryDataPoint(date="2026-02-28", value=None)],
+            error=None,
+        )
+
+        with patch(
+            "src.routers.stats.SentryService.get_health",
+            new=AsyncMock(return_value=mock_health),
+        ):
+            data = await self._get_admin(client, fake_redis)
+
+        assert data["sentry_frontend"] is not None
+        assert data["sentry_frontend"]["unresolved_count"] == 1
+        assert len(data["sentry_frontend"]["top_issues"]) == 1
+        assert "TypeError" in data["sentry_frontend"]["top_issues"][0]["title"]
+        assert data["sentry_frontend"]["error"] is None
+
+    async def test_sentry_frontend_error_fallback_on_exception(
+        self, client, fake_redis, monkeypatch
+    ):
+        from unittest.mock import AsyncMock, patch
+
+        from src.config import settings
+
+        monkeypatch.setattr(settings, "sentry_auth_token", "tok")
+        monkeypatch.setattr(settings, "sentry_org_slug", "myorg")
+        monkeypatch.setattr(settings, "sentry_project_slug", "myproject")
+        monkeypatch.setattr(settings, "sentry_frontend_project_slug", "retrospekt-frontend")
+
+        with patch(
+            "src.routers.stats.SentryService.get_health",
+            new=AsyncMock(side_effect=Exception("Frontend Sentry down")),
+        ):
+            data = await self._get_admin(client, fake_redis)
+
+        assert data["sentry_frontend"] is not None
+        assert data["sentry_frontend"]["unresolved_count"] == 0
+        assert data["sentry_frontend"]["top_issues"] == []
+        assert data["sentry_frontend"]["error"] == "Frontend Sentry down"
