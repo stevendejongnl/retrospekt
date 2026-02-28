@@ -512,25 +512,25 @@ test.describe('stats-page sentry health section', () => {
 
   test('shows error rate chart svg', async ({ page }) => {
     await unlockAdminWithSentry(page)
-    const svg = page.locator('stats-page').locator('#sentry-error-chart')
+    const svg = page.locator('stats-page').locator('#sentry-backend-error-chart')
     await expect(svg).toBeVisible()
   })
 
   test('shows p95 latency chart svg', async ({ page }) => {
     await unlockAdminWithSentry(page)
-    const svg = page.locator('stats-page').locator('#sentry-p95-chart')
+    const svg = page.locator('stats-page').locator('#sentry-backend-p95-chart')
     await expect(svg).toBeVisible()
   })
 
   test('error rate chart renders bars', async ({ page }) => {
     await unlockAdminWithSentry(page)
-    const rects = page.locator('stats-page').locator('#sentry-error-chart rect')
+    const rects = page.locator('stats-page').locator('#sentry-backend-error-chart rect')
     await expect(rects).toHaveCount(7)
   })
 
   test('p95 chart renders bars', async ({ page }) => {
     await unlockAdminWithSentry(page)
-    const rects = page.locator('stats-page').locator('#sentry-p95-chart rect')
+    const rects = page.locator('stats-page').locator('#sentry-backend-p95-chart rect')
     await expect(rects).toHaveCount(7)
   })
 
@@ -561,7 +561,7 @@ test.describe('stats-page sentry health section', () => {
     await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
     await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
     await expect(page.locator('stats-page').getByText(/Sentry Health/i)).toBeVisible()
-    await expect(page.locator('stats-page').locator('#sentry-error-chart')).toBeVisible()
+    await expect(page.locator('stats-page').locator('#sentry-backend-error-chart')).toBeVisible()
   })
 
   test('sentry charts handle all-null data gracefully (empty filtered list)', async ({ page }) => {
@@ -590,7 +590,7 @@ test.describe('stats-page sentry health section', () => {
     await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
     await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
     await expect(page.locator('stats-page').getByText(/Sentry Health/i)).toBeVisible()
-    const rects = page.locator('stats-page').locator('#sentry-error-chart rect')
+    const rects = page.locator('stats-page').locator('#sentry-backend-error-chart rect')
     await expect(rects).toHaveCount(0)
   })
 
@@ -614,5 +614,120 @@ test.describe('stats-page sentry health section', () => {
     await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
     await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
     await expect(page.locator('stats-page').getByText(/Connection refused to sentry.io/, { exact: false })).toBeVisible()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Frontend Sentry Health section
+// ---------------------------------------------------------------------------
+
+const MOCK_FRONTEND_SENTRY_HEALTH = {
+  unresolved_count: 1,
+  top_issues: [
+    { id: 'FE-1', title: 'TypeError: Cannot read properties of undefined', count: 3, last_seen: '2026-02-28T11:00:00Z' },
+  ],
+  error_rate_7d: [
+    { date: '2026-02-22', value: 2 },
+    { date: '2026-02-23', value: 0 },
+    { date: '2026-02-24', value: 1 },
+    { date: '2026-02-25', value: 0 },
+    { date: '2026-02-26', value: 3 },
+    { date: '2026-02-27', value: 0 },
+    { date: '2026-02-28', value: 1 },
+  ],
+  p95_latency_7d: [
+    { date: '2026-02-22', value: null },
+    { date: '2026-02-23', value: null },
+    { date: '2026-02-24', value: null },
+    { date: '2026-02-25', value: null },
+    { date: '2026-02-26', value: null },
+    { date: '2026-02-27', value: null },
+    { date: '2026-02-28', value: null },
+  ],
+  error: null,
+}
+
+async function unlockAdminWithFrontendSentry(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+  await mockStats(page)
+  await mockAdminAuth(page)
+  const adminWithBoth = {
+    ...MOCK_ADMIN_STATS,
+    sentry: MOCK_SENTRY_HEALTH,
+    sentry_frontend: MOCK_FRONTEND_SENTRY_HEALTH,
+  }
+  await page.route('/api/v1/stats/admin', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(adminWithBoth),
+    }),
+  )
+  await page.goto('/stats')
+  await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+  await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+  await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+  await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
+}
+
+test.describe('stats-page frontend sentry health section', () => {
+  test('frontend sentry section hidden when sentry_frontend is null', async ({ page }) => {
+    await unlockAdmin(page)
+    const headings = page.locator('stats-page').getByText('Sentry Health', { exact: false })
+    // Only backend block (or none) — frontend block should not appear when null
+    await expect(headings).toHaveCount(0)
+  })
+
+  test('frontend sentry section shown when sentry_frontend data present', async ({ page }) => {
+    await unlockAdminWithFrontendSentry(page)
+    // Should see both Backend and Frontend headings
+    await expect(page.locator('stats-page').getByText(/Backend/i)).toBeVisible()
+    await expect(page.locator('stats-page').getByText(/Frontend/i)).toBeVisible()
+  })
+
+  test('frontend sentry shows issue title', async ({ page }) => {
+    await unlockAdminWithFrontendSentry(page)
+    await expect(
+      page.locator('stats-page').getByText(/TypeError: Cannot read properties of undefined/, { exact: false }),
+    ).toBeVisible()
+  })
+
+  test('frontend sentry error rate chart renders', async ({ page }) => {
+    await unlockAdminWithFrontendSentry(page)
+    const svg = page.locator('stats-page').locator('#sentry-frontend-error-chart')
+    await expect(svg).toBeVisible()
+  })
+
+  test('frontend sentry p95 chart renders', async ({ page }) => {
+    await unlockAdminWithFrontendSentry(page)
+    const svg = page.locator('stats-page').locator('#sentry-frontend-p95-chart')
+    await expect(svg).toBeVisible()
+  })
+
+  test('frontend sentry error rate chart renders bars', async ({ page }) => {
+    await unlockAdminWithFrontendSentry(page)
+    const rects = page.locator('stats-page').locator('#sentry-frontend-error-chart rect')
+    await expect(rects).toHaveCount(7)
+  })
+
+  test('shows error banner when sentry_frontend.error is set', async ({ page }) => {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    const adminWithFrontendError = {
+      ...MOCK_ADMIN_STATS,
+      sentry_frontend: { ...MOCK_FRONTEND_SENTRY_HEALTH, error: 'Frontend Sentry unreachable' },
+    }
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(adminWithFrontendError),
+      }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
+    await expect(page.locator('stats-page').getByText(/Frontend Sentry unreachable/, { exact: false })).toBeVisible()
   })
 })
