@@ -4,7 +4,7 @@ import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 import { faIconStyles } from '../icons'
-import type { AdminStats, LifetimeBucket, PublicStats, SentryDataPoint } from '../types'
+import type { AdminStats, LifetimeBucket, PublicStats, SentryDataPoint, SentryHealth } from '../types'
 
 type AdminPhase = 'locked' | 'loading' | 'unlocked' | 'error'
 
@@ -195,8 +195,12 @@ export class StatsPage extends LitElement {
     this._renderReactionChart()
     this._renderLifetimeChart()
     if (this.adminStats?.sentry) {
-      this._renderSentryBarChart('#sentry-error-chart', this.adminStats.sentry.error_rate_7d, 'danger')
-      this._renderSentryBarChart('#sentry-p95-chart', this.adminStats.sentry.p95_latency_7d, 'accent')
+      this._renderSentryBarChart('#sentry-backend-error-chart', this.adminStats.sentry.error_rate_7d, 'danger')
+      this._renderSentryBarChart('#sentry-backend-p95-chart', this.adminStats.sentry.p95_latency_7d, 'accent')
+    }
+    if (this.adminStats?.sentry_frontend) {
+      this._renderSentryBarChart('#sentry-frontend-error-chart', this.adminStats.sentry_frontend.error_rate_7d, 'danger')
+      this._renderSentryBarChart('#sentry-frontend-p95-chart', this.adminStats.sentry_frontend.p95_latency_7d, 'accent')
     }
   }
 
@@ -434,26 +438,25 @@ export class StatsPage extends LitElement {
     `
   }
 
-  private _renderSentryHealth() {
-    if (!this.adminStats?.sentry) return nothing
-    const s = this.adminStats.sentry
+  private _renderSentryHealth(label: string, health: SentryHealth | null | undefined, idPrefix: string) {
+    if (!health) return nothing
 
     return html`
       <div class="sentry-block chart-block">
-        <h3 class="chart-title">Sentry Health</h3>
+        <h3 class="chart-title">Sentry Health — ${label}</h3>
 
-        ${s.error
-          ? html`<p class="sentry-error-banner">${s.error}</p>`
+        ${health.error
+          ? html`<p class="sentry-error-banner">${health.error}</p>`
           : html`
               <div class="stat-grid sentry-stat-grid">
-                ${this._renderStatCard('Unresolved Issues', s.unresolved_count)}
+                ${this._renderStatCard('Unresolved Issues', health.unresolved_count)}
               </div>
 
-              ${s.top_issues.length > 0
+              ${health.top_issues.length > 0
                 ? html`
                     <h4 class="chart-title" style="margin-top: 12px;">Top Issues</h4>
                     <ul class="sentry-issue-list">
-                      ${s.top_issues.map(
+                      ${health.top_issues.map(
                         (issue) => html`
                           <li class="sentry-issue-item">
                             <span class="sentry-issue-title">${issue.title}</span>
@@ -468,11 +471,11 @@ export class StatsPage extends LitElement {
               <div class="sentry-charts-row">
                 <div>
                   <h4 class="chart-title" style="margin-top: 12px;">Error Rate (7d)</h4>
-                  <svg id="sentry-error-chart" width="280" height="100" class="chart-svg"></svg>
+                  <svg id="${idPrefix}-error-chart" width="280" height="100" class="chart-svg"></svg>
                 </div>
                 <div>
                   <h4 class="chart-title" style="margin-top: 12px;">p95 Latency (7d, ms)</h4>
-                  <svg id="sentry-p95-chart" width="280" height="100" class="chart-svg"></svg>
+                  <svg id="${idPrefix}-p95-chart" width="280" height="100" class="chart-svg"></svg>
                 </div>
               </div>
             `}
@@ -533,7 +536,8 @@ export class StatsPage extends LitElement {
         </div>
 
         ${this._renderLifetimeStats()}
-        ${this._renderSentryHealth()}
+        ${this._renderSentryHealth('Backend', this.adminStats?.sentry, 'sentry-backend')}
+        ${this._renderSentryHealth('Frontend', this.adminStats?.sentry_frontend, 'sentry-frontend')}
       </section>
     `
   }

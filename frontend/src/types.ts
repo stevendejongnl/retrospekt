@@ -146,6 +146,7 @@ export interface AdminStats {
   engagement_funnel: FunnelStats
   session_lifetime: SessionLifetimeStats
   sentry: SentryHealth | null
+  sentry_frontend: SentryHealth | null
 }
 
 export const PARTICIPANT_COLORS = [
