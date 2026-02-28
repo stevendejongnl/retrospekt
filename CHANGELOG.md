@@ -1,3 +1,9 @@
+## [1.17.4](https://github.com/stevendejongnl/retrospekt/compare/v1.17.3...v1.17.4) (2026-02-28)
+
+### Bug Fixes
+
+* **frontend:** bust browser cache for env.js with query version ([1040e15](https://github.com/stevendejongnl/retrospekt/commit/1040e15ff24e740c5c2fe75d41a1d392ec811115))
+
 ## [1.17.3](https://github.com/stevendejongnl/retrospekt/compare/v1.17.2...v1.17.3) (2026-02-28)
 
 ### Bug Fixes
