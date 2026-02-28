@@ -1,3 +1,9 @@
+## [1.17.2](https://github.com/stevendejongnl/retrospekt/compare/v1.17.1...v1.17.2) (2026-02-28)
+
+### Bug Fixes
+
+* **frontend:** disable Cloudflare caching for env.js ([21b9a91](https://github.com/stevendejongnl/retrospekt/commit/21b9a91bdbade64ab4680e984ea4b6ac06e19f52))
+
 ## [1.17.1](https://github.com/stevendejongnl/retrospekt/compare/v1.17.0...v1.17.1) (2026-02-28)
 
 ### Bug Fixes
