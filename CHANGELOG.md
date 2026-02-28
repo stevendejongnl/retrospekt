@@ -1,3 +1,9 @@
+## [1.15.0](https://github.com/stevendejongnl/retrospekt/compare/v1.14.2...v1.15.0) (2026-02-28)
+
+### Features
+
+* **stats:** add /stats page with public + admin analytics ([afc8132](https://github.com/stevendejongnl/retrospekt/commit/afc813273a45299b30b37719a782f67b8f4775d5))
+
 ## [1.14.2](https://github.com/stevendejongnl/retrospekt/compare/v1.14.1...v1.14.2) (2026-02-27)
 
 ### Bug Fixes
