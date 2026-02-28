@@ -146,4 +146,4 @@ kubectl create secret generic retrospekt-sentry-secret \
 kubectl apply -f kubernetes.yaml
 ```
 
-Backend env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default: 30), `REDIS_URL`, `SENTRY_DSN` (optional), `ADMIN_PASSWORD_HASH` (optional, argon2 hash; empty = admin stats disabled), `SENTRY_AUTH_TOKEN` + `SENTRY_ORG_SLUG` + `SENTRY_PROJECT_SLUG` (optional; all three required to enable Sentry Health in admin stats).
+Backend env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default: 30), `REDIS_URL`, `SENTRY_DSN` (optional), `ADMIN_PASSWORD_HASH` (optional, argon2 hash; empty = admin stats disabled), `SENTRY_AUTH_TOKEN` + `SENTRY_ORG_SLUG` + `SENTRY_PROJECT_SLUG` (optional; all three required to enable Sentry Health in admin stats), `SENTRY_FRONTEND_PROJECT_SLUG` (optional; requires `SENTRY_AUTH_TOKEN` + `SENTRY_ORG_SLUG`; enables Frontend Sentry Health in admin stats).

@@ -76,6 +76,12 @@ spec:
                   name: retrospekt-sentry-secret
                   key: project-slug
                   optional: true
+            - name: SENTRY_FRONTEND_PROJECT_SLUG
+              valueFrom:
+                secretKeyRef:
+                  name: retrospekt-sentry-secret
+                  key: frontend-project-slug
+                  optional: true
           resources:
             requests:
               memory: "128Mi"
