@@ -49,6 +49,61 @@ export interface CreateSessionResponse extends Session {
   facilitator_token: string
 }
 
+// ---------------------------------------------------------------------------
+// Stats types
+// ---------------------------------------------------------------------------
+
+export interface PhaseCount {
+  phase: string
+  count: number
+}
+
+export interface DailyCount {
+  date: string
+  count: number
+}
+
+export interface ReactionCount {
+  emoji: string
+  count: number
+}
+
+export interface ColumnCount {
+  column: string
+  count: number
+}
+
+export interface HeatmapCell {
+  day_of_week: number
+  hour_bucket: number
+  count: number
+}
+
+export interface FunnelStats {
+  created: number
+  has_cards: number
+  has_votes: number
+  closed: number
+}
+
+export interface PublicStats {
+  total_sessions: number
+  active_sessions: number
+  sessions_by_phase: PhaseCount[]
+  sessions_per_day: DailyCount[]
+  total_cards: number
+  avg_cards_per_session: number
+  total_votes: number
+  total_reactions: number
+}
+
+export interface AdminStats {
+  reaction_breakdown: ReactionCount[]
+  cards_per_column: ColumnCount[]
+  activity_heatmap: HeatmapCell[]
+  engagement_funnel: FunnelStats
+}
+
 export const PARTICIPANT_COLORS = [
   '#7c3aed', '#0284c7', '#059669', '#d97706', '#db2777',
   '#0891b2', '#65a30d', '#9333ea', '#ea580c', '#0d9488',

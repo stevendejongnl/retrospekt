@@ -207,6 +207,34 @@ describe('assignCard', () => {
   })
 })
 
+describe('stats endpoints', () => {
+  it('getPublicStats GETs /api/v1/stats', async () => {
+    mockOk({ total_sessions: 5, active_sessions: 3, sessions_by_phase: [], sessions_per_day: [],
+      total_cards: 10, avg_cards_per_session: 2.0, total_votes: 4, total_reactions: 2 })
+    await api.getPublicStats()
+    const [url] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/stats')
+  })
+
+  it('adminAuth POSTs password to /api/v1/stats/auth', async () => {
+    mockOk({ token: 'tok-xyz' })
+    await api.adminAuth('secret')
+    const [url, opts] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/stats/auth')
+    expect(opts.method).toBe('POST')
+    expect(opts.body).toBe(JSON.stringify({ password: 'secret' }))
+  })
+
+  it('getAdminStats GETs /api/v1/stats/admin with X-Admin-Token header', async () => {
+    mockOk({ reaction_breakdown: [], cards_per_column: [], activity_heatmap: [],
+      engagement_funnel: { created: 0, has_cards: 0, has_votes: 0, closed: 0 } })
+    await api.getAdminStats('my-admin-token')
+    const [url, opts] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/stats/admin')
+    expect(opts.headers).toMatchObject({ 'X-Admin-Token': 'my-admin-token' })
+  })
+})
+
 describe('timer endpoints', () => {
   it('setTimerDuration PATCHes /timer with duration_seconds', async () => {
     mockOk(mockSession)

@@ -13,7 +13,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from mongomock_motor import AsyncMongoMockClient
 
-from src.dependencies import get_repo
+from src.dependencies import get_redis, get_repo
 from src.main import create_app
 from src.repositories.session_repo import SessionRepository
 from src.services.sse_manager import sse_manager
@@ -37,10 +37,11 @@ async def db():
 
 
 @pytest_asyncio.fixture
-async def client(db):
-    """FastAPI test client wired to the in-memory DB via dependency override."""
+async def client(db, fake_redis):
+    """FastAPI test client wired to the in-memory DB and fake Redis via dependency overrides."""
     app = create_app()
     app.dependency_overrides[get_repo] = lambda: SessionRepository(db)
+    app.dependency_overrides[get_redis] = lambda: fake_redis
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
     app.dependency_overrides.clear()

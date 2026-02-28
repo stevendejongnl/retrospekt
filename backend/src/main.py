@@ -17,7 +17,7 @@ from sentry_sdk.integrations.starlette import StarletteIntegration
 from .config import settings
 from .database import database
 from .repositories.session_repo import SessionRepository
-from .routers import cards, health, sessions
+from .routers import cards, health, sessions, stats
 from .services.sse_manager import sse_manager
 
 logger = logging.getLogger(__name__)
@@ -46,6 +46,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # type: ignore[
     await repo.ensure_indexes()
     redis_client = aioredis.from_url(settings.redis_url, decode_responses=False)
     sse_manager.set_client(redis_client)
+    app.state.redis = redis_client
     task = asyncio.create_task(_cleanup_loop(repo))
     try:
         yield
@@ -84,6 +85,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(sessions.router)
     app.include_router(cards.router)
+    app.include_router(stats.router)
 
     return app
 

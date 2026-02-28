@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     session_expiry_days: int = 30
     redis_url: str = "redis://localhost:6379"
     sentry_dsn: str = ""
+    admin_password_hash: str = ""  # empty = admin disabled (safe default)
 
 
 settings = Settings()

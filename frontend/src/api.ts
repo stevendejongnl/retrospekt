@@ -1,4 +1,4 @@
-import type { Card, CreateSessionResponse, Session } from './types'
+import type { AdminStats, Card, CreateSessionResponse, PublicStats, Session } from './types'
 
 const BASE = '/api/v1'
 
@@ -119,6 +119,19 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         method: 'PATCH',
         body: JSON.stringify({ assignee }),
         headers: { 'X-Participant-Name': participantName, 'X-Facilitator-Token': facilitatorToken },
+      }),
+
+    getPublicStats: () => request<PublicStats>('/stats'),
+
+    adminAuth: (password: string) =>
+      request<{ token: string }>('/stats/auth', {
+        method: 'POST',
+        body: JSON.stringify({ password }),
+      }),
+
+    getAdminStats: (token: string) =>
+      request<AdminStats>('/stats/admin', {
+        headers: { 'X-Admin-Token': token },
       }),
 
     setTimerDuration: (sessionId: string, durationSeconds: number, facilitatorToken: string) =>

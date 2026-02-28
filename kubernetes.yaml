@@ -52,6 +52,12 @@ spec:
                 secretKeyRef:
                   name: retrospekt-sentry-secret
                   key: backend-dsn
+            - name: ADMIN_PASSWORD_HASH
+              valueFrom:
+                secretKeyRef:
+                  name: retrospekt-admin-secret
+                  key: admin-password-hash
+                  optional: true
           resources:
             requests:
               memory: "64Mi"
