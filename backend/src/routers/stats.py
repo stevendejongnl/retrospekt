@@ -78,4 +78,20 @@ async def get_admin_stats(
                 p95_latency_7d=[],
                 error=str(exc),
             )
+    if settings.sentry_frontend_api_configured:
+        svc_fe = SentryService(
+            settings.sentry_auth_token,
+            settings.sentry_org_slug,
+            settings.sentry_frontend_project_slug,
+        )
+        try:
+            result.sentry_frontend = await svc_fe.get_health()
+        except Exception as exc:
+            result.sentry_frontend = SentryHealth(
+                unresolved_count=0,
+                top_issues=[],
+                error_rate_7d=[],
+                p95_latency_7d=[],
+                error=str(exc),
+            )
     return result

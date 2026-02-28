@@ -101,6 +101,7 @@ class AdminStats(BaseModel):
     engagement_funnel: FunnelStats
     session_lifetime: SessionLifetimeStats
     sentry: SentryHealth | None = None
+    sentry_frontend: SentryHealth | None = None
 
 
 class StatsRepository:
