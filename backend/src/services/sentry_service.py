@@ -31,15 +31,25 @@ class SentryService:
         async with httpx.AsyncClient(
             base_url=self.BASE_URL, headers=self._headers, timeout=10.0
         ) as client:
+            # events-stats API requires the numeric project ID, not the slug.
+            try:
+                project_id = await self._get_project_id(client)
+                project_id_error: str | None = None
+            except Exception as exc:
+                project_id = None
+                project_id_error = str(exc)
+
             results = await asyncio.gather(
                 self._get_issues(client),
-                self._get_error_rate(client),
-                self._get_p95(client),
+                self._get_error_rate(client, project_id),
+                self._get_p95(client, project_id),
                 return_exceptions=True,
             )
 
         issues_raw, error_rate_raw, p95_raw = results
         errors: list[str] = []
+        if project_id_error:
+            errors.append(project_id_error)
 
         # Issues
         unresolved_count = 0
@@ -89,7 +99,16 @@ class SentryService:
         ]
         return total, issues
 
-    async def _get_error_rate(self, client: httpx.AsyncClient) -> list[SentryDataPoint]:
+    async def _get_project_id(self, client: httpx.AsyncClient) -> int:
+        resp = await client.get(f"/api/0/projects/{self._org}/{self._project}/")
+        resp.raise_for_status()
+        return int(resp.json()["id"])
+
+    async def _get_error_rate(
+        self, client: httpx.AsyncClient, project_id: int | None
+    ) -> list[SentryDataPoint]:
+        if project_id is None:
+            return []
         resp = await client.get(
             f"/api/0/organizations/{self._org}/events-stats/",
             params={
@@ -98,13 +117,17 @@ class SentryService:
                 "period": "7d",
                 "query": "",
                 "dataset": "errors",
-                "project": self._project,
+                "project": project_id,
             },
         )
         resp.raise_for_status()
         return _parse_timeseries(resp.json())
 
-    async def _get_p95(self, client: httpx.AsyncClient) -> list[SentryDataPoint]:
+    async def _get_p95(
+        self, client: httpx.AsyncClient, project_id: int | None
+    ) -> list[SentryDataPoint]:
+        if project_id is None:
+            return []
         resp = await client.get(
             f"/api/0/organizations/{self._org}/events-stats/",
             params={
@@ -113,7 +136,7 @@ class SentryService:
                 "period": "7d",
                 "query": "",
                 "dataset": "transactions",
-                "project": self._project,
+                "project": project_id,
             },
         )
         resp.raise_for_status()

@@ -13,6 +13,13 @@ import pytest
 class TestSentryServiceGetHealth:
     """SentryService.get_health() maps three Sentry API endpoints to SentryHealth."""
 
+    def _make_project_response(self):
+        """Mock httpx response for project details endpoint (returns numeric ID)."""
+        response = MagicMock()
+        response.raise_for_status = MagicMock()
+        response.json.return_value = {"id": "4510940777676800", "slug": "myproject"}
+        return response
+
     def _make_issues_response(self):
         """Mock httpx response for issues endpoint."""
         response = MagicMock()
@@ -72,6 +79,7 @@ class TestSentryServiceGetHealth:
         from src.services.sentry_service import SentryService
 
         mock_client.get = AsyncMock(side_effect=[
+            self._make_project_response(),
             self._make_issues_response(),
             self._make_error_rate_response(),
             self._make_p95_response(),
@@ -87,6 +95,7 @@ class TestSentryServiceGetHealth:
         from src.services.sentry_service import SentryService
 
         mock_client.get = AsyncMock(side_effect=[
+            self._make_project_response(),
             self._make_issues_response(),
             self._make_error_rate_response(),
             self._make_p95_response(),
@@ -106,6 +115,7 @@ class TestSentryServiceGetHealth:
         from src.services.sentry_service import SentryService
 
         mock_client.get = AsyncMock(side_effect=[
+            self._make_project_response(),
             self._make_issues_response(),
             self._make_error_rate_response(),
             self._make_p95_response(),
@@ -127,6 +137,7 @@ class TestSentryServiceGetHealth:
         from src.services.sentry_service import SentryService
 
         mock_client.get = AsyncMock(side_effect=[
+            self._make_project_response(),
             self._make_issues_response(),
             self._make_error_rate_response(),
             self._make_p95_response(),
@@ -144,6 +155,7 @@ class TestSentryServiceGetHealth:
         from src.services.sentry_service import SentryService
 
         mock_client.get = AsyncMock(side_effect=[
+            self._make_project_response(),
             self._make_issues_response(),
             self._make_error_rate_response(),
             self._make_p95_response(),
@@ -159,6 +171,7 @@ class TestSentryServiceGetHealth:
         from src.services.sentry_service import SentryService
 
         mock_client.get = AsyncMock(side_effect=[
+            self._make_project_response(),
             Exception("Connection refused"),
             self._make_error_rate_response(),
             self._make_p95_response(),
@@ -175,6 +188,7 @@ class TestSentryServiceGetHealth:
         from src.services.sentry_service import SentryService
 
         mock_client.get = AsyncMock(side_effect=[
+            self._make_project_response(),
             self._make_issues_response(),
             Exception("Timeout"),
             self._make_p95_response(),
@@ -192,6 +206,23 @@ class TestSentryServiceGetHealth:
         assert len(health.p95_latency_7d) == 3
         assert health.error is not None
 
+    async def test_project_id_failure_returns_empty_timeseries(self, mock_client):
+        from src.services.sentry_service import SentryService
+
+        mock_client.get = AsyncMock(side_effect=[
+            Exception("404 project not found"),
+            self._make_issues_response(),
+        ])
+
+        with patch("src.services.sentry_service.httpx.AsyncClient", return_value=mock_client):
+            svc = SentryService("token", "myorg", "myproject")
+            health = await svc.get_health()
+
+        # timeseries calls skipped when project ID unavailable
+        assert health.error_rate_7d == []
+        assert health.p95_latency_7d == []
+        assert health.error is not None
+
     async def test_issues_x_hits_header_missing_defaults_to_len_of_issues(self, mock_client):
         from src.services.sentry_service import SentryService
 
@@ -203,6 +234,7 @@ class TestSentryServiceGetHealth:
         ]
 
         mock_client.get = AsyncMock(side_effect=[
+            self._make_project_response(),
             response,
             self._make_error_rate_response(),
             self._make_p95_response(),
