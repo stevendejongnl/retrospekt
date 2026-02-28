@@ -1,3 +1,9 @@
+## [1.17.3](https://github.com/stevendejongnl/retrospekt/compare/v1.17.2...v1.17.3) (2026-02-28)
+
+### Bug Fixes
+
+* **frontend:** opt env.js out of Cloudflare Rocket Loader ([d316307](https://github.com/stevendejongnl/retrospekt/commit/d3163079658b7b1db4c7d16256fb889cd40fa47f))
+
 ## [1.17.2](https://github.com/stevendejongnl/retrospekt/compare/v1.17.1...v1.17.2) (2026-02-28)
 
 ### Bug Fixes
