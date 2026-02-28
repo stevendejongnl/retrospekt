@@ -36,6 +36,8 @@ A simple, self-hosted retrospective board.
 - Session history sidebar: up to 50 past sessions persisted in localStorage
 - Dark mode with persisted preference (CSS custom properties)
 - Session auto-expiry: sessions deleted after 30 days of inactivity
+- Stats dashboard at `/stats`: public session counts + admin analytics (engagement funnel, reaction breakdown, session lifetime)
+- Brand theming: visit `/?theme=cs` to activate an alternate visual theme (stored in localStorage)
 
 ## Stack
 
@@ -92,6 +94,10 @@ PATCH  /api/v1/sessions/{id}/timer                              set timer durati
 POST   /api/v1/sessions/{id}/timer/start                        start or resume timer (facilitator)
 POST   /api/v1/sessions/{id}/timer/pause                        pause timer (facilitator)
 POST   /api/v1/sessions/{id}/timer/reset                        reset timer (facilitator)
+
+GET  /api/v1/stats                                              public aggregate stats
+POST /api/v1/stats/auth                                         authenticate for admin stats (returns token)
+GET  /api/v1/stats/admin                                        admin analytics (X-Admin-Token required)
 ```
 
 Every mutation broadcasts the full updated session JSON to all connected SSE clients.
@@ -132,4 +138,4 @@ kubectl create secret generic retrospekt-mongodb-secret \
 kubectl apply -f kubernetes.yaml
 ```
 
-Backend env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default: 30), `REDIS_URL`, `SENTRY_DSN` (optional).
+Backend env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default: 30), `REDIS_URL`, `SENTRY_DSN` (optional), `ADMIN_PASSWORD_HASH` (optional, argon2 hash; empty = admin stats disabled).

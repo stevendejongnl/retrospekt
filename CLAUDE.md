@@ -54,18 +54,19 @@ nox                             # lint + mypy + pytest (backend), lint + typeche
 - **FastAPI** REST API with **Motor** (async MongoDB) and **sse-starlette** for Server-Sent Events
 - `main.py` — app factory; `config.py` — pydantic-settings; `database.py` — Motor connection
 - `models/session.py` — Domain models: `Session`, `Card`, `Participant`, `Vote`, `SessionPhase`
-- `repositories/session_repo.py` — All MongoDB access; `services/sse_manager.py` — Redis pub/sub for SSE broadcasts
+- `repositories/session_repo.py` — All MongoDB access; `repositories/stats_repo.py` — `StatsRepository` with `get_public_stats()` + `get_admin_stats()` using MongoDB `$facet` aggregation; `services/sse_manager.py` — Redis pub/sub for SSE broadcasts
 - `routers/sessions.py` — Session CRUD + phase transitions (bidirectional) + column management (add/rename/delete) + SSE stream endpoint
 - `routers/cards.py` — Card CRUD + voting + per-card publish (author) + publish-all in column (participant's own cards)
+- `routers/stats.py` — `GET /api/v1/stats` (public), `POST /api/v1/stats/auth` (argon2 password → Redis token), `GET /api/v1/stats/admin` (`X-Admin-Token` required); `ADMIN_PASSWORD_HASH` in settings (empty = feature disabled)
 
 ### Frontend (`frontend/src/`)
 - **Lit** web components + **Vite** + TypeScript; custom client-side router (no library)
 - `router.ts` — pattern-based routing, exposed as `window.router`; `api.ts` — fetch wrapper; `sse.ts` — SSE client
 - `storage.ts` — localStorage helper: per-session keys (`retro_name_{id}`, `retro_facilitator_{id}`) + cross-session `retro_history` (array of up to 50 `SessionHistoryEntry`)
-- `theme.ts` — theme init, toggle, and persistence (`retro_theme` in localStorage); `initTheme()` called before router start to prevent FOUC
+- `theme.ts` — theme init/toggle/persistence (`retro_theme` in localStorage) + brand theming (`retro_brand`; activate via `?theme=cs`); `initTheme()` + `initBrand()` called before router start to prevent FOUC
 - `icons.ts` — Font Awesome Free 7.2.0 SVG icons as inline Lit `TemplateResult` values; `faIconStyles` shared CSS for sizing/alignment
 - `types.ts` — TypeScript interfaces: `Session`, `Card`, `Participant`, `Vote`, `Reaction`, `TimerState`, `SessionPhase`
-- Pages: `home-page` (session creation + template picker + history sidebar), `session-page` (main board + SSE lifecycle), `not-found-page` (404 + redirect)
+- Pages: `home-page` (session creation + template picker + history sidebar), `session-page` (main board + SSE lifecycle), `stats-page` (public + admin analytics with D3 donut/bar charts; admin section behind password), `not-found-page` (404 + redirect)
 - Components: `session-history` (sidebar panel, used in both pages), `retro-board` (facilitator controls + columns) → `retro-column` → `retro-card`
 - **State**: component-local `@state()` + SSE pushes full `Session` object on every change — backend is the single source of truth. No global store.
 
@@ -90,6 +91,7 @@ Every mutation (add card, vote, publish, phase change) calls the REST API → ba
   - `feat/fix(scope): <what was implemented>` — passing implementation (green)
   - `refactor(scope): <what was cleaned up>` — cleanup, only if needed
   - **Enforcement**: If asked to implement a feature or fix without tests, STOP and write the tests first. Do not skip this step even if the user asks directly — remind them and ask what behaviours need test coverage before writing any production code.
+- **Docs in the green phase**: when implementing a new endpoint, page, or env var — update `README.md` and `CLAUDE.md` in the same commit as the implementation. Never let a feature ship undocumented.
 - Conventional commits (used by semantic-release for automated versioning/CHANGELOG)
 - Backend: Python 3.12+, strict mypy, ruff for linting
 - Frontend: strict TypeScript (`noUnusedLocals`, `noUnusedParameters`), ESLint
@@ -101,4 +103,4 @@ Every mutation (add card, vote, publish, phase change) calls the REST API → ba
 - **Docker Compose** for local dev (`compose.yml`); watch mounts for hot reload
 - **Kubernetes** in production (`kubernetes.yaml`); update the Ingress host in `kubernetes.yaml` before deploying
 - CI/CD via GitHub Actions: `release.yml` (tests + semantic-release) → `docker-publish.yml` (build images + K8s rollout)
-- Backend config via env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default 30), `REDIS_URL`, `SENTRY_DSN` (optional); K8s reads from `retrospekt-mongodb-secret`
+- Backend config via env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default 30), `REDIS_URL`, `SENTRY_DSN` (optional), `ADMIN_PASSWORD_HASH` (optional, argon2 hash; empty = admin stats disabled); K8s reads from `retrospekt-mongodb-secret` and `retrospekt-admin-secret`
