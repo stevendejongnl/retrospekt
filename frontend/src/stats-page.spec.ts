@@ -24,6 +24,33 @@ const MOCK_PUBLIC_STATS = {
   total_reactions: 45,
 }
 
+const MOCK_SENTRY_HEALTH = {
+  unresolved_count: 5,
+  top_issues: [
+    { id: '123', title: 'ZeroDivisionError: division by zero', count: 15, last_seen: '2026-02-28T10:00:00Z' },
+    { id: '456', title: 'KeyError: user_id', count: 7, last_seen: '2026-02-27T09:00:00Z' },
+  ],
+  error_rate_7d: [
+    { date: '2026-02-22', value: 10 },
+    { date: '2026-02-23', value: 25 },
+    { date: '2026-02-24', value: 0 },
+    { date: '2026-02-25', value: 5 },
+    { date: '2026-02-26', value: 8 },
+    { date: '2026-02-27', value: 3 },
+    { date: '2026-02-28', value: 12 },
+  ],
+  p95_latency_7d: [
+    { date: '2026-02-22', value: 120.5 },
+    { date: '2026-02-23', value: 98.3 },
+    { date: '2026-02-24', value: 0 },
+    { date: '2026-02-25', value: 145.0 },
+    { date: '2026-02-26', value: 110.0 },
+    { date: '2026-02-27', value: 88.5 },
+    { date: '2026-02-28', value: 133.2 },
+  ],
+  error: null,
+}
+
 const MOCK_ADMIN_STATS = {
   reaction_breakdown: [
     { emoji: '❤️', count: 20 },
@@ -46,6 +73,7 @@ const MOCK_ADMIN_STATS = {
     avg_duration: { open_avg_hours: 14.5, closed_avg_hours: 48.25 },
     avg_time_to_close_hours: 36.0,
   },
+  sentry: null,
 }
 
 async function mockStats(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
@@ -433,5 +461,98 @@ test.describe('stats-page session lifetime section', () => {
     await unlockAdmin(page)
     const rects = page.locator('stats-page').locator('#lifetime-chart rect')
     await expect(rects).toHaveCount(4)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Sentry Health section
+// ---------------------------------------------------------------------------
+
+async function unlockAdminWithSentry(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+  await mockStats(page)
+  await mockAdminAuth(page)
+  const adminWithSentry = { ...MOCK_ADMIN_STATS, sentry: MOCK_SENTRY_HEALTH }
+  await page.route('/api/v1/stats/admin', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(adminWithSentry),
+    }),
+  )
+  await page.goto('/stats')
+  await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+  await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+  await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+  await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
+}
+
+test.describe('stats-page sentry health section', () => {
+  test('sentry section hidden when sentry is null', async ({ page }) => {
+    await unlockAdmin(page)
+    await expect(page.locator('stats-page').getByText('Sentry Health', { exact: false })).not.toBeVisible()
+  })
+
+  test('sentry section shown when sentry data present', async ({ page }) => {
+    await unlockAdminWithSentry(page)
+    await expect(page.locator('stats-page').getByText('Sentry Health', { exact: false })).toBeVisible()
+  })
+
+  test('shows unresolved issues count', async ({ page }) => {
+    await unlockAdminWithSentry(page)
+    await expect(page.locator('stats-page').getByText('Unresolved Issues', { exact: false })).toBeVisible()
+    // unresolved_count = 5
+    await expect(page.locator('stats-page').getByText('5', { exact: true }).first()).toBeVisible()
+  })
+
+  test('shows top issues list with titles', async ({ page }) => {
+    await unlockAdminWithSentry(page)
+    await expect(page.locator('stats-page').getByText('ZeroDivisionError: division by zero', { exact: false })).toBeVisible()
+    await expect(page.locator('stats-page').getByText('KeyError: user_id', { exact: false })).toBeVisible()
+  })
+
+  test('shows error rate chart svg', async ({ page }) => {
+    await unlockAdminWithSentry(page)
+    const svg = page.locator('stats-page').locator('#sentry-error-chart')
+    await expect(svg).toBeVisible()
+  })
+
+  test('shows p95 latency chart svg', async ({ page }) => {
+    await unlockAdminWithSentry(page)
+    const svg = page.locator('stats-page').locator('#sentry-p95-chart')
+    await expect(svg).toBeVisible()
+  })
+
+  test('error rate chart renders bars', async ({ page }) => {
+    await unlockAdminWithSentry(page)
+    const rects = page.locator('stats-page').locator('#sentry-error-chart rect')
+    await expect(rects).toHaveCount(7)
+  })
+
+  test('p95 chart renders bars', async ({ page }) => {
+    await unlockAdminWithSentry(page)
+    const rects = page.locator('stats-page').locator('#sentry-p95-chart rect')
+    await expect(rects).toHaveCount(7)
+  })
+
+  test('shows error banner when sentry.error is set', async ({ page }) => {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    const adminWithError = {
+      ...MOCK_ADMIN_STATS,
+      sentry: { ...MOCK_SENTRY_HEALTH, error: 'Connection refused to sentry.io' },
+    }
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(adminWithError),
+      }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
+    await expect(page.locator('stats-page').getByText(/Connection refused to sentry.io/, { exact: false })).toBeVisible()
   })
 })

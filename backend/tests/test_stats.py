@@ -11,6 +11,8 @@ TDD commit order:
   feat(stats): implement StatsRepository.get_admin_stats()
   test(stats): add SessionLifetimeStats backend tests
   feat(stats): implement session lifetime aggregations
+  test(stats): admin endpoint includes sentry health when API configured
+  feat(stats): add SentryHealth to AdminStats and call SentryService in admin endpoint
 """
 
 from datetime import UTC, datetime, timedelta
@@ -478,3 +480,97 @@ class TestAdminStatsLifetime:
         avg = data["avg_time_to_close_hours"]
         assert avg is not None
         assert 5 <= avg <= 7
+
+
+# ---------------------------------------------------------------------------
+# Sentry health — GET /api/v1/stats/admin (sentry field)
+# ---------------------------------------------------------------------------
+
+SENTRY_TOKEN = "sentry-test-token"
+
+MOCK_SENTRY_HEALTH = {
+    "unresolved_count": 7,
+    "top_issues": [
+        {
+            "id": "123",
+            "title": "ZeroDivisionError",
+            "count": 5,
+            "last_seen": "2026-02-28T10:00:00Z",
+        }
+    ],
+    "error_rate_7d": [{"date": "2026-02-28", "value": 3.0}],
+    "p95_latency_7d": [{"date": "2026-02-28", "value": 120.0}],
+    "error": None,
+}
+
+
+class TestAdminStatsSentry:
+    """Sentry health field is included in admin stats when API is configured."""
+
+    async def _get_admin(self, client, fake_redis) -> dict:
+        await fake_redis.set(f"admin_token:{SENTRY_TOKEN}", "1", ex=86400)
+        response = await client.get(
+            "/api/v1/stats/admin", headers={"X-Admin-Token": SENTRY_TOKEN}
+        )
+        assert response.status_code == 200
+        return response.json()
+
+    async def test_sentry_field_null_when_not_configured(self, client, fake_redis, monkeypatch):
+        from src.config import settings
+        monkeypatch.setattr(settings, "sentry_auth_token", "")
+        monkeypatch.setattr(settings, "sentry_org_slug", "")
+        monkeypatch.setattr(settings, "sentry_project_slug", "")
+        data = await self._get_admin(client, fake_redis)
+        assert data["sentry"] is None
+
+    async def test_sentry_field_present_when_configured(self, client, fake_redis, monkeypatch):
+        from unittest.mock import AsyncMock, patch
+
+        from src.config import settings
+        from src.repositories.stats_repo import SentryDataPoint, SentryHealth, SentryIssue
+
+        monkeypatch.setattr(settings, "sentry_auth_token", "tok")
+        monkeypatch.setattr(settings, "sentry_org_slug", "myorg")
+        monkeypatch.setattr(settings, "sentry_project_slug", "myproject")
+
+        mock_health = SentryHealth(
+            unresolved_count=7,
+            top_issues=[
+                SentryIssue(id="123", title="ZeroDivisionError", count=5, last_seen="2026-02-28T10:00:00Z")
+            ],
+            error_rate_7d=[SentryDataPoint(date="2026-02-28", value=3.0)],
+            p95_latency_7d=[SentryDataPoint(date="2026-02-28", value=120.0)],
+            error=None,
+        )
+
+        with patch(
+            "src.routers.stats.SentryService.get_health",
+            new=AsyncMock(return_value=mock_health),
+        ):
+            data = await self._get_admin(client, fake_redis)
+
+        assert data["sentry"] is not None
+        assert data["sentry"]["unresolved_count"] == 7
+        assert len(data["sentry"]["top_issues"]) == 1
+        assert data["sentry"]["top_issues"][0]["title"] == "ZeroDivisionError"
+        assert data["sentry"]["error"] is None
+
+    async def test_sentry_error_fallback_on_exception(self, client, fake_redis, monkeypatch):
+        from unittest.mock import AsyncMock, patch
+
+        from src.config import settings
+
+        monkeypatch.setattr(settings, "sentry_auth_token", "tok")
+        monkeypatch.setattr(settings, "sentry_org_slug", "myorg")
+        monkeypatch.setattr(settings, "sentry_project_slug", "myproject")
+
+        with patch(
+            "src.routers.stats.SentryService.get_health",
+            new=AsyncMock(side_effect=Exception("Sentry down")),
+        ):
+            data = await self._get_admin(client, fake_redis)
+
+        assert data["sentry"] is not None
+        assert data["sentry"]["unresolved_count"] == 0
+        assert data["sentry"]["top_issues"] == []
+        assert data["sentry"]["error"] == "Sentry down"
