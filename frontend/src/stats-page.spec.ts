@@ -154,6 +154,145 @@ test.describe('stats-page charts', () => {
   })
 })
 
+test.describe('stats-page load error', () => {
+  test('shows error message when public stats fails', async ({ page }) => {
+    await page.route('/api/v1/stats', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{"detail":"error"}' }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText(/Failed to load statistics/)).toBeVisible()
+  })
+})
+
+test.describe('stats-page saved admin token', () => {
+  test('pre-seeded sessionStorage token auto-unlocks admin section', async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem('retro_admin_token', 'pre-seeded-token')
+    })
+    await mockStats(page)
+    await mockAdminStats(page)
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('Reaction Breakdown', { exact: false })).toBeVisible()
+  })
+
+  test('shows loading spinner while fetching admin stats from saved token', async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem('retro_admin_token', 'token-slow')
+    })
+    await mockStats(page)
+
+    let resolveAdmin!: () => void
+    const adminReady = new Promise<void>((r) => {
+      resolveAdmin = r
+    })
+    await page.route('/api/v1/stats/admin', async (route) => {
+      await adminReady
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(MOCK_ADMIN_STATS),
+      })
+    })
+
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    // Admin spinner should be visible since we haven't resolved yet
+    await expect(page.locator('stats-page').getByText('Loading…')).toBeVisible()
+    resolveAdmin()
+    await expect(page.locator('stats-page').getByText('Reaction Breakdown', { exact: false })).toBeVisible()
+  })
+
+  test('clears expired token on 401 and shows password form', async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem('retro_admin_token', 'expired-token')
+    })
+    await mockStats(page)
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({ status: 401, contentType: 'application/json', body: '{"detail":"Unauthorized"}' }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    // Token should be cleared, password form should be visible
+    await expect(page.locator('stats-page').getByPlaceholder('Admin password')).toBeVisible()
+  })
+
+  test('non-401 error from auto-load keeps error state visible', async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem('retro_admin_token', 'bad-token')
+    })
+    await mockStats(page)
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{"detail":"Server error"}' }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    // Error state: form shown (password input visible)
+    await expect(page.locator('stats-page').getByPlaceholder('Admin password')).toBeVisible()
+  })
+})
+
+test.describe('stats-page keyboard interaction', () => {
+  test('pressing Enter in password field submits the form', async ({ page }) => {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    await mockAdminStats(page)
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+
+    const input = page.locator('stats-page').getByPlaceholder('Admin password')
+    await input.fill('mypassword')
+    await input.press('Enter')
+    await expect(page.locator('stats-page').getByText('Reaction Breakdown', { exact: false })).toBeVisible()
+  })
+})
+
+test.describe('stats-page charts with empty data', () => {
+  test('renders gracefully with empty phase and day data', async ({ page }) => {
+    const emptyStats = { ...MOCK_PUBLIC_STATS, sessions_by_phase: [], sessions_per_day: [] }
+    await page.route('/api/v1/stats', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(emptyStats) }),
+    )
+    await page.goto('/stats')
+    // SVG elements still exist, just empty
+    await expect(page.locator('stats-page').locator('#donut-chart')).toBeVisible()
+    await expect(page.locator('stats-page').locator('#bar-chart')).toBeVisible()
+  })
+
+  test('renders donut chart with unknown phase using fallback color', async ({ page }) => {
+    const unknownPhaseStats = {
+      ...MOCK_PUBLIC_STATS,
+      sessions_by_phase: [{ phase: 'unknown_phase', count: 5 }],
+    }
+    await page.route('/api/v1/stats', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(unknownPhaseStats) }),
+    )
+    await page.goto('/stats')
+    // Donut chart should still render with the fallback grey color
+    await expect(page.locator('stats-page').locator('#donut-chart')).toBeVisible()
+    const path = page.locator('stats-page').locator('#donut-chart path')
+    await expect(path).toHaveAttribute('fill', '#9ca3af')
+  })
+
+  test('renders admin reaction chart gracefully with empty reaction data', async ({ page }) => {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    const emptyAdmin = { ...MOCK_ADMIN_STATS, reaction_breakdown: [] }
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(emptyAdmin),
+      }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+
+    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText('Engagement Funnel', { exact: false })).toBeVisible()
+  })
+})
+
 test.describe('stats-page admin unlock', () => {
   test('shows admin unlock section when locked', async ({ page }) => {
     await mockStats(page)

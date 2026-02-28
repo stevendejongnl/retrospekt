@@ -94,11 +94,8 @@ export class StatsPage extends LitElement {
   // ---------------------------------------------------------------------------
 
   private _renderDonutChart(): void {
-    if (!this.stats || !this.shadowRoot) return
-    const el = this.shadowRoot.querySelector<SVGSVGElement>('#donut-chart')
-    if (!el) return
-
-    const data = this.stats.sessions_by_phase
+    const data = this.stats!.sessions_by_phase
+    const el = this.shadowRoot!.querySelector<SVGSVGElement>('#donut-chart')!
     const svg = d3.select(el)
     svg.selectAll('*').remove()
 
@@ -150,18 +147,15 @@ export class StatsPage extends LitElement {
   }
 
   private _renderBarChart(): void {
-    if (!this.stats || !this.shadowRoot) return
-    const el = this.shadowRoot.querySelector<SVGSVGElement>('#bar-chart')
-    if (!el) return
-
-    const data = this.stats.sessions_per_day
+    const data = this.stats!.sessions_per_day
+    const el = this.shadowRoot!.querySelector<SVGSVGElement>('#bar-chart')!
     const svg = d3.select(el)
     svg.selectAll('*').remove()
 
     if (data.length === 0) return
 
     const margin = { top: 10, right: 10, bottom: 24, left: 28 }
-    const svgW = el.getBoundingClientRect().width || 360
+    const svgW = Math.max(el.getBoundingClientRect().width, 360)
     const svgH = 160
     const width = svgW - margin.left - margin.right
     const height = svgH - margin.top - margin.bottom
@@ -173,17 +167,16 @@ export class StatsPage extends LitElement {
 
     const x = d3.scaleBand().domain(data.map((d) => d.date)).range([0, width]).padding(0.1)
 
-    const maxCount = d3.max(data, (d) => d.count) ?? 1
+    const maxCount = d3.max(data, (d) => d.count) as number
     const y = d3.scaleLinear().domain([0, maxCount]).nice().range([height, 0])
 
-    const accent =
-      getComputedStyle(this).getPropertyValue('--retro-accent').trim() || '#6366f1'
+    const accent = getComputedStyle(this).getPropertyValue('--retro-accent').trim()
 
     g.selectAll('rect')
       .data(data)
       .enter()
       .append('rect')
-      .attr('x', (d) => x(d.date) ?? 0)
+      .attr('x', (d) => x(d.date) as number)
       .attr('y', (d) => y(d.count))
       .attr('width', x.bandwidth())
       .attr('height', (d) => height - y(d.count))
@@ -199,16 +192,12 @@ export class StatsPage extends LitElement {
   }
 
   private _renderAdminCharts(): void {
-    if (!this.adminStats || !this.shadowRoot) return
     this._renderReactionChart()
   }
 
   private _renderReactionChart(): void {
-    if (!this.adminStats || !this.shadowRoot) return
-    const el = this.shadowRoot.querySelector<SVGSVGElement>('#reaction-chart')
-    if (!el) return
-
-    const data = this.adminStats.reaction_breakdown
+    const data = this.adminStats!.reaction_breakdown
+    const el = this.shadowRoot!.querySelector<SVGSVGElement>('#reaction-chart')!
     const svg = d3.select(el)
     svg.selectAll('*').remove()
 
@@ -225,19 +214,18 @@ export class StatsPage extends LitElement {
 
     const x = d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => d.count) ?? 1])
+      .domain([0, d3.max(data, (d) => d.count) as number])
       .range([0, width])
 
     const y = d3.scaleBand().domain(data.map((d) => d.emoji)).range([0, height]).padding(0.15)
 
-    const accent =
-      getComputedStyle(this).getPropertyValue('--retro-accent').trim() || '#6366f1'
+    const accent = getComputedStyle(this).getPropertyValue('--retro-accent').trim()
 
     g.selectAll('rect')
       .data(data)
       .enter()
       .append('rect')
-      .attr('y', (d) => y(d.emoji) ?? 0)
+      .attr('y', (d) => y(d.emoji) as number)
       .attr('x', 0)
       .attr('height', y.bandwidth())
       .attr('width', (d) => x(d.count))
@@ -250,7 +238,7 @@ export class StatsPage extends LitElement {
       .append('text')
       .attr('class', 'emoji-label')
       .attr('x', -4)
-      .attr('y', (d) => (y(d.emoji) ?? 0) + y.bandwidth() / 2 + 4)
+      .attr('y', (d) => (y(d.emoji) as number) + y.bandwidth() / 2 + 4)
       .attr('text-anchor', 'end')
       .attr('font-size', '14px')
       .text((d) => d.emoji)
