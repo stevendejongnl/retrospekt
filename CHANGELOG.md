@@ -1,3 +1,9 @@
+## [1.16.0](https://github.com/stevendejongnl/retrospekt/compare/v1.15.0...v1.16.0) (2026-02-28)
+
+### Features
+
+* **stats:** add session lifetime analytics to admin stats ([cb50190](https://github.com/stevendejongnl/retrospekt/commit/cb50190e066d8d8d2d88920d15767cf54fce404e))
+
 ## [1.15.0](https://github.com/stevendejongnl/retrospekt/compare/v1.14.2...v1.15.0) (2026-02-28)
 
 ### Features
