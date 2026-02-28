@@ -1,3 +1,14 @@
+## [1.18.0](https://github.com/stevendejongnl/retrospekt/compare/v1.17.4...v1.18.0) (2026-02-28)
+
+### Features
+
+* **stats-page:** render backend and frontend Sentry health side by side ([3ba3d6c](https://github.com/stevendejongnl/retrospekt/commit/3ba3d6cba251c00ba622efeb72ea7920bd443a74))
+* **stats:** add sentry_frontend field driven by SENTRY_FRONTEND_PROJECT_SLUG ([d15d48f](https://github.com/stevendejongnl/retrospekt/commit/d15d48f0ea03c06b02a157f4020747d9ece4a087))
+
+### Documentation
+
+* add SENTRY_FRONTEND_PROJECT_SLUG to README, CLAUDE.md, kubernetes.yaml ([29bc3fc](https://github.com/stevendejongnl/retrospekt/commit/29bc3fc6e385052816895444b493fdd0f0658f09))
+
 ## [1.17.4](https://github.com/stevendejongnl/retrospekt/compare/v1.17.3...v1.17.4) (2026-02-28)
 
 ### Bug Fixes
