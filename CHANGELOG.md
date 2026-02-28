@@ -1,3 +1,9 @@
+## [1.17.1](https://github.com/stevendejongnl/retrospekt/compare/v1.17.0...v1.17.1) (2026-02-28)
+
+### Bug Fixes
+
+* **sentry-service:** resolve numeric project ID before events-stats calls ([626ed9e](https://github.com/stevendejongnl/retrospekt/commit/626ed9e6382460ab520299c748058329ff6a58cd))
+
 ## [1.17.0](https://github.com/stevendejongnl/retrospekt/compare/v1.16.0...v1.17.0) (2026-02-28)
 
 ### Features
