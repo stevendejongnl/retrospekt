@@ -31,6 +31,7 @@ class Card(BaseModel):
     votes: list[Vote] = []
     reactions: list[Reaction] = []
     assignee: str | None = None
+    group_id: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 

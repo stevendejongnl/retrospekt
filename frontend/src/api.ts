@@ -155,6 +155,19 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         headers: { 'X-Participant-Name': participantName },
       }),
 
+    groupCard: (sessionId: string, cardId: string, targetCardId: string, participantName: string) =>
+      request<Session>(`/sessions/${sessionId}/cards/${cardId}/group`, {
+        method: 'POST',
+        body: JSON.stringify({ target_card_id: targetCardId }),
+        headers: { 'X-Participant-Name': participantName },
+      }),
+
+    ungroupCard: (sessionId: string, cardId: string, participantName: string) =>
+      request<void>(`/sessions/${sessionId}/cards/${cardId}/group`, {
+        method: 'DELETE',
+        headers: { 'X-Participant-Name': participantName },
+      }),
+
     getPublicStats: () => request<PublicStats>('/stats'),
 
     adminAuth: (password: string) =>

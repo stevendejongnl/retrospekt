@@ -6,6 +6,9 @@ import type { JiraConfig } from '../storage'
 import { storage } from '../storage'
 import { faIconStyles, iconThumbsUp } from '../icons'
 
+// Module-level fallback for Firefox, which clears dataTransfer between events
+let _draggedCardId: string | null = null
+
 export function buildJiraProjectUrl(config: JiraConfig): string {
   const base = config.baseUrl.replace(/\/$/, '')
   return `${base}/browse/${config.projectKey}`
@@ -31,8 +34,10 @@ export class RetroCard extends LitElement {
   @property({ type: String }) sessionName = ''
 
   @property({ type: Boolean }) canEdit = false
+  @property({ type: Boolean }) canGroup = false
 
   @state() private menuOpen = false
+  @state() private isDragOver = false
   @state() private jiraDialogOpen = false
   @state() private summaryCopied = false
   @state() private descCopied = false
@@ -70,6 +75,10 @@ export class RetroCard extends LitElement {
     .card.draft {
       border-left-style: dashed;
       background: var(--retro-bg-subtle);
+    }
+    .card.drag-over {
+      outline: 2px dashed var(--retro-accent);
+      outline-offset: 2px;
     }
     .card-text {
       font-size: 14px;
@@ -553,6 +562,37 @@ export class RetroCard extends LitElement {
     )
   }
 
+  private _onDragStart(e: DragEvent): void {
+    _draggedCardId = this.card.id
+    e.dataTransfer?.setData('text/plain', this.card.id)
+  }
+
+  private _onDragOver(e: DragEvent): void {
+    const sourceId = e.dataTransfer?.getData('text/plain') || _draggedCardId
+    if (sourceId && sourceId !== this.card.id) {
+      e.preventDefault()
+      this.isDragOver = true
+    }
+  }
+
+  private _onDragLeave(): void {
+    this.isDragOver = false
+  }
+
+  private _onDrop(e: DragEvent): void {
+    e.preventDefault()
+    this.isDragOver = false
+    const sourceId = e.dataTransfer?.getData('text/plain') ?? _draggedCardId
+    if (sourceId && sourceId !== this.card.id) {
+      this.dispatchEvent(new CustomEvent('group-cards', {
+        bubbles: true,
+        composed: true,
+        detail: { cardId: sourceId, targetCardId: this.card.id },
+      }))
+    }
+    _draggedCardId = null
+  }
+
   private onJiraExport(): void {
     this.menuOpen = false
     this.jiraDialogOpen = true
@@ -614,7 +654,14 @@ export class RetroCard extends LitElement {
     const jiraConfig = storage.getJiraConfig()
     const showMenu = !canPublish && !!jiraConfig
     return html`
-      <div class="card ${canPublish ? 'draft' : ''}">
+      <div
+        class="card ${canPublish ? 'draft' : ''} ${this.isDragOver ? 'drag-over' : ''}"
+        draggable=${this.canGroup ? 'true' : 'false'}
+        @dragstart=${this._onDragStart}
+        @dragover=${this._onDragOver}
+        @dragleave=${this._onDragLeave}
+        @drop=${this._onDrop}
+      >
         ${this.editing
           ? html`<textarea
               class="card-edit-input"

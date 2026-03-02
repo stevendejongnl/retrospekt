@@ -2,7 +2,12 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Card, SessionPhase } from '../types'
+import { faIconStyles, iconLayerGroup } from '../icons'
 import './retro-card'
+
+type CardItem =
+  | { kind: 'single'; card: Card }
+  | { kind: 'group'; groupId: string; cards: Card[] }
 
 const isMac = navigator.platform.startsWith('Mac') || navigator.userAgent.includes('Mac')
 const modKey = isMac ? '⌘' : 'Ctrl'
@@ -32,6 +37,7 @@ export class RetroColumn extends LitElement {
   @state() private editingTitle = false
   @state() private editTitleValue = ''
   @state() private showEmojiPicker = false
+  @state() private expandedGroupId: string | null = null
 
   private readonly _outsideClickHandler = (e: MouseEvent): void => {
     if (!e.composedPath().includes(this)) {
@@ -49,7 +55,7 @@ export class RetroColumn extends LitElement {
     document.removeEventListener('click', this._outsideClickHandler)
   }
 
-  static styles = css`
+  static styles = [faIconStyles, css`
     :host {
       display: flex;
       flex-direction: column;
@@ -272,7 +278,120 @@ export class RetroColumn extends LitElement {
     .delete-col-btn:hover {
       color: var(--retro-accent);
     }
-  `
+
+    /* ── Card group stack ── */
+    .stack-tile {
+      background: var(--retro-bg-surface);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px var(--retro-card-shadow);
+      border-left: 3px solid var(--col-accent);
+      cursor: pointer;
+      position: relative;
+      transition: box-shadow 0.12s;
+    }
+    .stack-tile::before {
+      content: '';
+      position: absolute;
+      top: -4px;
+      left: 4px;
+      right: 4px;
+      bottom: 4px;
+      background: var(--retro-bg-surface);
+      border-radius: 8px;
+      border-left: 3px solid var(--col-accent);
+      box-shadow: 0 1px 3px var(--retro-card-shadow);
+      z-index: -1;
+    }
+    .stack-tile:hover {
+      box-shadow: 0 2px 8px var(--retro-card-shadow);
+    }
+    .stack-tile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .stack-preview-text {
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--retro-text-primary);
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .stack-count {
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+      background: var(--col-accent);
+      border-radius: 10px;
+      padding: 1px 7px;
+      min-width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .stack-hint {
+      font-size: 11px;
+      color: var(--retro-text-disabled);
+      margin-top: 4px;
+    }
+    .stack-expanded {
+      margin-bottom: 8px;
+    }
+    .stack-expanded-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 10px;
+      background: color-mix(in srgb, var(--col-accent) 10%, transparent);
+      border-radius: 8px 8px 0 0;
+      border-left: 3px solid var(--col-accent);
+      margin-bottom: 0;
+    }
+    .stack-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--col-accent);
+    }
+    .stack-collapse {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 11px;
+      color: var(--retro-text-disabled);
+      font-family: inherit;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color 0.12s;
+    }
+    .stack-collapse:hover {
+      color: var(--retro-text-secondary);
+    }
+    .stack-card-wrapper {
+      position: relative;
+    }
+    .ungroup-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 11px;
+      color: var(--retro-text-disabled);
+      font-family: inherit;
+      padding: 2px 6px 4px;
+      transition: color 0.12s;
+    }
+    .ungroup-btn:hover {
+      color: var(--retro-text-secondary);
+    }
+  `]
 
   private async submitCard(): Promise<void> {
     const text = this.newCardText.trim()
@@ -377,11 +496,76 @@ export class RetroColumn extends LitElement {
     return visible
   }
 
+  private get cardItems(): CardItem[] {
+    if (this.phase !== 'discussing') {
+      return this.visibleCards.map((card) => ({ kind: 'single' as const, card }))
+    }
+    const seenGroups = new Set<string>()
+    const result: CardItem[] = []
+    for (const card of this.visibleCards) {
+      if (card.group_id && card.published) {
+        if (!seenGroups.has(card.group_id)) {
+          seenGroups.add(card.group_id)
+          const groupCards = this.visibleCards.filter(
+            (c) => c.group_id === card.group_id && c.published,
+          )
+          result.push({ kind: 'group', groupId: card.group_id, cards: groupCards })
+        }
+        // else: already added as part of the group
+      } else {
+        result.push({ kind: 'single' as const, card })
+      }
+    }
+    return result
+  }
+
+  updated(changedProps: Map<string, unknown>): void {
+    if (changedProps.has('phase') && this.phase !== 'discussing') {
+      this.expandedGroupId = null
+    }
+  }
+
+  private _dispatchUngroup(cardId: string): void {
+    this.dispatchEvent(
+      new CustomEvent('ungroup-card', {
+        bubbles: true,
+        composed: true,
+        detail: { cardId },
+      }),
+    )
+  }
+
   render() {
     const canAdd = this.phase === 'collecting' && !!this.participantName
     const accentStyle = `--col-accent: ${this.accent};`
-    const visible = this.visibleCards
+    const items = this.cardItems
     const canReact = this.phase === 'discussing' || this.phase === 'closed'
+
+    const renderSingleCard = (card: Card) => html`
+      <retro-card
+        .card=${card}
+        .participantName=${this.participantName}
+        .participantNames=${this.participantNames}
+        .sessionName=${this.sessionName}
+        ?canVote=${this.phase === 'discussing' &&
+        card.published &&
+        card.author_name !== this.participantName}
+        ?canDelete=${card.author_name === this.participantName &&
+        this.phase === 'collecting'}
+        ?canEdit=${card.author_name === this.participantName &&
+        this.phase !== 'closed'}
+        ?canPublish=${this.phase === 'discussing' &&
+        !card.published &&
+        card.author_name === this.participantName}
+        .reactionsEnabled=${this.reactionsEnabled}
+        ?canReact=${canReact && card.published}
+        ?canAssign=${this.phase !== 'collecting' &&
+        card.published &&
+        (card.author_name === this.participantName || this.isFacilitator)}
+        ?canGroup=${this.phase === 'discussing' && card.published}
+        style="--card-accent:${this.participantColorMap[card.author_name] ?? '#6b7280'}"
+      ></retro-card>
+    `
 
     return html`
       <div class="column" style=${accentStyle}>
@@ -409,36 +593,44 @@ export class RetroColumn extends LitElement {
             ${this.isFacilitator && this.phase === 'collecting'
               ? html`<button class="delete-col-btn" @click=${this.onRemoveColumn} title="Remove column">×</button>`
               : ''}
-            <span class="count-badge" style="background:${this.accent}">${visible.length}</span>
+            <span class="count-badge" style="background:${this.accent}">${this.visibleCards.length}</span>
           </div>
         </div>
 
         <div class="cards-list">
-          ${visible.map(
-            (card) => html`
-              <retro-card
-                .card=${card}
-                .participantName=${this.participantName}
-                .participantNames=${this.participantNames}
-                .sessionName=${this.sessionName}
-                ?canVote=${this.phase === 'discussing' &&
-                card.published &&
-                card.author_name !== this.participantName}
-                ?canDelete=${card.author_name === this.participantName &&
-                this.phase === 'collecting'}
-                ?canEdit=${card.author_name === this.participantName &&
-                this.phase !== 'closed'}
-                ?canPublish=${this.phase === 'discussing' &&
-                !card.published &&
-                card.author_name === this.participantName}
-                .reactionsEnabled=${this.reactionsEnabled}
-                ?canReact=${canReact && card.published}
-                ?canAssign=${this.phase !== 'collecting' &&
-                card.published &&
-                (card.author_name === this.participantName || this.isFacilitator)}
-                style="--card-accent:${this.participantColorMap[card.author_name] ?? '#6b7280'}"
-              ></retro-card>
-            `,
+          ${items.map((item) =>
+            item.kind === 'single'
+              ? renderSingleCard(item.card)
+              : item.groupId === this.expandedGroupId
+                ? html`
+                    <div class="stack-expanded">
+                      <div class="stack-expanded-header">
+                        <span class="stack-label">${iconLayerGroup()} Group (${item.cards.length})</span>
+                        <button
+                          class="stack-collapse"
+                          @click=${() => { this.expandedGroupId = null }}
+                        >Collapse ↑</button>
+                      </div>
+                      ${item.cards.map((card) => html`
+                        <div class="stack-card-wrapper">
+                          ${renderSingleCard(card)}
+                          <button
+                            class="ungroup-btn"
+                            @click=${() => this._dispatchUngroup(card.id)}
+                          >${iconLayerGroup()} Ungroup</button>
+                        </div>
+                      `)}
+                    </div>
+                  `
+                : html`
+                    <div class="stack-tile" @click=${() => { this.expandedGroupId = item.groupId }}>
+                      <div class="stack-tile-header">
+                        <span class="stack-preview-text">${item.cards[0]?.text ?? ''}</span>
+                        <span class="stack-count">${item.cards.length}</span>
+                      </div>
+                      <p class="stack-hint">+${item.cards.length - 1} more · click to expand</p>
+                    </div>
+                  `,
           )}
         </div>
 

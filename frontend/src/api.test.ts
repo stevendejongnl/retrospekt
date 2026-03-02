@@ -321,6 +321,31 @@ describe('deleteNote', () => {
   })
 })
 
+describe('groupCard', () => {
+  it('POSTs to /cards/:id/group with target_card_id and X-Participant-Name', async () => {
+    mockOk(mockSession)
+    await api.groupCard('sess-1', 'card-1', 'card-2', 'Alice')
+
+    const [url, opts] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/sessions/sess-1/cards/card-1/group')
+    expect(opts.method).toBe('POST')
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Alice' })
+    expect(JSON.parse(opts.body as string)).toMatchObject({ target_card_id: 'card-2' })
+  })
+})
+
+describe('ungroupCard', () => {
+  it('DELETEs /cards/:id/group with X-Participant-Name', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true, status: 204 })
+    await api.ungroupCard('sess-1', 'card-1', 'Alice')
+
+    const [url, opts] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/sessions/sess-1/cards/card-1/group')
+    expect(opts.method).toBe('DELETE')
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Alice' })
+  })
+})
+
 describe('createSession with custom columns', () => {
   it('includes columns array in the request body when provided', async () => {
     mockOk({ ...mockSession, facilitator_token: 'tok-1' }, 201)

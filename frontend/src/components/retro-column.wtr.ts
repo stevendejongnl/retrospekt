@@ -13,6 +13,7 @@ function makeCard(overrides: Partial<Card> = {}): Card {
     votes: [],
     reactions: [],
     assignee: null,
+    group_id: null,
     created_at: '2025-01-01T00:00:00Z',
     ...overrides,
   }

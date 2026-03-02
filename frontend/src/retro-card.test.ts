@@ -11,6 +11,7 @@ const card = {
   votes: [],
   reactions: [],
   assignee: null,
+  group_id: null,
   created_at: '2026-01-01T00:00:00Z',
 }
 

@@ -62,3 +62,7 @@ class AddNoteRequest(BaseModel):
 
 class UpdateNoteRequest(BaseModel):
     text: str
+
+
+class GroupCardRequest(BaseModel):
+    target_card_id: str

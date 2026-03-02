@@ -25,6 +25,7 @@ export interface Card {
   votes: Vote[]
   reactions: Reaction[]
   assignee: string | null
+  group_id: string | null
   created_at: string
 }
 

@@ -106,6 +106,7 @@ describe('retro-board', () => {
         votes: [],
         reactions: [],
         assignee: null,
+        group_id: null,
         created_at: '',
       })
     }
@@ -136,6 +137,7 @@ describe('retro-board', () => {
       votes: [],
       reactions: [],
       assignee: null,
+      group_id: null,
       created_at: '',
     }
     let voteCalled = false

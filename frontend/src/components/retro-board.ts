@@ -649,6 +649,16 @@ export class RetroBoard extends LitElement {
     await api.assignCard(this.session.id, cardId, null, this.participantName, this.facilitatorToken)
   }
 
+  private async onGroupCards(e: CustomEvent): Promise<void> {
+    const { cardId, targetCardId } = e.detail as { cardId: string; targetCardId: string }
+    await api.groupCard(this.session.id, cardId, targetCardId, this.participantName)
+  }
+
+  private async onUngroupCard(e: CustomEvent): Promise<void> {
+    const { cardId } = e.detail as { cardId: string }
+    await api.ungroupCard(this.session.id, cardId, this.participantName)
+  }
+
   private async onAddColumn(): Promise<void> {
     const existing = new Set(this.session.columns)
     let name = 'New column'
@@ -898,6 +908,8 @@ export class RetroBoard extends LitElement {
         @unreact=${this.onUnreact}
         @assign-card=${this.onAssignCard}
         @unassign-card=${this.onUnassignCard}
+        @group-cards=${this.onGroupCards}
+        @ungroup-card=${this.onUngroupCard}
         @rename-column=${this.onRenameColumn}
         @remove-column=${this.onRemoveColumn}
       >
