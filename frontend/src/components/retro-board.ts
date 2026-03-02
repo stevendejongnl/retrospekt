@@ -6,7 +6,7 @@ import type { Card, Session, SessionPhase } from '../types'
 import { buildParticipantColorMap } from '../types'
 import { api } from '../api'
 import { storage } from '../storage'
-import { faIconStyles, iconPencil, iconCommentDots, iconLock, iconUsers, iconCircleCheck } from '../icons'
+import { faIconStyles, iconPencil, iconCommentDots, iconLock, iconUsers, iconCircleCheck, iconGear } from '../icons'
 import './retro-column'
 import './retro-timer'
 
@@ -29,6 +29,12 @@ export class RetroBoard extends LitElement {
 
   @state() private showHelp = false
   @state() private showParticipants = false
+  @state() private showSettings = false
+  @state() private settingName = ''
+  @state() private settingReactions = true
+  @state() private settingJiraEnabled = false
+  @state() private settingJiraUrl = ''
+  @state() private settingJiraKey = ''
 
   static styles = [faIconStyles, css`
     :host {
@@ -131,6 +137,25 @@ export class RetroBoard extends LitElement {
       transition: background 0.12s;
     }
     .help-btn:hover {
+      background: var(--retro-bg-hover);
+    }
+    .settings-btn {
+      background: none;
+      border: 1px solid var(--retro-facilitator-border);
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: var(--retro-facilitator-text);
+      cursor: pointer;
+      font-family: inherit;
+      flex-shrink: 0;
+      transition: background 0.12s;
+    }
+    .settings-btn:hover {
       background: var(--retro-bg-hover);
     }
 
@@ -405,6 +430,123 @@ export class RetroBoard extends LitElement {
       font-size: 11px;
       color: var(--retro-text-disabled);
     }
+
+    /* ── Settings overlay ── */
+    .settings-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--retro-overlay-bg);
+      backdrop-filter: blur(2px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 24px;
+    }
+    .settings-card {
+      background: var(--retro-bg-surface);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 16px 64px var(--retro-card-shadow);
+    }
+    .settings-card h3 {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--retro-text-primary);
+      margin: 0 0 20px;
+      letter-spacing: -0.4px;
+    }
+    .settings-field {
+      margin-bottom: 16px;
+    }
+    .settings-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--retro-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .settings-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 9px 12px;
+      border: 1px solid var(--retro-border-default);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--retro-bg-page);
+      color: var(--retro-text-primary);
+      outline: none;
+      transition: border-color 0.12s;
+    }
+    .settings-input:focus {
+      border-color: var(--retro-accent);
+    }
+    .settings-checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      font-size: 14px;
+      color: var(--retro-text-primary);
+    }
+    .settings-checkbox-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--retro-accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .settings-section {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--retro-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 20px 0 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--retro-border-subtle);
+    }
+    .settings-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+    .settings-cancel-btn {
+      background: none;
+      border: 1px solid var(--retro-border-default);
+      border-radius: 8px;
+      padding: 9px 18px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--retro-text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.12s;
+    }
+    .settings-cancel-btn:hover {
+      background: var(--retro-bg-hover);
+    }
+    .settings-save-btn {
+      background: var(--retro-accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.12s;
+    }
+    .settings-save-btn:hover {
+      background: var(--retro-accent-hover);
+    }
   `]
 
   private get participantColorMap(): Record<string, string> {
@@ -523,6 +665,31 @@ export class RetroBoard extends LitElement {
     )
   }
 
+  private openSettings(): void {
+    this.settingName = this.session.name
+    this.settingReactions = this.session.reactions_enabled
+    const jiraConfig = storage.getJiraConfig()
+    this.settingJiraEnabled = jiraConfig !== null
+    this.settingJiraUrl = jiraConfig?.baseUrl ?? ''
+    this.settingJiraKey = jiraConfig?.projectKey ?? ''
+    this.showSettings = true
+  }
+
+  private async saveSettings(): Promise<void> {
+    const updates: { name?: string; reactions_enabled?: boolean } = {}
+    if (this.settingName !== this.session.name) updates.name = this.settingName
+    if (this.settingReactions !== this.session.reactions_enabled) updates.reactions_enabled = this.settingReactions
+    if (Object.keys(updates).length > 0) {
+      await api.updateSession(this.session.id, updates, this.facilitatorToken)
+    }
+    if (this.settingJiraEnabled && this.settingJiraUrl && this.settingJiraKey) {
+      storage.setJiraConfig({ baseUrl: this.settingJiraUrl, projectKey: this.settingJiraKey })
+    } else {
+      storage.clearJiraConfig()
+    }
+    this.showSettings = false
+  }
+
   render() {
     const { session } = this
 
@@ -557,6 +724,74 @@ export class RetroBoard extends LitElement {
                       </div>
                     `,
                   )}
+                </div>
+              </div>
+            </div>
+          `
+        : ''}
+
+      ${this.showSettings
+        ? html`
+            <div class="settings-overlay" @click=${() => (this.showSettings = false)}>
+              <div class="settings-card" @click=${(e: Event) => e.stopPropagation()}>
+                <h3>Session settings</h3>
+                <div class="settings-field">
+                  <label class="settings-label">Session name</label>
+                  <input
+                    class="settings-input settings-name-input"
+                    type="text"
+                    .value=${this.settingName}
+                    @input=${(e: InputEvent) => { this.settingName = (e.target as HTMLInputElement).value }}
+                  />
+                </div>
+                <div class="settings-checkbox-row">
+                  <input
+                    class="settings-reactions-input"
+                    type="checkbox"
+                    id="settings-reactions"
+                    .checked=${this.settingReactions}
+                    @change=${(e: Event) => { this.settingReactions = (e.target as HTMLInputElement).checked }}
+                  />
+                  <label for="settings-reactions">Enable emoji reactions</label>
+                </div>
+                <div class="settings-section">Jira export</div>
+                <div class="settings-checkbox-row">
+                  <input
+                    class="settings-jira-enabled-input"
+                    type="checkbox"
+                    id="settings-jira-enabled"
+                    .checked=${this.settingJiraEnabled}
+                    @change=${(e: Event) => { this.settingJiraEnabled = (e.target as HTMLInputElement).checked }}
+                  />
+                  <label for="settings-jira-enabled">Enable Jira export</label>
+                </div>
+                ${this.settingJiraEnabled
+                  ? html`
+                      <div class="settings-field">
+                        <label class="settings-label">Jira URL</label>
+                        <input
+                          class="settings-input settings-jira-url-input"
+                          type="url"
+                          placeholder="https://yourorg.atlassian.net"
+                          .value=${this.settingJiraUrl}
+                          @input=${(e: InputEvent) => { this.settingJiraUrl = (e.target as HTMLInputElement).value }}
+                        />
+                      </div>
+                      <div class="settings-field">
+                        <label class="settings-label">Project key</label>
+                        <input
+                          class="settings-input settings-jira-key-input"
+                          type="text"
+                          placeholder="PROJ"
+                          .value=${this.settingJiraKey}
+                          @input=${(e: InputEvent) => { this.settingJiraKey = (e.target as HTMLInputElement).value }}
+                        />
+                      </div>
+                    `
+                  : ''}
+                <div class="settings-actions">
+                  <button class="settings-cancel-btn" @click=${() => (this.showSettings = false)}>Cancel</button>
+                  <button class="settings-save-btn" @click=${this.saveSettings}>Save</button>
                 </div>
               </div>
             </div>
@@ -624,6 +859,7 @@ export class RetroBoard extends LitElement {
                 ? html`<button class="add-column-btn" @click=${this.onAddColumn}>+ Add column</button>`
                 : ''}
               ${participantCountBtn}
+              <button class="settings-btn" title="Session settings" @click=${this.openSettings}>${iconGear()}</button>
               <button class="help-btn" @click=${() => (this.showHelp = true)}>?</button>
             </div>
           `

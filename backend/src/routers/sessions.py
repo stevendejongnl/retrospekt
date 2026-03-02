@@ -13,6 +13,7 @@ from ..models.requests import (
     RenameColumnRequest,
     SetPhaseRequest,
     SetTimerDurationRequest,
+    UpdateSessionRequest,
 )
 from ..models.session import Participant, Session, SessionPhase, TimerState
 from ..repositories.session_repo import SessionRepository
@@ -53,6 +54,29 @@ async def get_session(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     await repo.touch(session_id)  # reset expiry clock
+    return _public(session)
+
+
+@router.patch("/{session_id}")
+async def update_session(
+    session_id: str,
+    body: UpdateSessionRequest,
+    x_facilitator_token: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.facilitator_token != x_facilitator_token:
+        raise HTTPException(status_code=403, detail="Facilitator token required")
+
+    if body.name is not None:
+        session.name = body.name
+    if body.reactions_enabled is not None:
+        session.reactions_enabled = body.reactions_enabled
+
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
     return _public(session)
 
 

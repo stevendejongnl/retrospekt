@@ -717,6 +717,105 @@ test.describe('session-page mobile layout', () => {
   })
 })
 
+// ── Settings dialog ───────────────────────────────────────────────────────────
+
+test.describe('session-page settings dialog', () => {
+  test.beforeEach(async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
+    await mockApi(page, { ...BASE, reactions_enabled: true })
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.facilitator-bar')).toBeVisible()
+  })
+
+  test('⚙ settings button is visible in the facilitator bar', async ({ page }) => {
+    await expect(page.locator('.settings-btn')).toBeVisible()
+  })
+
+  test('clicking ⚙ opens the settings dialog', async ({ page }) => {
+    await page.locator('.settings-btn').click()
+    await expect(page.locator('.settings-overlay')).toBeVisible()
+    await expect(page.getByText('Session settings')).toBeVisible()
+  })
+
+  test('dialog shows current session name in the name field', async ({ page }) => {
+    await page.locator('.settings-btn').click()
+    await expect(page.locator('.settings-name-input')).toHaveValue('Sprint Retro')
+  })
+
+  test('clicking the overlay backdrop closes the dialog', async ({ page }) => {
+    await page.locator('.settings-btn').click()
+    await page.locator('.settings-overlay').click({ position: { x: 10, y: 10 } })
+    await expect(page.locator('.settings-overlay')).not.toBeVisible()
+  })
+
+  test('Cancel button closes the dialog', async ({ page }) => {
+    await page.locator('.settings-btn').click()
+    await page.getByRole('button', { name: 'Cancel' }).click()
+    await expect(page.locator('.settings-overlay')).not.toBeVisible()
+  })
+
+  test('changing name and clicking Save calls PATCH /sessions/{id}', async ({ page }) => {
+    const patchReq = page.waitForRequest(
+      (r) => r.url().endsWith(`/sessions/${SESSION_ID}`) && r.method() === 'PATCH',
+    )
+    await page.locator('.settings-btn').click()
+    await page.locator('.settings-name-input').fill('Renamed Retro')
+    await page.getByRole('button', { name: 'Save' }).click()
+    const req = await patchReq
+    const body = JSON.parse(req.postData() ?? '{}') as Record<string, unknown>
+    expect(body.name).toBe('Renamed Retro')
+    await expect(page.locator('.settings-overlay')).not.toBeVisible()
+  })
+
+  test('toggling reactions and clicking Save calls PATCH with reactions_enabled', async ({ page }) => {
+    const patchReq = page.waitForRequest(
+      (r) => r.url().endsWith(`/sessions/${SESSION_ID}`) && r.method() === 'PATCH',
+    )
+    await page.locator('.settings-btn').click()
+    await page.locator('.settings-reactions-input').click()
+    await page.getByRole('button', { name: 'Save' }).click()
+    const req = await patchReq
+    const body = JSON.parse(req.postData() ?? '{}') as Record<string, unknown>
+    expect(body.reactions_enabled).toBe(false)
+  })
+
+  test('enabling Jira export and clicking Save stores config in localStorage', async ({ page }) => {
+    await page.locator('.settings-btn').click()
+    await page.locator('.settings-jira-enabled-input').click()
+    await expect(page.locator('.settings-jira-url-input')).toBeVisible()
+    await page.locator('.settings-jira-url-input').fill('https://acme.atlassian.net')
+    await page.locator('.settings-jira-key-input').fill('ACME')
+    await page.getByRole('button', { name: 'Save' }).click()
+    const stored = await page.evaluate(() => localStorage.getItem('retro_jira'))
+    expect(JSON.parse(stored ?? '{}')).toMatchObject({ baseUrl: 'https://acme.atlassian.net', projectKey: 'ACME' })
+  })
+
+  test('disabling Jira export and clicking Save clears localStorage', async ({ page }) => {
+    await page.addInitScript(() =>
+      localStorage.setItem('retro_jira', JSON.stringify({ baseUrl: 'https://x.atlassian.net', projectKey: 'X' })),
+    )
+    await withName(page, 'Alice', FAC_TOKEN)
+    await mockApi(page, { ...BASE, reactions_enabled: true })
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.locator('.settings-btn').click()
+    // Jira is pre-filled from localStorage — uncheck to disable
+    await page.locator('.settings-jira-enabled-input').click()
+    await page.getByRole('button', { name: 'Save' }).click()
+    const stored = await page.evaluate(() => localStorage.getItem('retro_jira'))
+    expect(stored).toBeNull()
+  })
+})
+
+test.describe('session-page settings button (participant)', () => {
+  test('⚙ settings button is NOT shown for non-facilitators', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, { ...BASE, reactions_enabled: true })
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await expect(page.locator('.settings-btn')).not.toBeVisible()
+  })
+})
+
 // ── Add column deduplication ──────────────────────────────────────────────────
 
 test.describe('retro-board add column deduplication', () => {

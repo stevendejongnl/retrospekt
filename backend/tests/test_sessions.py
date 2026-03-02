@@ -81,3 +81,48 @@ async def test_creating_a_session_with_reactions_disabled(client: AsyncClient):
     )
     assert response.status_code == 201
     assert response.json()["reactions_enabled"] is False
+
+
+# ── PATCH /sessions/{id} ──────────────────────────────────────────────────────
+
+async def test_patch_session_renames_it(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}",
+        json={"name": "Renamed Retro"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 200
+    assert response.json()["name"] == "Renamed Retro"
+
+
+async def test_patch_session_toggles_reactions_enabled(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}",
+        json={"reactions_enabled": False},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 200
+    assert response.json()["reactions_enabled"] is False
+
+
+async def test_patch_session_with_no_fields_is_a_no_op(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}",
+        json={},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 200
+    assert response.json()["name"] == session.name
+
+
+async def test_patch_session_with_wrong_token_returns_403(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}",
+        json={"name": "Hacked"},
+        headers={"X-Facilitator-Token": "wrong-token"},
+    )
+    assert response.status_code == 403

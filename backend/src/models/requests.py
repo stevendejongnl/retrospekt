@@ -44,3 +44,8 @@ class AssignCardRequest(BaseModel):
 
 class SetTimerDurationRequest(BaseModel):
     duration_seconds: int
+
+
+class UpdateSessionRequest(BaseModel):
+    name: str | None = None
+    reactions_enabled: bool | None = None

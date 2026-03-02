@@ -25,6 +25,13 @@ export function createApi(fetchFn: typeof fetch = fetch) {
 
     getSession: (id: string) => request<Session>(`/sessions/${id}`),
 
+    updateSession: (id: string, updates: { name?: string; reactions_enabled?: boolean }, facilitatorToken: string) =>
+      request<Session>(`/sessions/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
+        headers: { 'X-Facilitator-Token': facilitatorToken },
+      }),
+
     joinSession: (id: string, participantName: string) =>
       request<Session>(`/sessions/${id}/join`, {
         method: 'POST',
