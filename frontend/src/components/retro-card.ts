@@ -6,15 +6,13 @@ import type { JiraConfig } from '../storage'
 import { storage } from '../storage'
 import { faIconStyles, iconThumbsUp } from '../icons'
 
-export function buildJiraUrl(config: JiraConfig, card: Card, sessionName: string): string {
+export function buildJiraProjectUrl(config: JiraConfig): string {
   const base = config.baseUrl.replace(/\/$/, '')
-  const description = `Retrospective: ${sessionName}\nColumn: ${card.column}\n\n${card.text}`
-  const params = new URLSearchParams({
-    projectKey: config.projectKey,
-    summary: card.text,
-    description,
-  })
-  return `${base}/secure/CreateIssueDetails.jspa?${params.toString()}`
+  return `${base}/browse/${config.projectKey}`
+}
+
+export function formatJiraDescription(card: Card, sessionName: string): string {
+  return `Retrospective: ${sessionName}\nColumn: ${card.column}\n\n${card.text}`
 }
 
 const REACTION_EMOJI = ['❤️', '😂', '😮', '🎉', '🤔', '👀', '🥓']
@@ -33,6 +31,9 @@ export class RetroCard extends LitElement {
   @property({ type: String }) sessionName = ''
 
   @state() private menuOpen = false
+  @state() private jiraDialogOpen = false
+  @state() private summaryCopied = false
+  @state() private descCopied = false
 
   private readonly _outsideClickHandler = (e: MouseEvent): void => {
     if (!e.composedPath().includes(this)) {
@@ -290,6 +291,129 @@ export class RetroCard extends LitElement {
     .jira-export-btn:hover {
       background: var(--retro-bg-subtle);
     }
+    .jira-dialog-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    .jira-dialog {
+      background: var(--retro-bg-surface);
+      border: 1px solid var(--retro-border-default);
+      border-radius: 12px;
+      padding: 20px 24px;
+      width: min(420px, 90vw);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    }
+    .jira-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .jira-dialog-header span {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--retro-text-primary);
+    }
+    .jira-dialog-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      color: var(--retro-text-disabled);
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color 0.12s;
+    }
+    .jira-dialog-close:hover {
+      color: var(--retro-text-primary);
+    }
+    .jira-field-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--retro-text-disabled);
+      margin-bottom: 6px;
+    }
+    .jira-field-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .jira-summary-text {
+      flex: 1;
+      font-size: 14px;
+      color: var(--retro-text-primary);
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
+      border-radius: 6px;
+      padding: 6px 10px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .jira-desc {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--retro-text-primary);
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
+      border-radius: 6px;
+      padding: 8px 10px;
+      resize: none;
+      height: 100px;
+      margin-bottom: 8px;
+    }
+    .jira-copy-btn {
+      font-size: 12px;
+      font-family: inherit;
+      padding: 4px 10px;
+      border: 1px solid var(--retro-border-default);
+      border-radius: 6px;
+      background: var(--retro-bg-surface);
+      color: var(--retro-text-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.12s;
+    }
+    .jira-copy-btn:hover {
+      border-color: var(--retro-accent);
+      color: var(--retro-accent);
+    }
+    .jira-dialog-footer {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .jira-open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 600;
+      padding: 7px 14px;
+      background: var(--retro-accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.12s;
+    }
+    .jira-open-btn:hover {
+      opacity: 0.85;
+    }
   `]
 
   private get hasVoted(): boolean {
@@ -372,10 +496,58 @@ export class RetroCard extends LitElement {
   }
 
   private onJiraExport(): void {
-    // jiraConfig is always non-null here — showMenu guards the button
-    const url = buildJiraUrl(storage.getJiraConfig()!, this.card, this.sessionName)
-    window.open(url, '_blank', 'noopener')
     this.menuOpen = false
+    this.jiraDialogOpen = true
+  }
+
+  private async onCopySummary(): Promise<void> {
+    await navigator.clipboard.writeText(this.card.text)
+    this.summaryCopied = true
+    setTimeout(() => { this.summaryCopied = false; this.requestUpdate() }, 1500)
+  }
+
+  private async onCopyDesc(): Promise<void> {
+    await navigator.clipboard.writeText(formatJiraDescription(this.card, this.sessionName))
+    this.descCopied = true
+    setTimeout(() => { this.descCopied = false; this.requestUpdate() }, 1500)
+  }
+
+  private _renderJiraDialog(jiraConfig: ReturnType<typeof storage.getJiraConfig>) {
+    /* istanbul ignore next */
+    if (!jiraConfig) return ''
+    const description = formatJiraDescription(this.card, this.sessionName)
+    return html`
+      <div class="jira-dialog-overlay" @click=${() => { this.jiraDialogOpen = false }}>
+        <div class="jira-dialog" @click=${(e: Event) => e.stopPropagation()}>
+          <div class="jira-dialog-header">
+            <span>Export to Jira</span>
+            <button class="jira-dialog-close" @click=${() => { this.jiraDialogOpen = false }}>×</button>
+          </div>
+
+          <p class="jira-field-label">Summary</p>
+          <div class="jira-field-row">
+            <span class="jira-summary-text">${this.card.text}</span>
+            <button class="jira-copy-btn jira-copy-summary" @click=${this.onCopySummary}>
+              ${this.summaryCopied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+
+          <p class="jira-field-label">Description</p>
+          <textarea class="jira-desc" readonly>${description}</textarea>
+          <div style="display:flex;justify-content:flex-end">
+            <button class="jira-copy-btn jira-copy-desc" @click=${this.onCopyDesc}>
+              ${this.descCopied ? 'Copied!' : 'Copy description'}
+            </button>
+          </div>
+
+          <div class="jira-dialog-footer">
+            <a class="jira-open-btn" href=${buildJiraProjectUrl(jiraConfig)} target="_blank" rel="noopener">
+              Open Jira ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    `
   }
 
   render() {
@@ -486,6 +658,7 @@ export class RetroCard extends LitElement {
           </div>
         </div>
       </div>
+      ${this.jiraDialogOpen ? this._renderJiraDialog(jiraConfig) : ''}
     `
   }
 }

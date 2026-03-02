@@ -1,72 +1,51 @@
 import { describe, it, expect } from 'vitest'
-import { buildJiraUrl } from './components/retro-card'
+import { buildJiraProjectUrl, formatJiraDescription } from './components/retro-card'
 import { extractJiraBaseUrl } from './pages/home-page'
 
-// ── buildJiraUrl ──────────────────────────────────────────────────────────────
+const card = {
+  id: 'c1',
+  column: 'To Improve',
+  text: 'Too many meetings',
+  author_name: 'Alice',
+  published: true,
+  votes: [],
+  reactions: [],
+  assignee: null,
+  created_at: '2026-01-01T00:00:00Z',
+}
 
-describe('buildJiraUrl', () => {
-  const config = { baseUrl: 'https://myorg.atlassian.net', projectKey: 'RETRO' }
-  const card = {
-    id: 'c1',
-    column: 'To Improve',
-    text: 'Too many meetings',
-    author_name: 'Alice',
-    published: true,
-    votes: [],
-    reactions: [],
-    assignee: null,
-    created_at: '2026-01-01T00:00:00Z',
-  }
+// ── buildJiraProjectUrl ────────────────────────────────────────────────────────
 
-  it('returns a URL starting with the Jira base URL', () => {
-    const url = buildJiraUrl(config, card, 'Sprint 42')
-    expect(url.startsWith('https://myorg.atlassian.net/')).toBe(true)
-  })
-
-  it('includes the correct path', () => {
-    const url = buildJiraUrl(config, card, 'Sprint 42')
-    expect(url).toContain('/secure/CreateIssueDetails.jspa')
-  })
-
-  it('includes projectKey query param', () => {
-    const url = buildJiraUrl(config, card, 'Sprint 42')
-    expect(url).toContain('projectKey=RETRO')
-  })
-
-  it('includes summary from card text', () => {
-    const url = buildJiraUrl(config, card, 'Sprint 42')
-    expect(url).toContain('Too+many+meetings')
-  })
-
-  it('URL-encodes special characters in summary', () => {
-    const specialCard = { ...card, text: 'Fix: auth & session <token>' }
-    const url = buildJiraUrl(config, specialCard, 'Q1 Retro')
-    expect(url).toContain('Fix%3A+auth+%26+session+%3Ctoken%3E')
-  })
-
-  it('includes session name in description', () => {
-    const url = buildJiraUrl(config, card, 'Sprint 42')
-    const params = new URLSearchParams(url.split('?')[1])
-    expect(params.get('description')).toContain('Sprint 42')
-  })
-
-  it('includes column name in description', () => {
-    const url = buildJiraUrl(config, card, 'Sprint 42')
-    const params = new URLSearchParams(url.split('?')[1])
-    expect(params.get('description')).toContain('To Improve')
+describe('buildJiraProjectUrl', () => {
+  it('returns base URL + /browse/ + projectKey', () => {
+    const config = { baseUrl: 'https://myorg.atlassian.net', projectKey: 'RETRO' }
+    expect(buildJiraProjectUrl(config)).toBe('https://myorg.atlassian.net/browse/RETRO')
   })
 
   it('trims trailing slash from baseUrl', () => {
-    const configWithSlash = { baseUrl: 'https://myorg.atlassian.net/', projectKey: 'RETRO' }
-    const url = buildJiraUrl(configWithSlash, card, 'Sprint 42')
-    expect(url).not.toContain('//secure')
+    const config = { baseUrl: 'https://myorg.atlassian.net/', projectKey: 'RETRO' }
+    expect(buildJiraProjectUrl(config)).toBe('https://myorg.atlassian.net/browse/RETRO')
   })
 
   it('works with Jira Server (non-atlassian.net) URL', () => {
-    const serverConfig = { baseUrl: 'https://jira.mycompany.com', projectKey: 'BACK' }
-    const url = buildJiraUrl(serverConfig, card, 'Sprint 42')
-    expect(url.startsWith('https://jira.mycompany.com/')).toBe(true)
-    expect(url).toContain('projectKey=BACK')
+    const config = { baseUrl: 'https://jira.mycompany.com', projectKey: 'BACK' }
+    expect(buildJiraProjectUrl(config)).toBe('https://jira.mycompany.com/browse/BACK')
+  })
+})
+
+// ── formatJiraDescription ─────────────────────────────────────────────────────
+
+describe('formatJiraDescription', () => {
+  it('includes session name', () => {
+    expect(formatJiraDescription(card, 'Sprint 42')).toContain('Sprint 42')
+  })
+
+  it('includes column name', () => {
+    expect(formatJiraDescription(card, 'Sprint 42')).toContain('To Improve')
+  })
+
+  it('includes card text', () => {
+    expect(formatJiraDescription(card, 'Sprint 42')).toContain('Too many meetings')
   })
 })
 
