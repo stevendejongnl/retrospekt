@@ -20,6 +20,7 @@ dist/
 # Test artifacts
 backend/.coverage
 frontend/.nyc_output/
+frontend/.nyc_report/
 frontend/coverage/
 frontend/playwright-coverage/
 frontend/test-results/
