@@ -1,3 +1,9 @@
+## [1.25.0](https://github.com/stevendejongnl/retrospekt/compare/v1.24.0...v1.25.0) (2026-03-02)
+
+### Features
+
+* **open-facilitator:** add open_facilitator mode ([a478acc](https://github.com/stevendejongnl/retrospekt/commit/a478accad89fcfb7185a53ec459c0841119390d4))
+
 ## [1.24.0](https://github.com/stevendejongnl/retrospekt/compare/v1.23.0...v1.24.0) (2026-03-02)
 
 ### Features
