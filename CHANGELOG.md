@@ -1,3 +1,9 @@
+## [1.20.0](https://github.com/stevendejongnl/retrospekt/compare/v1.19.0...v1.20.0) (2026-03-02)
+
+### Features
+
+* **settings:** add facilitator settings dialog ([72fe8cc](https://github.com/stevendejongnl/retrospekt/commit/72fe8ccb02c6f2ec083c9cc0e9102d55981e8d16))
+
 ## [1.19.0](https://github.com/stevendejongnl/retrospekt/compare/v1.18.0...v1.19.0) (2026-03-02)
 
 ### Features
