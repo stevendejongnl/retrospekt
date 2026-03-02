@@ -1,3 +1,9 @@
+## [1.22.0](https://github.com/stevendejongnl/retrospekt/compare/v1.21.0...v1.22.0) (2026-03-02)
+
+### Features
+
+* **cards:** add inline card text editing ([3ee8546](https://github.com/stevendejongnl/retrospekt/commit/3ee85468032e0777f68f12db571ca054f5a9c448))
+
 ## [1.21.0](https://github.com/stevendejongnl/retrospekt/compare/v1.20.1...v1.21.0) (2026-03-02)
 
 ### Features
