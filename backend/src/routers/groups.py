@@ -46,6 +46,8 @@ async def group_card(
         raise HTTPException(status_code=409, detail="Card must be published to group")
     if not target.published:
         raise HTTPException(status_code=409, detail="Target card must be published to group")
+    if card.column != target.column:
+        raise HTTPException(status_code=409, detail="Cards must be in the same column to group")
 
     # Determine the group UUID: reuse target's existing group or create a new one
     new_group_id = target.group_id if target.group_id is not None else str(uuid4())

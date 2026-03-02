@@ -4,6 +4,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 import type { Card, SessionPhase } from '../types'
 import { faIconStyles, iconLayerGroup } from '../icons'
 import './retro-card'
+import { getDraggedCardInfo } from './retro-card'
 
 type CardItem =
   | { kind: 'single'; card: Card }
@@ -38,6 +39,7 @@ export class RetroColumn extends LitElement {
   @state() private editTitleValue = ''
   @state() private showEmojiPicker = false
   @state() private expandedGroupId: string | null = null
+  @state() private dragOverGroupId: string | null = null
 
   private readonly _outsideClickHandler = (e: MouseEvent): void => {
     if (!e.composedPath().includes(this)) {
@@ -339,8 +341,17 @@ export class RetroColumn extends LitElement {
       color: var(--retro-text-disabled);
       margin-top: 4px;
     }
+    .stack-tile.drag-over {
+      outline: 2px dashed var(--col-accent);
+      outline-offset: 2px;
+    }
     .stack-expanded {
       margin-bottom: 8px;
+      border-left: 3px solid var(--col-accent);
+      border-radius: 8px;
+      overflow: hidden;
+      background: color-mix(in srgb, var(--col-accent) 4%, transparent);
+      padding-bottom: 4px;
     }
     .stack-expanded-header {
       display: flex;
@@ -349,8 +360,8 @@ export class RetroColumn extends LitElement {
       gap: 8px;
       padding: 6px 10px;
       background: color-mix(in srgb, var(--col-accent) 10%, transparent);
-      border-radius: 8px 8px 0 0;
-      border-left: 3px solid var(--col-accent);
+      border-radius: 0;
+      border-left: none;
       margin-bottom: 0;
     }
     .stack-label {
@@ -374,6 +385,7 @@ export class RetroColumn extends LitElement {
     }
     .stack-card-wrapper {
       position: relative;
+      padding: 0 8px;
     }
     .ungroup-btn {
       display: flex;
@@ -623,7 +635,31 @@ export class RetroColumn extends LitElement {
                     </div>
                   `
                 : html`
-                    <div class="stack-tile" @click=${() => { this.expandedGroupId = item.groupId }}>
+                    <div
+                      class="stack-tile ${this.dragOverGroupId === item.groupId ? 'drag-over' : ''}"
+                      @click=${() => { this.expandedGroupId = item.groupId }}
+                      @dragover=${(e: DragEvent) => {
+                        const info = getDraggedCardInfo()
+                        if (info.id && info.column === this.title) {
+                          e.preventDefault()
+                          this.dragOverGroupId = item.groupId
+                        }
+                      }}
+                      @dragleave=${() => { this.dragOverGroupId = null }}
+                      @dragend=${() => { this.dragOverGroupId = null }}
+                      @drop=${(e: DragEvent) => {
+                        e.preventDefault()
+                        this.dragOverGroupId = null
+                        const info = getDraggedCardInfo()
+                        if (info.id && info.column === this.title) {
+                          this.dispatchEvent(new CustomEvent('group-cards', {
+                            bubbles: true,
+                            composed: true,
+                            detail: { cardId: info.id, targetCardId: item.cards[0].id },
+                          }))
+                        }
+                      }}
+                    >
                       <div class="stack-tile-header">
                         <span class="stack-preview-text">${item.cards[0]?.text ?? ''}</span>
                         <span class="stack-count">${item.cards.length}</span>

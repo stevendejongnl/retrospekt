@@ -8,6 +8,11 @@ import { faIconStyles, iconThumbsUp } from '../icons'
 
 // Module-level fallback for Firefox, which clears dataTransfer between events
 let _draggedCardId: string | null = null
+let _draggedCardColumn: string | null = null
+
+export function getDraggedCardInfo(): { id: string | null; column: string | null } {
+  return { id: _draggedCardId, column: _draggedCardColumn }
+}
 
 export function buildJiraProjectUrl(config: JiraConfig): string {
   const base = config.baseUrl.replace(/\/$/, '')
@@ -564,12 +569,13 @@ export class RetroCard extends LitElement {
 
   private _onDragStart(e: DragEvent): void {
     _draggedCardId = this.card.id
+    _draggedCardColumn = this.card.column
     e.dataTransfer?.setData('text/plain', this.card.id)
   }
 
   private _onDragOver(e: DragEvent): void {
     const sourceId = e.dataTransfer?.getData('text/plain') || _draggedCardId
-    if (sourceId && sourceId !== this.card.id) {
+    if (sourceId && sourceId !== this.card.id && _draggedCardColumn === this.card.column) {
       e.preventDefault()
       this.isDragOver = true
     }
@@ -583,7 +589,7 @@ export class RetroCard extends LitElement {
     e.preventDefault()
     this.isDragOver = false
     const sourceId = e.dataTransfer?.getData('text/plain') ?? _draggedCardId
-    if (sourceId && sourceId !== this.card.id) {
+    if (sourceId && sourceId !== this.card.id && _draggedCardColumn === this.card.column) {
       this.dispatchEvent(new CustomEvent('group-cards', {
         bubbles: true,
         composed: true,
@@ -591,6 +597,7 @@ export class RetroCard extends LitElement {
       }))
     }
     _draggedCardId = null
+    _draggedCardColumn = null
   }
 
   private onJiraExport(): void {

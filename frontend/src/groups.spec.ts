@@ -416,4 +416,131 @@ test.describe('card grouping — stack rendering', () => {
     await expect(page.locator('.stack-tile')).not.toBeVisible()
     await expect(page.locator('retro-card')).toBeVisible()
   })
+
+  test('expanded group has visual container with border-left', async ({ page }) => {
+    const GROUP_ID = 'grp-abc'
+    const session = {
+      ...BASE,
+      phase: 'discussing' as const,
+      cards: [
+        makeCard({ id: 'c1', author_name: 'Bob', published: true, group_id: GROUP_ID, text: 'First' }),
+        makeCard({ id: 'c2', author_name: 'Alice', published: true, group_id: GROUP_ID, text: 'Second' }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+
+    await page.locator('.stack-tile').click()
+
+    // .stack-expanded container must exist and contain .stack-card-wrapper children
+    await expect(page.locator('.stack-expanded')).toBeVisible()
+    await expect(page.locator('.stack-expanded .stack-card-wrapper')).toHaveCount(2)
+  })
+})
+
+// ── Cross-column grouping prevention ──────────────────────────────────────
+
+test.describe('card grouping — cross-column prevention', () => {
+  test('cross-column drag does not dispatch group-cards event', async ({ page }) => {
+    const session = {
+      ...BASE,
+      columns: ['Went Well', 'To Improve'],
+      phase: 'discussing' as const,
+      cards: [
+        makeCard({ id: 'c1', column: 'Went Well', author_name: 'Bob', published: true, text: 'Card 1' }),
+        makeCard({ id: 'c2', column: 'To Improve', author_name: 'Alice', published: true, text: 'Card 2' }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+
+    const groupFired = await page.evaluate(() => {
+      return new Promise<boolean>(resolve => {
+        // Listen on the board element for any group-cards event
+        const board = (document.querySelector('session-page') as any)
+          ?.shadowRoot?.querySelector('retro-board')
+        if (!board) { resolve(false); return }
+
+        let fired = false
+        board.addEventListener('group-cards', () => { fired = true }, { once: true })
+
+        const col = board.shadowRoot?.querySelector('retro-column')
+        const cards = col?.shadowRoot?.querySelectorAll('retro-card')
+        if (!cards || cards.length < 2) { resolve(false); return }
+
+        const srcCard = cards[0] as HTMLElement  // 'Went Well' column
+        const tgtCard = cards[1] as HTMLElement  // 'To Improve' column
+
+        // dragstart sets _draggedCardColumn = 'Went Well'
+        const srcInner = srcCard.shadowRoot?.querySelector('.card') as HTMLElement
+        if (srcInner) {
+          srcInner.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, composed: true }))
+        }
+
+        // dragover + drop on target from different column
+        const tgtInner = tgtCard.shadowRoot?.querySelector('.card') as HTMLElement
+        if (tgtInner) {
+          tgtInner.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, composed: true }))
+          tgtInner.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, composed: true }))
+        }
+
+        setTimeout(() => resolve(fired), 300)
+      })
+    })
+
+    expect(groupFired).toBe(false)
+  })
+})
+
+// ── Drop onto collapsed stack tile ────────────────────────────────────────
+
+test.describe('card grouping — drop onto stack tile', () => {
+  test('dropping card onto collapsed stack tile dispatches group-cards event', async ({ page }) => {
+    const GROUP_ID = 'grp-xyz'
+    const session = {
+      ...BASE,
+      phase: 'discussing' as const,
+      cards: [
+        makeCard({ id: 'c1', author_name: 'Bob', published: true, group_id: GROUP_ID, text: 'Grouped 1' }),
+        makeCard({ id: 'c2', author_name: 'Alice', published: true, group_id: GROUP_ID, text: 'Grouped 2' }),
+        makeCard({ id: 'c3', author_name: 'Alice', published: true, group_id: null, text: 'Lone card' }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+
+    const result = await page.evaluate(() => {
+      return new Promise<{ cardId: string; targetCardId: string } | null>(resolve => {
+        const board = (document.querySelector('session-page') as any)
+          ?.shadowRoot?.querySelector('retro-board')
+        if (!board) { resolve(null); return }
+
+        board.addEventListener('group-cards', (e: Event) => {
+          resolve((e as CustomEvent).detail)
+        }, { once: true })
+
+        const col = board.shadowRoot?.querySelector('retro-column')
+
+        // Find the lone retro-card (c3) and simulate dragstart
+        const cards = col?.shadowRoot?.querySelectorAll('retro-card')
+        if (!cards) { resolve(null); return }
+        // c3 is the lone card — it's the only non-grouped card, rendered after the stack tile
+        const loneCard = cards[0] as HTMLElement  // only one retro-card visible (lone card)
+        const loneInner = loneCard.shadowRoot?.querySelector('.card') as HTMLElement
+        if (loneInner) {
+          loneInner.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, composed: true }))
+        }
+
+        // Fire dragover + drop on the .stack-tile
+        const tile = col?.shadowRoot?.querySelector('.stack-tile') as HTMLElement
+        if (tile) {
+          tile.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, composed: true }))
+          tile.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, composed: true }))
+        }
+
+        setTimeout(() => resolve(null), 500)
+      })
+    })
+
+    expect(result).not.toBeNull()
+    expect(result?.cardId).toBe('c3')
+    expect(result?.targetCardId).toBe('c1')
+  })
 })

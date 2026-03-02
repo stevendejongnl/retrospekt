@@ -13,10 +13,11 @@ async def _add_card(
     *,
     author: str,
     text: str = "Card text",
+    column: str = "Went Well",
 ) -> dict:
     r = await client.post(
         f"/api/v1/sessions/{session_id}/cards",
-        json={"column": "Went Well", "text": text, "author_name": author},
+        json={"column": column, "text": text, "author_name": author},
     )
     assert r.status_code == 201, r.text
     return r.json()
@@ -439,3 +440,30 @@ async def test_group_card_that_is_already_in_a_different_group(client: AsyncClie
     assert cards_by_id[c1["id"]]["group_id"] == cards_by_id[c3["id"]]["group_id"]
     # c2 was alone → should be None (singleton cleanup)
     assert cards_by_id[c2["id"]]["group_id"] is None
+
+
+async def test_cannot_group_cards_in_different_columns(client: AsyncClient):
+    """Cards in different columns cannot be grouped — 409 expected."""
+    session = await make_session(client)
+
+    # Add one card to "Went Well" and one to "To Improve" (both default columns)
+    card_a = await _add_card(client, session.id, author="Alice", text="A", column="Went Well")
+    card_b = await _add_card(client, session.id, author="Bob", text="B", column="To Improve")
+
+    # Advance to discussing and publish both
+    await client.post(
+        f"/api/v1/sessions/{session.id}/phase",
+        json={"phase": "discussing"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    await _publish(client, session.id, card_a["id"], author="Alice")
+    await _publish(client, session.id, card_b["id"], author="Bob")
+
+    # Attempt cross-column group → must be rejected
+    r = await client.post(
+        f"/api/v1/sessions/{session.id}/cards/{card_a['id']}/group",
+        json={"target_card_id": card_b["id"]},
+        headers={"X-Participant-Name": "Alice"},
+    )
+    assert r.status_code == 409
+    assert "column" in r.json()["detail"].lower()
