@@ -1,3 +1,11 @@
+## [1.19.0](https://github.com/stevendejongnl/retrospekt/compare/v1.18.0...v1.19.0) (2026-03-02)
+
+### Features
+
+* **jira-export:** add per-card Jira export via ⋮ overflow menu ([5da6376](https://github.com/stevendejongnl/retrospekt/commit/5da6376bab8a832c2ff4831cdd3d5883bfb959a1))
+* **reactions:** add 🥓 to REACTION_EMOJI + fix CT branch coverage ([510e529](https://github.com/stevendejongnl/retrospekt/commit/510e529ba5fb8e940274b39f7b28a8bb290c0a11))
+* **reactions:** add 🥓 to REACTION_EMOJI on frontend and backend ([40d06f4](https://github.com/stevendejongnl/retrospekt/commit/40d06f40638e34866c4a45939bd69839fb1c16a0))
+
 ## [1.18.0](https://github.com/stevendejongnl/retrospekt/compare/v1.17.4...v1.18.0) (2026-02-28)
 
 ### Features
