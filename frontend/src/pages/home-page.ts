@@ -7,6 +7,15 @@ import { getEffectiveTheme, toggleTheme, getBrand, clearBrand } from '../theme'
 import { faIconStyles, iconSun, iconMoon, iconClockRotateLeft, iconRotateLeft } from '../icons'
 import '../components/session-history'
 
+export function extractJiraBaseUrl(url: string): string {
+  if (!url) return ''
+  try {
+    return new URL(url).origin
+  } catch {
+    return ''
+  }
+}
+
 const COLUMN_TEMPLATES = [
   { label: 'Standard', columns: ['Went Well', 'To Improve', 'Action Items'] },
   { label: 'Mad · Sad · Glad', columns: ['Mad', 'Sad', 'Glad'] },
@@ -26,6 +35,9 @@ export class HomePage extends LitElement {
   @state() private showHistory = false
   @state() private reactionsEnabled = true
   @state() private sessionNotFound = false
+  @state() private jiraEnabled = false
+  @state() private jiraUrl = ''
+  @state() private jiraProjectKey = ''
 
   private _themeListener!: EventListener
   private _brandListener!: EventListener
@@ -40,6 +52,12 @@ export class HomePage extends LitElement {
     }
     window.addEventListener('retro-theme-change', this._themeListener)
     window.addEventListener('retro-brand-change', this._brandListener)
+    const saved = storage.getJiraConfig()
+    if (saved) {
+      this.jiraEnabled = true
+      this.jiraUrl = saved.baseUrl
+      this.jiraProjectKey = saved.projectKey
+    }
     const params = new URLSearchParams(window.location.search)
     if (params.has('session_not_found')) {
       this.sessionNotFound = true
@@ -310,6 +328,47 @@ export class HomePage extends LitElement {
       color: var(--retro-text-muted);
       margin-top: 1px;
     }
+    .jira-config {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: var(--retro-bg-page);
+      border: 1px solid var(--retro-border-default);
+      border-radius: 8px;
+    }
+    .jira-config.visible {
+      display: flex;
+    }
+    .jira-config label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--retro-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 2px;
+    }
+    .jira-config input[type="text"] {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1.5px solid var(--retro-border-default);
+      border-radius: 7px;
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--retro-text-primary);
+      background: var(--retro-bg-surface);
+      box-sizing: border-box;
+    }
+    .jira-config input[type="text"]:focus {
+      outline: none;
+      border-color: var(--retro-accent);
+    }
+    .jira-url-hint {
+      font-size: 11px;
+      color: var(--retro-text-muted);
+      min-height: 1em;
+    }
     .not-found-banner {
       position: absolute;
       top: 16px;
@@ -382,6 +441,24 @@ export class HomePage extends LitElement {
 
   private onBrandReset(): void {
     clearBrand()
+  }
+
+  private onJiraInput(): void {
+    const baseUrl = extractJiraBaseUrl(this.jiraUrl)
+    if (this.jiraEnabled && baseUrl && this.jiraProjectKey.trim()) {
+      storage.setJiraConfig({ baseUrl, projectKey: this.jiraProjectKey.trim() })
+    } else {
+      storage.clearJiraConfig()
+    }
+  }
+
+  private onJiraToggle(e: Event): void {
+    this.jiraEnabled = (e.target as HTMLInputElement).checked
+    if (!this.jiraEnabled) {
+      storage.clearJiraConfig()
+    } else {
+      this.onJiraInput()
+    }
   }
 
   render() {
@@ -460,6 +537,7 @@ export class HomePage extends LitElement {
             <label class="option-row">
               <input
                 type="checkbox"
+                aria-label="Emoji reactions on cards"
                 .checked=${this.reactionsEnabled}
                 @change=${(e: Event) => { this.reactionsEnabled = (e.target as HTMLInputElement).checked }}
                 ?disabled=${this.loading}
@@ -469,6 +547,50 @@ export class HomePage extends LitElement {
                 <small>Participants can react to published cards with emoji</small>
               </span>
             </label>
+            <label class="option-row" style="margin-top:8px">
+              <input
+                type="checkbox"
+                aria-label="Jira export"
+                .checked=${this.jiraEnabled}
+                @change=${this.onJiraToggle}
+                ?disabled=${this.loading}
+              />
+              <span class="option-label">
+                Jira export
+                <small>Export published cards to Jira as new issues</small>
+              </span>
+            </label>
+            <div class="jira-config ${this.jiraEnabled ? 'visible' : ''}">
+              <div>
+                <label>Paste any Jira URL</label>
+                <input
+                  type="text"
+                  class="jira-url-input"
+                  placeholder="https://myorg.atlassian.net/browse/RETRO-1"
+                  .value=${this.jiraUrl}
+                  @input=${(e: Event) => {
+                    this.jiraUrl = (e.target as HTMLInputElement).value
+                    this.onJiraInput()
+                  }}
+                  ?disabled=${this.loading}
+                />
+                <span class="jira-url-hint">${extractJiraBaseUrl(this.jiraUrl)}</span>
+              </div>
+              <div>
+                <label>Project key</label>
+                <input
+                  type="text"
+                  class="jira-key-input"
+                  placeholder="RETRO"
+                  .value=${this.jiraProjectKey}
+                  @input=${(e: Event) => {
+                    this.jiraProjectKey = (e.target as HTMLInputElement).value
+                    this.onJiraInput()
+                  }}
+                  ?disabled=${this.loading}
+                />
+              </div>
+            </div>
           </div>
 
           ${this.error ? html`<p class="error-msg">${this.error}</p>` : ''}

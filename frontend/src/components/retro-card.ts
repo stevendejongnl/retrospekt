@@ -1,8 +1,21 @@
 import { LitElement, css, html } from 'lit'
-import { customElement, property } from 'lit/decorators.js'
+import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Card } from '../types'
+import type { JiraConfig } from '../storage'
+import { storage } from '../storage'
 import { faIconStyles, iconThumbsUp } from '../icons'
+
+export function buildJiraUrl(config: JiraConfig, card: Card, sessionName: string): string {
+  const base = config.baseUrl.replace(/\/$/, '')
+  const description = `Retrospective: ${sessionName}\nColumn: ${card.column}\n\n${card.text}`
+  const params = new URLSearchParams({
+    projectKey: config.projectKey,
+    summary: card.text,
+    description,
+  })
+  return `${base}/secure/CreateIssueDetails!init.jspa?${params.toString()}`
+}
 
 const REACTION_EMOJI = ['❤️', '😂', '😮', '🎉', '🤔', '👀']
 
@@ -17,6 +30,25 @@ export class RetroCard extends LitElement {
   @property({ type: Boolean }) canAssign = false
   @property({ type: Boolean }) reactionsEnabled = true
   @property({ type: Array }) participantNames: string[] = []
+  @property({ type: String }) sessionName = ''
+
+  @state() private menuOpen = false
+
+  private readonly _outsideClickHandler = (e: MouseEvent): void => {
+    if (!e.composedPath().includes(this)) {
+      this.menuOpen = false
+    }
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    document.addEventListener('click', this._outsideClickHandler)
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    document.removeEventListener('click', this._outsideClickHandler)
+  }
 
   static styles = [faIconStyles, css`
     :host {
@@ -212,6 +244,52 @@ export class RetroCard extends LitElement {
     .delete-btn:hover {
       color: var(--retro-error);
     }
+    .menu-wrapper {
+      position: relative;
+    }
+    .menu-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--retro-border-strong);
+      font-size: 16px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.12s;
+      font-family: inherit;
+    }
+    .menu-btn:hover {
+      color: var(--retro-text-secondary);
+    }
+    .card-menu {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 4px);
+      background: var(--retro-bg-surface);
+      border: 1px solid var(--retro-border-default);
+      border-radius: 8px;
+      box-shadow: 0 4px 16px var(--retro-card-shadow);
+      min-width: 150px;
+      z-index: 50;
+      overflow: hidden;
+    }
+    .jira-export-btn {
+      display: block;
+      width: 100%;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-family: inherit;
+      text-align: left;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--retro-text-primary);
+      transition: background 0.1s;
+    }
+    .jira-export-btn:hover {
+      background: var(--retro-bg-subtle);
+    }
   `]
 
   private get hasVoted(): boolean {
@@ -280,7 +358,7 @@ export class RetroCard extends LitElement {
         composed: true,
       }),
     )
-    ;(e.target as HTMLSelectElement).value = ''
+      ; (e.target as HTMLSelectElement).value = ''
   }
 
   private onUnassignClick(): void {
@@ -293,18 +371,28 @@ export class RetroCard extends LitElement {
     )
   }
 
+  private onJiraExport(): void {
+    const jiraConfig = storage.getJiraConfig()
+    if (!jiraConfig) return
+    const url = buildJiraUrl(jiraConfig, this.card, this.sessionName)
+    window.open(url, '_blank', 'noopener')
+    this.menuOpen = false
+  }
+
   render() {
     const { card, canVote, canDelete, canPublish } = this
     const groups = this.reactionGroups
+    const jiraConfig = storage.getJiraConfig()
+    const showMenu = !canPublish && !!jiraConfig
     return html`
       <div class="card ${canPublish ? 'draft' : ''}">
         <p class="card-text">${card.text}</p>
 
         ${this.reactionsEnabled && groups.length > 0
-          ? html`
+        ? html`
               <div class="reactions-row">
                 ${groups.map(
-                  (g) => html`
+          (g) => html`
                     <button
                       class="reaction-btn ${g.myReaction ? 'reacted' : ''}"
                       style="${this.canReact && g.count === 0 ? 'opacity:0.35' : ''}"
@@ -313,38 +401,38 @@ export class RetroCard extends LitElement {
                       title="${g.emoji}"
                     >
                       ${g.emoji}${g.count > 0
-                        ? html`<span class="reaction-count">${g.count}</span>`
-                        : ''}
+              ? html`<span class="reaction-count">${g.count}</span>`
+              : ''}
                     </button>
                   `,
-                )}
+        )}
               </div>
             `
-          : ''}
+        : ''}
 
         ${this.canAssign || card.assignee
-          ? html`
+        ? html`
               <div class="assignee-row">
                 ${card.assignee
-                  ? html`
+            ? html`
                       <span class="assignee-chip">
                         Assigned: ${card.assignee}
                         ${this.canAssign
-                          ? html`<button class="unassign-btn" @click=${this.onUnassignClick} title="Remove assignee">×</button>`
-                          : ''}
+                ? html`<button class="unassign-btn" @click=${this.onUnassignClick} title="Remove assignee">×</button>`
+                : ''}
                       </span>
                     `
-                  : html`
+            : html`
                       <select class="assign-select" @change=${this.onAssignChange}>
                         <option value="">Assign to…</option>
                         ${this.participantNames.map(
-                          (name) => html`<option value="${name}">${name}</option>`,
-                        )}
+              (name) => html`<option value="${name}">${name}</option>`,
+            )}
                       </select>
                     `}
               </div>
             `
-          : ''}
+        : ''}
 
         <div class="card-footer">
           <div class="card-meta">
@@ -353,12 +441,12 @@ export class RetroCard extends LitElement {
           </div>
           <div class="card-actions">
             ${canPublish
-              ? html`
+        ? html`
                   <button class="publish-btn" @click=${this.onPublishClick} title="Publish card">
                     Publish
                   </button>
                 `
-              : html`
+        : html`
                   <button
                     class="vote-btn ${this.hasVoted ? 'voted' : ''}"
                     ?disabled=${!canVote}
@@ -369,10 +457,33 @@ export class RetroCard extends LitElement {
                   </button>
                 `}
             ${canDelete
-              ? html`<button class="delete-btn" @click=${this.onDeleteClick} title="Delete card">
+        ? html`<button class="delete-btn" @click=${this.onDeleteClick} title="Delete card">
                   ×
                 </button>`
-              : ''}
+        : ''}
+            ${showMenu
+        ? html`
+                  <div class="menu-wrapper">
+                    <button
+                      class="menu-btn"
+                      title="More actions"
+                      @click=${(e: Event) => {
+            e.stopPropagation()
+            this.menuOpen = !this.menuOpen
+          }}
+                    >⋮</button>
+                    ${this.menuOpen
+            ? html`
+                          <div class="card-menu">
+                            <button class="jira-export-btn" @click=${this.onJiraExport}>
+                              Export to Jira
+                            </button>
+                          </div>
+                        `
+            : ''}
+                  </div>
+                `
+        : ''}
           </div>
         </div>
       </div>

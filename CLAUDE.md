@@ -67,8 +67,9 @@ nox                             # lint + mypy + pytest (backend), lint + typeche
 - `theme.ts` — theme init/toggle/persistence (`retro_theme` in localStorage) + brand theming (`retro_brand`; activate via `?theme=cs`); `initTheme()` + `initBrand()` called before router start to prevent FOUC
 - `icons.ts` — Font Awesome Free 7.2.0 SVG icons as inline Lit `TemplateResult` values; `faIconStyles` shared CSS for sizing/alignment
 - `types.ts` — TypeScript interfaces: `Session`, `Card`, `Participant`, `Vote`, `Reaction`, `TimerState`, `SessionPhase`, `SentryIssue`, `SentryDataPoint`, `SentryHealth`
-- Pages: `home-page` (session creation + template picker + history sidebar), `session-page` (main board + SSE lifecycle), `stats-page` (public + admin analytics with D3 donut/bar charts; admin section behind password), `not-found-page` (404 + redirect)
+- Pages: `home-page` (session creation + template picker + history sidebar + Jira config), `session-page` (main board + SSE lifecycle), `stats-page` (public + admin analytics with D3 donut/bar charts; admin section behind password), `not-found-page` (404 + redirect)
 - Components: `session-history` (sidebar panel, used in both pages), `retro-board` (facilitator controls + columns) → `retro-column` → `retro-card`
+- **Jira export**: pure client-side feature; `retro_jira` localStorage key (`{ baseUrl, projectKey }`); configured on home-page; published cards show ⋮ menu → "Export to Jira" opens `CreateIssueDetails!init.jspa` in a new tab; `buildJiraUrl()` exported from `retro-card.ts`; `extractJiraBaseUrl()` exported from `home-page.ts`; `sessionName` threaded retro-board → retro-column → retro-card
 - **State**: component-local `@state()` + SSE pushes full `Session` object on every change — backend is the single source of truth. No global store.
 
 ### Real-time flow

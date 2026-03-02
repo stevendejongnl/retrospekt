@@ -665,6 +665,7 @@ export class RetroBoard extends LitElement {
               .title=${col}
               .cards=${session.cards.filter((c) => c.column === col)}
               .participantName=${this.participantName}
+              .sessionName=${session.name}
               .participantNames=${participantNames}
               .phase=${session.phase}
               .accent=${COLUMN_ACCENTS[col] ?? '#e85d04'}

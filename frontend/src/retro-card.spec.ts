@@ -455,3 +455,88 @@ test.describe('retro-card delete 204 response', () => {
     await page.locator('.delete-btn').click()
   })
 })
+
+// ── retro-card jira export ────────────────────────────────────────────────────
+
+const JIRA_CONFIG = { baseUrl: 'https://myorg.atlassian.net', projectKey: 'RETRO' }
+
+async function withJiraConfig(page: Page) {
+  await page.addInitScript((cfg) => {
+    localStorage.setItem('retro_jira', JSON.stringify(cfg))
+  }, JIRA_CONFIG)
+}
+
+test.describe('retro-card jira export', () => {
+  test('⋮ button is absent on draft cards (canPublish=true)', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ author_name: 'Alice', published: false })],
+    }
+    await withJiraConfig(page)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('.menu-btn')).not.toBeVisible()
+  })
+
+  test('⋮ button is absent when no Jira config in localStorage', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ author_name: 'Bob', published: true })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('.menu-btn')).not.toBeVisible()
+  })
+
+  test('⋮ button is visible on published cards when Jira config is set', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ author_name: 'Bob', published: true })],
+    }
+    await withJiraConfig(page)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('.menu-btn')).toBeVisible()
+  })
+
+  test('clicking ⋮ opens the overflow menu', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ author_name: 'Bob', published: true })],
+    }
+    await withJiraConfig(page)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.menu-btn').click()
+    await expect(page.locator('.card-menu')).toBeVisible()
+    await expect(page.locator('.jira-export-btn')).toBeVisible()
+  })
+
+  test('clicking outside the menu closes it', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ author_name: 'Bob', published: true })],
+    }
+    await withJiraConfig(page)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.menu-btn').click()
+    await expect(page.locator('.card-menu')).toBeVisible()
+    await page.locator('body').click({ position: { x: 10, y: 10 } })
+    await expect(page.locator('.card-menu')).not.toBeVisible()
+  })
+
+  test('clicking Export to Jira opens correct URL in new tab', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ author_name: 'Bob', published: true, text: 'Great teamwork', column: 'Went Well' })],
+    }
+    await withJiraConfig(page)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.menu-btn').click()
+
+    const [newPage] = await Promise.all([
+      page.context().waitForEvent('page'),
+      page.locator('.jira-export-btn').click(),
+    ])
+    expect(newPage.url()).toContain('myorg.atlassian.net')
+    expect(newPage.url()).toContain('projectKey=RETRO')
+    expect(newPage.url()).toContain('Great+teamwork')
+    await newPage.close()
+  })
+})

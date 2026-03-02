@@ -25,6 +25,7 @@ export class RetroColumn extends LitElement {
   @property({ type: Object }) participantColorMap: Record<string, string> = {}
   @property({ type: Array }) participantNames: string[] = []
   @property({ type: Boolean }) reactionsEnabled = true
+  @property({ type: String }) sessionName = ''
 
   @state() private newCardText = ''
   @state() private isAdding = false
@@ -419,6 +420,7 @@ export class RetroColumn extends LitElement {
                 .card=${card}
                 .participantName=${this.participantName}
                 .participantNames=${this.participantNames}
+                .sessionName=${this.sessionName}
                 ?canVote=${this.phase === 'discussing' &&
                 card.published &&
                 card.author_name !== this.participantName}
