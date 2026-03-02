@@ -372,9 +372,8 @@ export class RetroCard extends LitElement {
   }
 
   private onJiraExport(): void {
-    const jiraConfig = storage.getJiraConfig()
-    if (!jiraConfig) return
-    const url = buildJiraUrl(jiraConfig, this.card, this.sessionName)
+    // jiraConfig is always non-null here — showMenu guards the button
+    const url = buildJiraUrl(storage.getJiraConfig()!, this.card, this.sessionName)
     window.open(url, '_blank', 'noopener')
     this.menuOpen = false
   }

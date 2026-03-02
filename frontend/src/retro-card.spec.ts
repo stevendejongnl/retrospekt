@@ -508,6 +508,19 @@ test.describe('retro-card jira export', () => {
     await expect(page.locator('.jira-export-btn')).toBeVisible()
   })
 
+  test('clicking ⋮ again when menu is open closes it', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ author_name: 'Bob', published: true })],
+    }
+    await withJiraConfig(page)
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.menu-btn').click()
+    await expect(page.locator('.card-menu')).toBeVisible()
+    await page.locator('.menu-btn').click()
+    await expect(page.locator('.card-menu')).not.toBeVisible()
+  })
+
   test('clicking outside the menu closes it', async ({ page }) => {
     const session = {
       ...BASE,
