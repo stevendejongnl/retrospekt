@@ -25,11 +25,14 @@ export function createApi(fetchFn: typeof fetch = fetch) {
 
     getSession: (id: string) => request<Session>(`/sessions/${id}`),
 
-    updateSession: (id: string, updates: { name?: string; reactions_enabled?: boolean }, facilitatorToken: string) =>
+    updateSession: (id: string, updates: { name?: string; reactions_enabled?: boolean; open_facilitator?: boolean }, facilitatorToken: string, participantName?: string) =>
       request<Session>(`/sessions/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(updates),
-        headers: { 'X-Facilitator-Token': facilitatorToken },
+        headers: {
+          'X-Facilitator-Token': facilitatorToken,
+          ...(participantName && { 'X-Participant-Name': participantName }),
+        },
       }),
 
     joinSession: (id: string, participantName: string) =>
@@ -38,11 +41,14 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         body: JSON.stringify({ participant_name: participantName }),
       }),
 
-    setPhase: (id: string, phase: string, facilitatorToken: string) =>
+    setPhase: (id: string, phase: string, facilitatorToken: string, participantName?: string) =>
       request<Session>(`/sessions/${id}/phase`, {
         method: 'POST',
         body: JSON.stringify({ phase }),
-        headers: { 'X-Facilitator-Token': facilitatorToken },
+        headers: {
+          'X-Facilitator-Token': facilitatorToken,
+          ...(participantName && { 'X-Participant-Name': participantName }),
+        },
       }),
 
     addCard: (id: string, column: string, text: string, authorName: string) =>
@@ -89,24 +95,33 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         headers: { 'X-Participant-Name': participantName },
       }),
 
-    addColumn: (sessionId: string, name: string, facilitatorToken: string) =>
+    addColumn: (sessionId: string, name: string, facilitatorToken: string, participantName?: string) =>
       request<Session>(`/sessions/${sessionId}/columns`, {
         method: 'POST',
         body: JSON.stringify({ name }),
-        headers: { 'X-Facilitator-Token': facilitatorToken },
+        headers: {
+          'X-Facilitator-Token': facilitatorToken,
+          ...(participantName && { 'X-Participant-Name': participantName }),
+        },
       }),
 
-    renameColumn: (sessionId: string, oldName: string, newName: string, facilitatorToken: string) =>
+    renameColumn: (sessionId: string, oldName: string, newName: string, facilitatorToken: string, participantName?: string) =>
       request<Session>(`/sessions/${sessionId}/columns/${encodeURIComponent(oldName)}`, {
         method: 'PATCH',
         body: JSON.stringify({ name: newName }),
-        headers: { 'X-Facilitator-Token': facilitatorToken },
+        headers: {
+          'X-Facilitator-Token': facilitatorToken,
+          ...(participantName && { 'X-Participant-Name': participantName }),
+        },
       }),
 
-    removeColumn: (sessionId: string, name: string, facilitatorToken: string) =>
+    removeColumn: (sessionId: string, name: string, facilitatorToken: string, participantName?: string) =>
       request<void>(`/sessions/${sessionId}/columns/${encodeURIComponent(name)}`, {
         method: 'DELETE',
-        headers: { 'X-Facilitator-Token': facilitatorToken },
+        headers: {
+          'X-Facilitator-Token': facilitatorToken,
+          ...(participantName && { 'X-Participant-Name': participantName }),
+        },
       }),
 
     addReaction: (sessionId: string, cardId: string, emoji: string, participantName: string) =>
@@ -181,29 +196,41 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         headers: { 'X-Admin-Token': token },
       }),
 
-    setTimerDuration: (sessionId: string, durationSeconds: number, facilitatorToken: string) =>
+    setTimerDuration: (sessionId: string, durationSeconds: number, facilitatorToken: string, participantName?: string) =>
       request<Session>(`/sessions/${sessionId}/timer`, {
         method: 'PATCH',
         body: JSON.stringify({ duration_seconds: durationSeconds }),
-        headers: { 'X-Facilitator-Token': facilitatorToken },
+        headers: {
+          'X-Facilitator-Token': facilitatorToken,
+          ...(participantName && { 'X-Participant-Name': participantName }),
+        },
       }),
 
-    startTimer: (sessionId: string, facilitatorToken: string) =>
+    startTimer: (sessionId: string, facilitatorToken: string, participantName?: string) =>
       request<Session>(`/sessions/${sessionId}/timer/start`, {
         method: 'POST',
-        headers: { 'X-Facilitator-Token': facilitatorToken },
+        headers: {
+          'X-Facilitator-Token': facilitatorToken,
+          ...(participantName && { 'X-Participant-Name': participantName }),
+        },
       }),
 
-    pauseTimer: (sessionId: string, facilitatorToken: string) =>
+    pauseTimer: (sessionId: string, facilitatorToken: string, participantName?: string) =>
       request<Session>(`/sessions/${sessionId}/timer/pause`, {
         method: 'POST',
-        headers: { 'X-Facilitator-Token': facilitatorToken },
+        headers: {
+          'X-Facilitator-Token': facilitatorToken,
+          ...(participantName && { 'X-Participant-Name': participantName }),
+        },
       }),
 
-    resetTimer: (sessionId: string, facilitatorToken: string) =>
+    resetTimer: (sessionId: string, facilitatorToken: string, participantName?: string) =>
       request<Session>(`/sessions/${sessionId}/timer/reset`, {
         method: 'POST',
-        headers: { 'X-Facilitator-Token': facilitatorToken },
+        headers: {
+          'X-Facilitator-Token': facilitatorToken,
+          ...(participantName && { 'X-Participant-Name': participantName }),
+        },
       }),
   }
 }

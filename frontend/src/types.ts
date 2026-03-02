@@ -50,6 +50,7 @@ export interface Session {
   notes: Note[]
   timer: TimerState | null
   reactions_enabled: boolean
+  open_facilitator: boolean
   created_at: string
   updated_at: string
 }

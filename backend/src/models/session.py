@@ -77,6 +77,7 @@ class Session(BaseModel):
     notes: list[Note] = []
     timer: TimerState | None = None
     reactions_enabled: bool = True
+    open_facilitator: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_accessed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

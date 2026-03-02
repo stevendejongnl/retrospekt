@@ -53,6 +53,7 @@ class UpdateCardTextRequest(BaseModel):
 class UpdateSessionRequest(BaseModel):
     name: str | None = None
     reactions_enabled: bool | None = None
+    open_facilitator: bool | None = None
 
 
 class AddNoteRequest(BaseModel):

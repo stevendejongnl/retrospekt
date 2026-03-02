@@ -30,6 +30,7 @@ export class RetroTimer extends LitElement {
   @property({ type: String }) sessionId = ''
   @property({ type: Boolean }) isFacilitator = false
   @property({ type: String }) facilitatorToken = ''
+  @property({ type: String }) participantName = ''
 
   @state() private displaySeconds = 0
   @state() private customMinutes = ''
@@ -318,26 +319,26 @@ export class RetroTimer extends LitElement {
   }
 
   private async onSetDuration(seconds: number): Promise<void> {
-    await api.setTimerDuration(this.sessionId, seconds, this.facilitatorToken)
+    await api.setTimerDuration(this.sessionId, seconds, this.facilitatorToken, this.participantName)
   }
 
   private async onSetCustom(): Promise<void> {
     const minutes = parseFloat(this.customMinutes)
     if (isNaN(minutes) || minutes <= 0) return
-    await api.setTimerDuration(this.sessionId, Math.round(minutes * 60), this.facilitatorToken)
+    await api.setTimerDuration(this.sessionId, Math.round(minutes * 60), this.facilitatorToken, this.participantName)
     this.customMinutes = ''
   }
 
   private async onStart(): Promise<void> {
-    await api.startTimer(this.sessionId, this.facilitatorToken)
+    await api.startTimer(this.sessionId, this.facilitatorToken, this.participantName)
   }
 
   private async onPause(): Promise<void> {
-    await api.pauseTimer(this.sessionId, this.facilitatorToken)
+    await api.pauseTimer(this.sessionId, this.facilitatorToken, this.participantName)
   }
 
   private async onReset(): Promise<void> {
-    await api.resetTimer(this.sessionId, this.facilitatorToken)
+    await api.resetTimer(this.sessionId, this.facilitatorToken, this.participantName)
   }
 
   render() {

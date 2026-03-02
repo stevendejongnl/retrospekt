@@ -32,6 +32,7 @@ export class RetroBoard extends LitElement {
   @state() private showSettings = false
   @state() private settingName = ''
   @state() private settingReactions = true
+  @state() private settingOpenFacilitator = false
   @state() private settingJiraEnabled = false
   @state() private settingJiraUrl = ''
   @state() private settingJiraKey = ''
@@ -554,7 +555,7 @@ export class RetroBoard extends LitElement {
   }
 
   private get isFacilitator(): boolean {
-    return storage.isFacilitator(this.session.id)
+    return storage.isFacilitator(this.session.id) || !!this.session?.open_facilitator
   }
 
   private get facilitatorToken(): string {
@@ -570,13 +571,13 @@ export class RetroBoard extends LitElement {
   private async transitionPhase(): Promise<void> {
     const order: SessionPhase[] = ['collecting', 'discussing', 'closed']
     const next = order[order.indexOf(this.session.phase) + 1]
-    if (next) await api.setPhase(this.session.id, next, this.facilitatorToken)
+    if (next) await api.setPhase(this.session.id, next, this.facilitatorToken, this.participantName)
   }
 
   private async goBackPhase(): Promise<void> {
     const order: SessionPhase[] = ['collecting', 'discussing', 'closed']
     const prev = order[order.indexOf(this.session.phase) - 1]
-    if (prev) await api.setPhase(this.session.id, prev, this.facilitatorToken)
+    if (prev) await api.setPhase(this.session.id, prev, this.facilitatorToken, this.participantName)
   }
 
   private async onAddCard(e: CustomEvent): Promise<void> {
@@ -664,12 +665,12 @@ export class RetroBoard extends LitElement {
     let name = 'New column'
     let n = 2
     while (existing.has(name)) name = `New column ${n++}`
-    await api.addColumn(this.session.id, name, this.facilitatorToken)
+    await api.addColumn(this.session.id, name, this.facilitatorToken, this.participantName)
   }
 
   private async onRenameColumn(e: CustomEvent): Promise<void> {
     const { oldName, newName } = e.detail as { oldName: string; newName: string }
-    await api.renameColumn(this.session.id, oldName, newName, this.facilitatorToken)
+    await api.renameColumn(this.session.id, oldName, newName, this.facilitatorToken, this.participantName)
   }
 
   private async onRemoveColumn(e: CustomEvent): Promise<void> {
@@ -677,12 +678,14 @@ export class RetroBoard extends LitElement {
       this.session.id,
       (e.detail as { column: string }).column,
       this.facilitatorToken,
+      this.participantName,
     )
   }
 
   private openSettings(): void {
     this.settingName = this.session.name
     this.settingReactions = this.session.reactions_enabled
+    this.settingOpenFacilitator = this.session.open_facilitator
     const jiraConfig = storage.getJiraConfig()
     this.settingJiraEnabled = jiraConfig !== null
     this.settingJiraUrl = jiraConfig?.baseUrl ?? ''
@@ -691,11 +694,12 @@ export class RetroBoard extends LitElement {
   }
 
   private async saveSettings(): Promise<void> {
-    const updates: { name?: string; reactions_enabled?: boolean } = {}
+    const updates: { name?: string; reactions_enabled?: boolean; open_facilitator?: boolean } = {}
     if (this.settingName !== this.session.name) updates.name = this.settingName
     if (this.settingReactions !== this.session.reactions_enabled) updates.reactions_enabled = this.settingReactions
+    if (this.settingOpenFacilitator !== this.session.open_facilitator) updates.open_facilitator = this.settingOpenFacilitator
     if (Object.keys(updates).length > 0) {
-      await api.updateSession(this.session.id, updates, this.facilitatorToken)
+      await api.updateSession(this.session.id, updates, this.facilitatorToken, this.participantName)
     }
     if (this.settingJiraEnabled && this.settingJiraUrl && this.settingJiraKey) {
       storage.setJiraConfig({ baseUrl: this.settingJiraUrl, projectKey: this.settingJiraKey })
@@ -768,6 +772,16 @@ export class RetroBoard extends LitElement {
                     @change=${(e: Event) => { this.settingReactions = (e.target as HTMLInputElement).checked }}
                   />
                   <label for="settings-reactions">Enable emoji reactions</label>
+                </div>
+                <div class="settings-checkbox-row">
+                  <input
+                    class="settings-open-facilitator-input"
+                    type="checkbox"
+                    id="settings-open-facilitator"
+                    .checked=${this.settingOpenFacilitator}
+                    @change=${(e: Event) => { this.settingOpenFacilitator = (e.target as HTMLInputElement).checked }}
+                  />
+                  <label for="settings-open-facilitator">Allow all participants to manage the board</label>
                 </div>
                 <div class="settings-section">Jira export</div>
                 <div class="settings-checkbox-row">
@@ -891,6 +905,7 @@ export class RetroBoard extends LitElement {
               .sessionId=${session.id}
               ?isFacilitator=${this.isFacilitator}
               .facilitatorToken=${this.facilitatorToken}
+              .participantName=${this.participantName}
             ></retro-timer>
           `
         : ''}

@@ -55,6 +55,25 @@ describe('getSession', () => {
   })
 })
 
+describe('updateSession', () => {
+  it('PATCHes /sessions/:id with updates and X-Facilitator-Token', async () => {
+    mockOk(mockSession)
+    await api.updateSession('sess-1', { name: 'New Name' }, 'tok-1')
+    const [url, opts] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/sessions/sess-1')
+    expect(opts.method).toBe('PATCH')
+    expect(opts.headers).toMatchObject({ 'X-Facilitator-Token': 'tok-1' })
+    expect(JSON.parse(opts.body as string)).toMatchObject({ name: 'New Name' })
+  })
+
+  it('includes X-Participant-Name when participantName provided', async () => {
+    mockOk(mockSession)
+    await api.updateSession('sess-1', { name: 'New Name' }, 'tok-1', 'Alice')
+    const [, opts] = mockFetch.mock.calls[0]
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Alice' })
+  })
+})
+
 describe('setPhase', () => {
   it('POSTs with X-Facilitator-Token header', async () => {
     mockOk(mockSession)
@@ -62,6 +81,13 @@ describe('setPhase', () => {
 
     const [, options] = mockFetch.mock.calls[0]
     expect(options.headers).toMatchObject({ 'X-Facilitator-Token': 'my-token' })
+  })
+
+  it('includes X-Participant-Name when participantName provided', async () => {
+    mockOk(mockSession)
+    await api.setPhase('sess-1', 'discussing', 'tok-1', 'Bob')
+    const [, opts] = mockFetch.mock.calls[0]
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Bob' })
   })
 })
 
@@ -165,6 +191,13 @@ describe('addColumn', () => {
     expect(opts.body).toBe(JSON.stringify({ name: 'Kudos' }))
     expect(opts.headers).toMatchObject({ 'X-Facilitator-Token': 'tok-1' })
   })
+
+  it('includes X-Participant-Name when participantName provided', async () => {
+    mockOk(mockSession, 201)
+    await api.addColumn('sess-1', 'Kudos', 'tok-1', 'Bob')
+    const [, opts] = mockFetch.mock.calls[0]
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Bob' })
+  })
 })
 
 describe('renameColumn', () => {
@@ -176,6 +209,13 @@ describe('renameColumn', () => {
     expect(opts.method).toBe('PATCH')
     expect(opts.body).toBe(JSON.stringify({ name: 'Highlights' }))
   })
+
+  it('includes X-Participant-Name when participantName provided', async () => {
+    mockOk(mockSession)
+    await api.renameColumn('sess-1', 'Went Well', 'Highlights', 'tok-1', 'Bob')
+    const [, opts] = mockFetch.mock.calls[0]
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Bob' })
+  })
 })
 
 describe('removeColumn', () => {
@@ -186,6 +226,13 @@ describe('removeColumn', () => {
     expect(url).toBe('/api/v1/sessions/sess-1/columns/Action%20Items')
     expect(opts.method).toBe('DELETE')
     expect(opts.headers).toMatchObject({ 'X-Facilitator-Token': 'tok-1' })
+  })
+
+  it('includes X-Participant-Name when participantName provided', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true, status: 204 })
+    await api.removeColumn('sess-1', 'Action Items', 'tok-1', 'Bob')
+    const [, opts] = mockFetch.mock.calls[0]
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Bob' })
   })
 })
 
@@ -258,12 +305,26 @@ describe('timer endpoints', () => {
     expect(opts.body).toBe(JSON.stringify({ duration_seconds: 300 }))
   })
 
+  it('setTimerDuration includes X-Participant-Name when participantName provided', async () => {
+    mockOk(mockSession)
+    await api.setTimerDuration('sess-1', 300, 'tok-1', 'Bob')
+    const [, opts] = mockFetch.mock.calls[0]
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Bob' })
+  })
+
   it('startTimer POSTs to /timer/start', async () => {
     mockOk(mockSession)
     await api.startTimer('sess-1', 'tok-1')
     const [url, opts] = mockFetch.mock.calls[0]
     expect(url).toBe('/api/v1/sessions/sess-1/timer/start')
     expect(opts.method).toBe('POST')
+  })
+
+  it('startTimer includes X-Participant-Name when participantName provided', async () => {
+    mockOk(mockSession)
+    await api.startTimer('sess-1', 'tok-1', 'Bob')
+    const [, opts] = mockFetch.mock.calls[0]
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Bob' })
   })
 
   it('pauseTimer POSTs to /timer/pause', async () => {
@@ -273,11 +334,25 @@ describe('timer endpoints', () => {
     expect(url).toBe('/api/v1/sessions/sess-1/timer/pause')
   })
 
+  it('pauseTimer includes X-Participant-Name when participantName provided', async () => {
+    mockOk(mockSession)
+    await api.pauseTimer('sess-1', 'tok-1', 'Bob')
+    const [, opts] = mockFetch.mock.calls[0]
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Bob' })
+  })
+
   it('resetTimer POSTs to /timer/reset', async () => {
     mockOk(mockSession)
     await api.resetTimer('sess-1', 'tok-1')
     const [url] = mockFetch.mock.calls[0]
     expect(url).toBe('/api/v1/sessions/sess-1/timer/reset')
+  })
+
+  it('resetTimer includes X-Participant-Name when participantName provided', async () => {
+    mockOk(mockSession)
+    await api.resetTimer('sess-1', 'tok-1', 'Bob')
+    const [, opts] = mockFetch.mock.calls[0]
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Bob' })
   })
 })
 

@@ -30,6 +30,20 @@ def _public(session: Session) -> dict:
     return d
 
 
+def _check_facilitator_auth(
+    session: Session,
+    token: str | None,
+    participant_name: str | None,
+) -> None:
+    """Allow access if the caller holds the facilitator token, or if open_facilitator
+    is enabled and a participant name is provided."""
+    if token == session.facilitator_token:
+        return
+    if session.open_facilitator and participant_name:
+        return
+    raise HTTPException(status_code=403, detail="Facilitator token required")
+
+
 @router.post("", status_code=201)
 async def create_session(
     body: CreateSessionRequest,
@@ -62,18 +76,20 @@ async def update_session(
     session_id: str,
     body: UpdateSessionRequest,
     x_facilitator_token: str | None = Header(default=None),
+    x_participant_name: str | None = Header(default=None),
     repo: SessionRepository = Depends(get_repo),
 ) -> dict:
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    if session.facilitator_token != x_facilitator_token:
-        raise HTTPException(status_code=403, detail="Facilitator token required")
+    _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
 
     if body.name is not None:
         session.name = body.name
     if body.reactions_enabled is not None:
         session.reactions_enabled = body.reactions_enabled
+    if body.open_facilitator is not None:
+        session.open_facilitator = body.open_facilitator
 
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
@@ -104,13 +120,13 @@ async def set_phase(
     session_id: str,
     body: SetPhaseRequest,
     x_facilitator_token: str | None = Header(default=None),
+    x_participant_name: str | None = Header(default=None),
     repo: SessionRepository = Depends(get_repo),
 ) -> dict:
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    if session.facilitator_token != x_facilitator_token:
-        raise HTTPException(status_code=403, detail="Facilitator token required")
+    _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
 
     try:
         session.phase = SessionPhase(body.phase)
@@ -127,13 +143,13 @@ async def add_column(
     session_id: str,
     body: AddColumnRequest,
     x_facilitator_token: str | None = Header(default=None),
+    x_participant_name: str | None = Header(default=None),
     repo: SessionRepository = Depends(get_repo),
 ) -> dict:
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    if session.facilitator_token != x_facilitator_token:
-        raise HTTPException(status_code=403, detail="Facilitator token required")
+    _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
     if session.phase != SessionPhase.COLLECTING:
         raise HTTPException(status_code=409, detail="Columns can only be modified during collecting phase")
     if body.name in session.columns:
@@ -151,13 +167,13 @@ async def rename_column(
     column_name: str,
     body: RenameColumnRequest,
     x_facilitator_token: str | None = Header(default=None),
+    x_participant_name: str | None = Header(default=None),
     repo: SessionRepository = Depends(get_repo),
 ) -> dict:
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    if session.facilitator_token != x_facilitator_token:
-        raise HTTPException(status_code=403, detail="Facilitator token required")
+    _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
     if session.phase != SessionPhase.COLLECTING:
         raise HTTPException(status_code=409, detail="Columns can only be modified during collecting phase")
     if column_name not in session.columns:
@@ -181,13 +197,13 @@ async def remove_column(
     session_id: str,
     column_name: str,
     x_facilitator_token: str | None = Header(default=None),
+    x_participant_name: str | None = Header(default=None),
     repo: SessionRepository = Depends(get_repo),
 ) -> None:
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    if session.facilitator_token != x_facilitator_token:
-        raise HTTPException(status_code=403, detail="Facilitator token required")
+    _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
     if session.phase != SessionPhase.COLLECTING:
         raise HTTPException(status_code=409, detail="Columns can only be modified during collecting phase")
     if column_name not in session.columns:
@@ -204,13 +220,13 @@ async def set_timer_duration(
     session_id: str,
     body: SetTimerDurationRequest,
     x_facilitator_token: str | None = Header(default=None),
+    x_participant_name: str | None = Header(default=None),
     repo: SessionRepository = Depends(get_repo),
 ) -> dict:
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    if session.facilitator_token != x_facilitator_token:
-        raise HTTPException(status_code=403, detail="Facilitator token required")
+    _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
     if not (30 <= body.duration_seconds <= 7200):
         raise HTTPException(status_code=400, detail="Duration must be between 30 and 7200 seconds")
 
@@ -224,13 +240,13 @@ async def set_timer_duration(
 async def start_timer(
     session_id: str,
     x_facilitator_token: str | None = Header(default=None),
+    x_participant_name: str | None = Header(default=None),
     repo: SessionRepository = Depends(get_repo),
 ) -> dict:
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    if session.facilitator_token != x_facilitator_token:
-        raise HTTPException(status_code=403, detail="Facilitator token required")
+    _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
     if not session.timer:
         raise HTTPException(status_code=409, detail="No timer configured")
     if session.timer.paused_remaining is not None and session.timer.paused_remaining <= 0:
@@ -254,13 +270,13 @@ async def start_timer(
 async def pause_timer(
     session_id: str,
     x_facilitator_token: str | None = Header(default=None),
+    x_participant_name: str | None = Header(default=None),
     repo: SessionRepository = Depends(get_repo),
 ) -> dict:
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    if session.facilitator_token != x_facilitator_token:
-        raise HTTPException(status_code=403, detail="Facilitator token required")
+    _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
     if not session.timer or not session.timer.started_at:
         raise HTTPException(status_code=409, detail="Timer is not running")
 
@@ -278,13 +294,13 @@ async def pause_timer(
 async def reset_timer(
     session_id: str,
     x_facilitator_token: str | None = Header(default=None),
+    x_participant_name: str | None = Header(default=None),
     repo: SessionRepository = Depends(get_repo),
 ) -> dict:
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    if session.facilitator_token != x_facilitator_token:
-        raise HTTPException(status_code=403, detail="Facilitator token required")
+    _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
     if not session.timer:
         raise HTTPException(status_code=409, detail="No timer configured")
 

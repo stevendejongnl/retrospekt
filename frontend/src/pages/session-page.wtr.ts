@@ -24,6 +24,7 @@ function makeSession(overrides: Partial<Session> = {}): Session {
     notes: [],
     timer: null,
     reactions_enabled: true,
+    open_facilitator: false,
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
     ...overrides,
