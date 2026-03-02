@@ -245,7 +245,7 @@ test.describe('retro-card reactions', () => {
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.reactions-row')).toBeVisible()
-    await expect(page.locator('.reaction-btn')).toHaveCount(6)
+    await expect(page.locator('.reaction-btn')).toHaveCount(7)
   })
 
   test('clicking a reaction button calls POST /reactions', async ({ page }) => {
@@ -396,8 +396,8 @@ test.describe('retro-card reactions null handling', () => {
       cards: [makeCard({ author_name: 'Bob', published: true, reactions: null })],
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
-    // canReact=true (discussing, published, not own card) — all 6 buttons shown with count=0
-    await expect(page.locator('.reaction-btn')).toHaveCount(6)
+    // canReact=true (discussing, published, not own card) — all 7 buttons shown with count=0
+    await expect(page.locator('.reaction-btn')).toHaveCount(7)
   })
 })
 

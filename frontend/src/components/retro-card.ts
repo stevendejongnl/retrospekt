@@ -17,7 +17,7 @@ export function buildJiraUrl(config: JiraConfig, card: Card, sessionName: string
   return `${base}/secure/CreateIssueDetails!init.jspa?${params.toString()}`
 }
 
-const REACTION_EMOJI = ['❤️', '😂', '😮', '🎉', '🤔', '👀']
+const REACTION_EMOJI = ['❤️', '😂', '😮', '🎉', '🤔', '👀', '🥓']
 
 @customElement('retro-card')
 export class RetroCard extends LitElement {
