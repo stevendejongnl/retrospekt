@@ -426,6 +426,8 @@ export class RetroColumn extends LitElement {
                 card.author_name !== this.participantName}
                 ?canDelete=${card.author_name === this.participantName &&
                 this.phase === 'collecting'}
+                ?canEdit=${card.author_name === this.participantName &&
+                this.phase !== 'closed'}
                 ?canPublish=${this.phase === 'discussing' &&
                 !card.published &&
                 card.author_name === this.participantName}

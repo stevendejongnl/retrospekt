@@ -30,10 +30,14 @@ export class RetroCard extends LitElement {
   @property({ type: Array }) participantNames: string[] = []
   @property({ type: String }) sessionName = ''
 
+  @property({ type: Boolean }) canEdit = false
+
   @state() private menuOpen = false
   @state() private jiraDialogOpen = false
   @state() private summaryCopied = false
   @state() private descCopied = false
+  @state() private editing = false
+  @state() private editText = ''
 
   private readonly _outsideClickHandler = (e: MouseEvent): void => {
     if (!e.composedPath().includes(this)) {
@@ -73,6 +77,28 @@ export class RetroCard extends LitElement {
       color: var(--retro-text-primary);
       margin-bottom: 10px;
       word-break: break-word;
+    }
+    .card-text.editable {
+      cursor: pointer;
+    }
+    .card-text.editable:hover {
+      text-decoration: underline dotted var(--retro-text-muted);
+    }
+    .card-edit-input {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 14px;
+      line-height: 1.55;
+      font-family: inherit;
+      color: var(--retro-text-primary);
+      background: var(--retro-bg-surface);
+      border: 1.5px solid var(--card-accent, #e85d04);
+      border-radius: 6px;
+      padding: 4px 8px;
+      margin-bottom: 10px;
+      resize: none;
+      outline: none;
+      overflow: hidden;
     }
     .reactions-row {
       display: flex;
@@ -451,6 +477,38 @@ export class RetroCard extends LitElement {
     )
   }
 
+  private onTextClick(): void {
+    if (!this.canEdit) return
+    this.editText = this.card.text
+    this.editing = true
+    void this.updateComplete.then(() => {
+      (this.shadowRoot?.querySelector('.card-edit-input') as HTMLElement | null)?.focus()
+    })
+  }
+
+  private onEditKeydown(e: KeyboardEvent): void {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      this._saveEdit()
+    } else if (e.key === 'Escape') {
+      this.editing = false
+    }
+  }
+
+  private _saveEdit(): void {
+    const text = this.editText.trim()
+    if (text && text !== this.card.text) {
+      this.dispatchEvent(
+        new CustomEvent('edit-card', {
+          detail: { cardId: this.card.id, text },
+          bubbles: true,
+          composed: true,
+        }),
+      )
+    }
+    this.editing = false
+  }
+
   private onPublishClick(): void {
     this.dispatchEvent(
       new CustomEvent('publish-card', {
@@ -557,7 +615,19 @@ export class RetroCard extends LitElement {
     const showMenu = !canPublish && !!jiraConfig
     return html`
       <div class="card ${canPublish ? 'draft' : ''}">
-        <p class="card-text">${card.text}</p>
+        ${this.editing
+          ? html`<textarea
+              class="card-edit-input"
+              .value=${this.editText}
+              rows="3"
+              @input=${(e: Event) => { this.editText = (e.target as HTMLTextAreaElement).value }}
+              @keydown=${this.onEditKeydown}
+              @blur=${() => { if (this.editing) this._saveEdit() }}
+            ></textarea>`
+          : html`<p
+              class="card-text ${this.canEdit ? 'editable' : ''}"
+              @click=${this.onTextClick}
+            >${card.text}</p>`}
 
         ${this.reactionsEnabled && groups.length > 0
         ? html`

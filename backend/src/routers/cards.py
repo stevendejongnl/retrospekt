@@ -1,7 +1,13 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
 from ..dependencies import get_repo
-from ..models.requests import AddCardRequest, AddReactionRequest, AssignCardRequest, PublishAllRequest
+from ..models.requests import (
+    AddCardRequest,
+    AddReactionRequest,
+    AssignCardRequest,
+    PublishAllRequest,
+    UpdateCardTextRequest,
+)
 from ..models.session import REACTION_EMOJI, Card, Reaction, Session, Vote
 from ..repositories.session_repo import SessionRepository
 from ..services.sse_manager import sse_manager
@@ -265,6 +271,37 @@ async def assign_card(
         raise HTTPException(status_code=403, detail="Only the author or facilitator can assign this card")
 
     card.assignee = body.assignee
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
+
+    updated_card = next(c for c in session.cards if c.id == card_id)
+    return updated_card.model_dump()
+
+
+@router.patch("/{session_id}/cards/{card_id}/text")
+async def update_card_text(
+    session_id: str,
+    card_id: str,
+    body: UpdateCardTextRequest,
+    x_participant_name: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
+    if not x_participant_name:
+        raise HTTPException(status_code=400, detail="X-Participant-Name header required")
+
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.phase == "closed":
+        raise HTTPException(status_code=409, detail="Session is closed")
+
+    card = next((c for c in session.cards if c.id == card_id), None)
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found")
+    if card.author_name != x_participant_name:
+        raise HTTPException(status_code=403, detail="Only the author can edit this card")
+
+    card.text = body.text
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
 

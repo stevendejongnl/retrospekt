@@ -680,3 +680,94 @@ test.describe('retro-card lifecycle', () => {
     await expect(page).toHaveURL('/')
   })
 })
+
+// ── Inline card editing ────────────────────────────────────────────────────────
+
+test.describe('retro-card inline editing', () => {
+  test('edit input is not visible by default', async ({ page }) => {
+    const session = {
+      ...BASE,
+      phase: 'collecting',
+      cards: [makeCard({ author_name: 'Alice', published: false })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('.card-edit-input')).not.toBeVisible()
+    await expect(page.locator('.card-text')).toBeVisible()
+  })
+
+  test('clicking card text enters edit mode for own card in collecting phase', async ({ page }) => {
+    const session = {
+      ...BASE,
+      phase: 'collecting',
+      cards: [makeCard({ author_name: 'Alice', published: false })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.card-text').click()
+    await expect(page.locator('.card-edit-input')).toBeVisible()
+    await expect(page.locator('.card-text')).not.toBeVisible()
+  })
+
+  test('clicking card text does not enter edit mode for another author\'s card', async ({ page }) => {
+    const session = {
+      ...BASE,
+      phase: 'discussing',
+      cards: [makeCard({ author_name: 'Bob', published: true })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.card-text').click()
+    await expect(page.locator('.card-edit-input')).not.toBeVisible()
+  })
+
+  test('clicking card text does not enter edit mode in closed phase', async ({ page }) => {
+    const session = {
+      ...BASE,
+      phase: 'closed',
+      cards: [makeCard({ author_name: 'Alice', published: true })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.card-text').click()
+    await expect(page.locator('.card-edit-input')).not.toBeVisible()
+  })
+
+  test('pressing Enter saves and calls PATCH /text', async ({ page }) => {
+    const session = {
+      ...BASE,
+      phase: 'collecting',
+      cards: [makeCard({ author_name: 'Alice', published: false })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.card-text').click()
+    await page.locator('.card-edit-input').fill('Updated text')
+    const req = page.waitForRequest(r => r.url().includes('/text') && r.method() === 'PATCH')
+    await page.locator('.card-edit-input').press('Enter')
+    await req
+  })
+
+  test('pressing Escape cancels and restores original text without API call', async ({ page }) => {
+    const session = {
+      ...BASE,
+      phase: 'collecting',
+      cards: [makeCard({ author_name: 'Alice', published: false, text: 'Original' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.card-text').click()
+    await page.locator('.card-edit-input').fill('Changed text')
+    let apiCalled = false
+    await page.route(`/api/v1/sessions/${SESSION_ID}/cards/card-1/text`, () => { apiCalled = true })
+    await page.locator('.card-edit-input').press('Escape')
+    await expect(page.locator('.card-edit-input')).not.toBeVisible()
+    await expect(page.locator('.card-text')).toBeVisible()
+    expect(apiCalled).toBe(false)
+  })
+
+  test('edit mode shows the current card text pre-filled', async ({ page }) => {
+    const session = {
+      ...BASE,
+      phase: 'collecting',
+      cards: [makeCard({ author_name: 'Alice', published: false, text: 'Original text' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.card-text').click()
+    await expect(page.locator('.card-edit-input')).toHaveValue('Original text')
+  })
+})

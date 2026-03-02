@@ -89,3 +89,99 @@ async def test_delete_card_unknown_session_returns_404(client: AsyncClient):
         headers={"X-Participant-Name": "Alice"},
     )
     assert response.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Edit card text
+# ---------------------------------------------------------------------------
+
+
+async def test_author_can_edit_card_text_in_collecting_phase(client: AsyncClient):
+    session = await make_session(client)
+    card = await _add_card(client, session.id, author="Alice")
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}/cards/{card['id']}/text",
+        json={"text": "Updated text"},
+        headers={"X-Participant-Name": "Alice"},
+    )
+    assert response.status_code == 200
+    data = (await client.get(f"/api/v1/sessions/{session.id}")).json()
+    updated = next(c for c in data["cards"] if c["id"] == card["id"])
+    assert updated["text"] == "Updated text"
+
+
+async def test_author_can_edit_published_card_and_it_stays_published(client: AsyncClient):
+    session = await make_session(client)
+    card = await _add_card(client, session.id, author="Alice")
+    # Advance to discussing and publish the card
+    await client.post(
+        f"/api/v1/sessions/{session.id}/phase",
+        json={"phase": "discussing"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    await client.post(
+        f"/api/v1/sessions/{session.id}/cards/{card['id']}/publish",
+        headers={"X-Participant-Name": "Alice"},
+    )
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}/cards/{card['id']}/text",
+        json={"text": "Edited after publish"},
+        headers={"X-Participant-Name": "Alice"},
+    )
+    assert response.status_code == 200
+    data = (await client.get(f"/api/v1/sessions/{session.id}")).json()
+    updated = next(c for c in data["cards"] if c["id"] == card["id"])
+    assert updated["text"] == "Edited after publish"
+    assert updated["published"] is True
+
+
+async def test_non_author_cannot_edit_card_text(client: AsyncClient):
+    session = await make_session(client)
+    card = await _add_card(client, session.id, author="Alice")
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}/cards/{card['id']}/text",
+        json={"text": "Stolen edit"},
+        headers={"X-Participant-Name": "Bob"},
+    )
+    assert response.status_code == 403
+
+
+async def test_cannot_edit_card_text_in_closed_phase(client: AsyncClient):
+    session = await make_session(client)
+    card = await _add_card(client, session.id, author="Alice")
+    await client.post(
+        f"/api/v1/sessions/{session.id}/phase",
+        json={"phase": "discussing"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    await client.post(
+        f"/api/v1/sessions/{session.id}/phase",
+        json={"phase": "closed"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}/cards/{card['id']}/text",
+        json={"text": "Too late"},
+        headers={"X-Participant-Name": "Alice"},
+    )
+    assert response.status_code == 409
+
+
+async def test_edit_card_text_missing_card_returns_404(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}/cards/no-such-card/text",
+        json={"text": "Whatever"},
+        headers={"X-Participant-Name": "Alice"},
+    )
+    assert response.status_code == 404
+
+
+async def test_edit_card_text_missing_participant_header_returns_400(client: AsyncClient):
+    session = await make_session(client)
+    card = await _add_card(client, session.id)
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}/cards/{card['id']}/text",
+        json={"text": "No header"},
+    )
+    assert response.status_code == 400

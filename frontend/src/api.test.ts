@@ -65,6 +65,19 @@ describe('setPhase', () => {
   })
 })
 
+describe('updateCardText', () => {
+  it('sends PATCH to /text with text body and X-Participant-Name header', async () => {
+    mockOk({ id: 'card-1', text: 'Updated', column: 'Went Well', author_name: 'Alice', votes: [], reactions: [], assignee: null, published: false, created_at: '' })
+    await api.updateCardText('sess-1', 'card-1', 'Updated', 'Alice')
+
+    const [url, options] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/sessions/sess-1/cards/card-1/text')
+    expect(options.method).toBe('PATCH')
+    expect(options.headers).toMatchObject({ 'X-Participant-Name': 'Alice' })
+    expect(JSON.parse(options.body)).toMatchObject({ text: 'Updated' })
+  })
+})
+
 describe('deleteCard', () => {
   it('sends DELETE with X-Participant-Name header', async () => {
     mockFetch.mockResolvedValueOnce({ ok: true, status: 204 })

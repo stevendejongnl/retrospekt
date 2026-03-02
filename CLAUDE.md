@@ -56,7 +56,7 @@ nox                             # lint + mypy + pytest (backend), lint + typeche
 - `models/session.py` — Domain models: `Session`, `Card`, `Participant`, `Vote`, `SessionPhase`
 - `repositories/session_repo.py` — All MongoDB access; `repositories/stats_repo.py` — `StatsRepository` with `get_public_stats()` + `get_admin_stats()` using MongoDB `$facet` aggregation; `services/sse_manager.py` — Redis pub/sub for SSE broadcasts
 - `routers/sessions.py` — Session CRUD + phase transitions (bidirectional) + column management (add/rename/delete) + SSE stream endpoint
-- `routers/cards.py` — Card CRUD + voting + per-card publish (author) + publish-all in column (participant's own cards)
+- `routers/cards.py` — Card CRUD + voting + per-card publish (author) + publish-all in column (participant's own cards) + inline text edit (`PATCH .../cards/{id}/text`, author-only, 409 in closed)
 - `routers/stats.py` — `GET /api/v1/stats` (public), `POST /api/v1/stats/auth` (argon2 password → Redis token), `GET /api/v1/stats/admin` (`X-Admin-Token` required); `ADMIN_PASSWORD_HASH` in settings (empty = feature disabled); calls `SentryService` when all three Sentry env vars are set
 - `services/sentry_service.py` — `SentryService` class; fetches issues, error-rate 7d, and p95 latency 7d from Sentry API concurrently via `httpx` + `asyncio.gather`; models (`SentryIssue`, `SentryDataPoint`, `SentryHealth`) defined in `stats_repo.py`
 
@@ -70,6 +70,7 @@ nox                             # lint + mypy + pytest (backend), lint + typeche
 - Pages: `home-page` (session creation + template picker + history sidebar + Jira config), `session-page` (main board + SSE lifecycle), `stats-page` (public + admin analytics with D3 donut/bar charts; admin section behind password), `not-found-page` (404 + redirect)
 - Components: `session-history` (sidebar panel, used in both pages), `retro-board` (facilitator controls + columns) → `retro-column` → `retro-card`
 - **Jira export**: pure client-side feature; `retro_jira` localStorage key (`{ baseUrl, projectKey }`); configured on home-page; published cards show ⋮ menu → "Export to Jira" opens `CreateIssueDetails!init.jspa` in a new tab; `buildJiraUrl()` exported from `retro-card.ts`; `extractJiraBaseUrl()` exported from `home-page.ts`; `sessionName` threaded retro-board → retro-column → retro-card
+- **Inline card edit**: `canEdit` boolean prop on `retro-card` (set in `retro-column`: author + not closed); click `.card-text` → textarea swap; Enter saves, Escape cancels, blur saves (if still editing); dispatches `edit-card` event → `retro-board.onEditCard` → `api.updateCardText()`
 - **State**: component-local `@state()` + SSE pushes full `Session` object on every change — backend is the single source of truth. No global store.
 
 ### Real-time flow
