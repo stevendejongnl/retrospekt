@@ -1,3 +1,9 @@
+## [1.20.1](https://github.com/stevendejongnl/retrospekt/compare/v1.20.0...v1.20.1) (2026-03-02)
+
+### Bug Fixes
+
+* **jira-export:** use CreateIssueDetails.jspa instead of !init endpoint ([07f6593](https://github.com/stevendejongnl/retrospekt/commit/07f659314b781bd8c26df37979f4f6335dff8471))
+
 ## [1.20.0](https://github.com/stevendejongnl/retrospekt/compare/v1.19.0...v1.20.0) (2026-03-02)
 
 ### Features
