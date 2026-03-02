@@ -1,3 +1,9 @@
+## [1.21.0](https://github.com/stevendejongnl/retrospekt/compare/v1.20.1...v1.21.0) (2026-03-02)
+
+### Features
+
+* **jira-export:** replace URL prefill with in-app export dialog ([97a4f3b](https://github.com/stevendejongnl/retrospekt/commit/97a4f3b13ff4df1b3530ff76905676b6de8666a9))
+
 ## [1.20.1](https://github.com/stevendejongnl/retrospekt/compare/v1.20.0...v1.20.1) (2026-03-02)
 
 ### Bug Fixes
