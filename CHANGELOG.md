@@ -1,3 +1,9 @@
+## [1.23.0](https://github.com/stevendejongnl/retrospekt/compare/v1.22.0...v1.23.0) (2026-03-02)
+
+### Features
+
+* **notes:** add collaborative board notes ([7c339c6](https://github.com/stevendejongnl/retrospekt/commit/7c339c6ce85c424d3e653682d1986c5683affc38))
+
 ## [1.22.0](https://github.com/stevendejongnl/retrospekt/compare/v1.21.0...v1.22.0) (2026-03-02)
 
 ### Features
