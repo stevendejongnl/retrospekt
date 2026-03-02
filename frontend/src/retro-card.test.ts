@@ -25,7 +25,7 @@ describe('buildJiraUrl', () => {
 
   it('includes the correct path', () => {
     const url = buildJiraUrl(config, card, 'Sprint 42')
-    expect(url).toContain('/secure/CreateIssueDetails!init.jspa')
+    expect(url).toContain('/secure/CreateIssueDetails.jspa')
   })
 
   it('includes projectKey query param', () => {

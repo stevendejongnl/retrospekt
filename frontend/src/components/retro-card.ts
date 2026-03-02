@@ -14,7 +14,7 @@ export function buildJiraUrl(config: JiraConfig, card: Card, sessionName: string
     summary: card.text,
     description,
   })
-  return `${base}/secure/CreateIssueDetails!init.jspa?${params.toString()}`
+  return `${base}/secure/CreateIssueDetails.jspa?${params.toString()}`
 }
 
 const REACTION_EMOJI = ['❤️', '😂', '😮', '🎉', '🤔', '👀', '🥓']
