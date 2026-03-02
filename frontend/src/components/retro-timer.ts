@@ -343,6 +343,10 @@ export class RetroTimer extends LitElement {
   render() {
     if (!this.isFacilitator) {
       // Read-only pill for participants
+      // retro-board only renders retro-timer when isFacilitator||timer, so this guard
+      // is structurally unreachable for participants — only fires if timer is cleared
+      // via SSE while mounted (Lit removes the element before that happens in practice).
+      /* istanbul ignore next */
       if (!this.timer) return html``
       return html`
         <div class="timer-pill">

@@ -8,7 +8,27 @@ const apiTarget = process.env.VITE_BACKEND_URL ?? 'http://localhost:8000'
 
 export default defineConfig({
   plugins: process.env.VITE_COVERAGE === 'true'
-    ? [istanbul({ include: 'src/**', exclude: ['node_modules', '**/*.test.ts', '**/*.spec.ts', '**/*.wtr.ts'], requireEnv: false })]
+    ? [
+        // Suppress istanbul from instrumenting TypeScript's synthesized __decorateClass helper.
+        // esbuild inlines this helper at the top of every file that uses TS decorators; the
+        // helper body contains ~12 branch arms with no source-map entries, which appear as
+        // uncovered "ghost" branches attributed to random TypeScript lines and push branch
+        // coverage below threshold.  Adding /* istanbul ignore next */ before the declaration
+        // causes babel-plugin-istanbul (which runs after this plugin via enforce:'post') to
+        // skip instrumenting the entire arrow-function expression.
+        {
+          name: 'suppress-ts-helper-coverage',
+          transform(code: string, id: string) {
+            if (/node_modules/.test(id) || !/\.(ts|tsx)$/.test(id)) return null
+            if (!code.includes('var __decorateClass =')) return null
+            return {
+              code: code.replace('var __decorateClass =', '/* istanbul ignore next */ var __decorateClass ='),
+              map: null,
+            }
+          },
+        },
+        istanbul({ include: 'src/**', exclude: ['node_modules', '**/*.test.ts', '**/*.spec.ts', '**/*.wtr.ts'], requireEnv: false }),
+      ]
     : [],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
