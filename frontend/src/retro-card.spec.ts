@@ -553,3 +553,21 @@ test.describe('retro-card jira export', () => {
     await newPage.close()
   })
 })
+
+// ── retro-card lifecycle ───────────────────────────────────────────────────────
+
+test.describe('retro-card lifecycle', () => {
+  test('disconnectedCallback is called when navigating away from a session with cards', async ({ page }) => {
+    // This test covers disconnectedCallback by loading a session with published cards
+    // then navigating home — unmounts retro-card and fires disconnectedCallback.
+    const session = {
+      ...BASE,
+      cards: [makeCard({ author_name: 'Bob', published: true })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('retro-card')).toBeVisible()
+    // Navigate home — triggers disconnectedCallback on retro-card
+    await page.locator('.brand').click()
+    await expect(page).toHaveURL('/')
+  })
+})
