@@ -18,11 +18,13 @@ import {
   iconCheck,
   iconClockRotateLeft,
   iconFileArrowDown,
+  iconNoteSticky,
   iconRotateLeft,
   csLogo,
 } from '../icons'
 import '../components/retro-board'
 import '../components/session-history'
+import '../components/board-notes'
 
 @customElement('session-page')
 export class SessionPage extends LitElement {
@@ -38,6 +40,7 @@ export class SessionPage extends LitElement {
   @state() private brand = getBrand()
   @state() private showHelp = false
   @state() private showHistory = false
+  @state() private showNotes = false
 
   private sseClient: SSEClient | null = null
   private _themeListener!: EventListener
@@ -601,6 +604,14 @@ export class SessionPage extends LitElement {
       md += '\n'
     }
 
+    if (session.notes && session.notes.length > 0) {
+      md += `## Board Notes\n`
+      for (const note of session.notes) {
+        md += `- **${note.author_name}**: ${note.text}\n`
+      }
+      md += '\n'
+    }
+
     const blob = new Blob([md], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -634,6 +645,13 @@ export class SessionPage extends LitElement {
 
     return html`
       <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
+      <board-notes
+        .open=${this.showNotes}
+        .notes=${session.notes ?? []}
+        .participantName=${this.participantName}
+        .sessionId=${this.sessionId}
+        @close=${() => { this.showNotes = false }}
+      ></board-notes>
 
       ${this.showHelp
         ? html`
@@ -718,6 +736,7 @@ export class SessionPage extends LitElement {
           ${session.name}<span class="session-date">· ${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
         </span>
         <button class="icon-btn" @click=${() => { this.showHistory = true }} title="Your sessions">${iconClockRotateLeft()}</button>
+        <button class="icon-btn" @click=${() => { this.showNotes = true }} title="Board notes">${iconNoteSticky()}</button>
         ${this.brand === 'cs'
           ? html`<button class="icon-btn brand-reset" @click=${this.onBrandReset} title="Reset to default theme">${iconRotateLeft()}</button>`
           : html`<button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>`}

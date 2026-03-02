@@ -9,6 +9,13 @@ export interface Reaction {
   participant_name: string
 }
 
+export interface Note {
+  id: string
+  text: string
+  author_name: string
+  created_at: string
+}
+
 export interface Card {
   id: string
   column: string
@@ -39,6 +46,7 @@ export interface Session {
   phase: SessionPhase
   participants: Participant[]
   cards: Card[]
+  notes: Note[]
   timer: TimerState | null
   reactions_enabled: boolean
   created_at: string

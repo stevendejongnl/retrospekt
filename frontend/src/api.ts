@@ -1,4 +1,4 @@
-import type { AdminStats, Card, CreateSessionResponse, PublicStats, Session } from './types'
+import type { AdminStats, Card, CreateSessionResponse, Note, PublicStats, Session } from './types'
 
 const BASE = '/api/v1'
 
@@ -133,6 +133,26 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         method: 'PATCH',
         body: JSON.stringify({ assignee }),
         headers: { 'X-Participant-Name': participantName, 'X-Facilitator-Token': facilitatorToken },
+      }),
+
+    addNote: (sessionId: string, text: string, authorName: string) =>
+      request<Note>(`/sessions/${sessionId}/notes`, {
+        method: 'POST',
+        body: JSON.stringify({ text, author_name: authorName }),
+        headers: { 'X-Participant-Name': authorName },
+      }),
+
+    updateNote: (sessionId: string, noteId: string, text: string, participantName: string) =>
+      request<Note>(`/sessions/${sessionId}/notes/${noteId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ text }),
+        headers: { 'X-Participant-Name': participantName },
+      }),
+
+    deleteNote: (sessionId: string, noteId: string, participantName: string) =>
+      request<void>(`/sessions/${sessionId}/notes/${noteId}`, {
+        method: 'DELETE',
+        headers: { 'X-Participant-Name': participantName },
       }),
 
     getPublicStats: () => request<PublicStats>('/stats'),

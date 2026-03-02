@@ -281,6 +281,46 @@ describe('timer endpoints', () => {
   })
 })
 
+describe('addNote', () => {
+  it('POSTs to /notes with text, author_name and X-Participant-Name header', async () => {
+    const mockNote = { id: 'note-1', text: 'Great idea', author_name: 'Alice', created_at: '' }
+    mockOk(mockNote, 201)
+    await api.addNote('sess-1', 'Great idea', 'Alice')
+
+    const [url, opts] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/sessions/sess-1/notes')
+    expect(opts.method).toBe('POST')
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Alice' })
+    expect(JSON.parse(opts.body)).toMatchObject({ text: 'Great idea', author_name: 'Alice' })
+  })
+})
+
+describe('updateNote', () => {
+  it('PATCHes /notes/:id with text and X-Participant-Name header', async () => {
+    const mockNote = { id: 'note-1', text: 'Updated', author_name: 'Alice', created_at: '' }
+    mockOk(mockNote)
+    await api.updateNote('sess-1', 'note-1', 'Updated', 'Bob')
+
+    const [url, opts] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/sessions/sess-1/notes/note-1')
+    expect(opts.method).toBe('PATCH')
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Bob' })
+    expect(JSON.parse(opts.body)).toMatchObject({ text: 'Updated' })
+  })
+})
+
+describe('deleteNote', () => {
+  it('DELETEs /notes/:id with X-Participant-Name header', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true, status: 204 })
+    await api.deleteNote('sess-1', 'note-1', 'Alice')
+
+    const [url, opts] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/sessions/sess-1/notes/note-1')
+    expect(opts.method).toBe('DELETE')
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Alice' })
+  })
+})
+
 describe('createSession with custom columns', () => {
   it('includes columns array in the request body when provided', async () => {
     mockOk({ ...mockSession, facilitator_token: 'tok-1' }, 201)

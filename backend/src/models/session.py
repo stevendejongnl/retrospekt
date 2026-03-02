@@ -34,6 +34,18 @@ class Card(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
+class Note(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid4()))
+    text: str
+    author_name: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    @field_validator("created_at")
+    @classmethod
+    def ensure_utc(cls, v: datetime) -> datetime:
+        return v if v.tzinfo else v.replace(tzinfo=UTC)
+
+
 class TimerState(BaseModel):
     duration_seconds: int
     started_at: datetime | None = None
@@ -61,6 +73,7 @@ class Session(BaseModel):
     facilitator_token: str = Field(default_factory=lambda: str(uuid4()))
     participants: list[Participant] = []
     cards: list[Card] = []
+    notes: list[Note] = []
     timer: TimerState | None = None
     reactions_enabled: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
