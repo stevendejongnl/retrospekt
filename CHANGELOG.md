@@ -1,3 +1,9 @@
+## [1.25.1](https://github.com/stevendejongnl/retrospekt/compare/v1.25.0...v1.25.1) (2026-03-02)
+
+### Bug Fixes
+
+* **groups:** fix 3+ grouping, cross-column prevention, and visual containment ([75db29a](https://github.com/stevendejongnl/retrospekt/commit/75db29a26d9577b4fe1ebca8b83314b09289796b))
+
 ## [1.25.0](https://github.com/stevendejongnl/retrospekt/compare/v1.24.0...v1.25.0) (2026-03-02)
 
 ### Features
