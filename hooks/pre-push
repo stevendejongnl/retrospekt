@@ -18,9 +18,9 @@ git fetch "$REMOTE" "$BRANCH" --quiet 2>/dev/null || true
 if git rev-parse --verify "$REMOTE_BRANCH" >/dev/null 2>&1; then
   BEHIND=$(git rev-list --count "HEAD..${REMOTE_BRANCH}")
   if [ "$BEHIND" -gt 0 ]; then
-    echo "❌ Push blocked: your branch is $BEHIND commit(s) behind ${REMOTE_BRANCH}."
-    echo "   Run: git pull --rebase"
-    exit 1
+    echo "⟳  Branch is $BEHIND commit(s) behind ${REMOTE_BRANCH} — rebasing..."
+    git pull --rebase "$REMOTE" "$BRANCH" || { echo "❌ Rebase failed — resolve conflicts and retry."; exit 1; }
+    echo "✓  Rebase complete"
   fi
 fi
 
