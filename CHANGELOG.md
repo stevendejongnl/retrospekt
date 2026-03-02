@@ -1,3 +1,9 @@
+## [1.24.0](https://github.com/stevendejongnl/retrospekt/compare/v1.23.0...v1.24.0) (2026-03-02)
+
+### Features
+
+* **groups:** add card drag-and-drop grouping ([5d5dcc3](https://github.com/stevendejongnl/retrospekt/commit/5d5dcc3c0ac2063eb3bad6c11431ac3371448411))
+
 ## [1.23.0](https://github.com/stevendejongnl/retrospekt/compare/v1.22.0...v1.23.0) (2026-03-02)
 
 ### Features
