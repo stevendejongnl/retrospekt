@@ -6,6 +6,7 @@ class CreateSessionRequest(BaseModel):
     participant_name: str = "Facilitator"
     columns: list[str] | None = None
     reactions_enabled: bool = True
+    open_facilitator: bool = False
 
 
 class JoinSessionRequest(BaseModel):

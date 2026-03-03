@@ -8,6 +8,9 @@ source "$(dirname "$0")/shared.sh"
 echo "🔍 Pre-commit checks..."
 
 # ── Rebase check ──────────────────────────────────────────────────────────────
+# Fetch remote and warn if behind — can't auto-rebase here because staged
+# changes are present (pre-commit runs with an active index). The pre-push
+# hook will auto-rebase before pushing.
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 REMOTE=$(git config "branch.${BRANCH}.remote" 2>/dev/null || echo "origin")
 REMOTE_BRANCH="${REMOTE}/${BRANCH}"
@@ -17,9 +20,7 @@ git fetch "$REMOTE" "$BRANCH" --quiet 2>/dev/null || true
 if git rev-parse --verify "$REMOTE_BRANCH" >/dev/null 2>&1; then
   BEHIND=$(git rev-list --count "HEAD..${REMOTE_BRANCH}")
   if [ "$BEHIND" -gt 0 ]; then
-    echo "⟳  Branch is $BEHIND commit(s) behind ${REMOTE_BRANCH} — rebasing..."
-    git pull --rebase "$REMOTE" "$BRANCH" || { echo "❌ Rebase failed — resolve conflicts and retry."; exit 1; }
-    echo "✓  Rebase complete"
+    echo "⚠  Branch is $BEHIND commit(s) behind ${REMOTE_BRANCH} — pre-push will rebase automatically."
   fi
 fi
 

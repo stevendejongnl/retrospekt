@@ -531,6 +531,43 @@ test.describe('home-page jira config', () => {
   })
 })
 
+// ── home-page open facilitator option ────────────────────────────────────────
+
+test.describe('home-page open facilitator option', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+  })
+
+  test('open facilitator checkbox is visible in Options', async ({ page }) => {
+    await expect(page.locator('[aria-label="Open facilitator mode"]')).toBeVisible()
+  })
+
+  test('open facilitator checkbox is unchecked by default', async ({ page }) => {
+    await expect(page.locator('[aria-label="Open facilitator mode"]')).not.toBeChecked()
+  })
+
+  test('checking open facilitator sends open_facilitator=true in create request', async ({ page }) => {
+    const createReq = page.waitForRequest(
+      r => r.url().includes('/sessions') && r.method() === 'POST',
+    )
+    await page.locator('[aria-label="Open facilitator mode"]').check()
+    await page.getByLabel('Session name').fill('Open Retro')
+    await page.locator('.create-btn').click()
+    const req = await createReq
+    expect(req.postDataJSON().open_facilitator).toBe(true)
+  })
+
+  test('leaving open facilitator unchecked sends open_facilitator=false', async ({ page }) => {
+    const createReq = page.waitForRequest(
+      r => r.url().includes('/sessions') && r.method() === 'POST',
+    )
+    await page.getByLabel('Session name').fill('Normal Retro')
+    await page.locator('.create-btn').click()
+    const req = await createReq
+    expect(req.postDataJSON().open_facilitator).toBe(false)
+  })
+})
+
 // ── session-not-found banner ──────────────────────────────────────────────────
 
 test.describe('home-page session-not-found banner', () => {

@@ -83,6 +83,24 @@ async def test_creating_a_session_with_reactions_disabled(client: AsyncClient):
     assert response.json()["reactions_enabled"] is False
 
 
+async def test_creating_a_session_defaults_open_facilitator_to_false(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions",
+        json={"name": "Sprint 1", "participant_name": "Alice"},
+    )
+    assert response.status_code == 201
+    assert response.json()["open_facilitator"] is False
+
+
+async def test_creating_a_session_with_open_facilitator_enabled(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions",
+        json={"name": "Sprint 1", "participant_name": "Alice", "open_facilitator": True},
+    )
+    assert response.status_code == 201
+    assert response.json()["open_facilitator"] is True
+
+
 # ── PATCH /sessions/{id} ──────────────────────────────────────────────────────
 
 async def test_patch_session_renames_it(client: AsyncClient):

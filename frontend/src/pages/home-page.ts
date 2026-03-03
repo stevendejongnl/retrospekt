@@ -34,6 +34,7 @@ export class HomePage extends LitElement {
   @state() private brand = getBrand()
   @state() private showHistory = false
   @state() private reactionsEnabled = true
+  @state() private openFacilitator = false
   @state() private sessionNotFound = false
   @state() private jiraEnabled = false
   @state() private jiraUrl = ''
@@ -411,7 +412,7 @@ export class HomePage extends LitElement {
 
     try {
       const columns = COLUMN_TEMPLATES[this.selectedTemplate].columns
-      const session = await api.createSession(name, yourName, columns, this.reactionsEnabled)
+      const session = await api.createSession(name, yourName, columns, this.reactionsEnabled, this.openFacilitator)
       storage.setFacilitatorToken(session.id, session.facilitator_token)
       storage.setName(session.id, yourName)
       storage.addOrUpdateHistory({
@@ -545,6 +546,19 @@ export class HomePage extends LitElement {
               <span class="option-label">
                 Emoji reactions on cards
                 <small>Participants can react to published cards with emoji</small>
+              </span>
+            </label>
+            <label class="option-row" style="margin-top:8px">
+              <input
+                type="checkbox"
+                aria-label="Open facilitator mode"
+                .checked=${this.openFacilitator}
+                @change=${(e: Event) => { this.openFacilitator = (e.target as HTMLInputElement).checked }}
+                ?disabled=${this.loading}
+              />
+              <span class="option-label">
+                Open facilitator mode
+                <small>All participants can control the session (phase, timer, columns)</small>
               </span>
             </label>
             <label class="option-row" style="margin-top:8px">
