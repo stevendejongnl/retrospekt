@@ -1,3 +1,9 @@
+## [1.26.0](https://github.com/stevendejongnl/retrospekt/compare/v1.25.1...v1.26.0) (2026-03-03)
+
+### Features
+
+* **open-facilitator:** add open facilitator toggle to create session form ([9378a1a](https://github.com/stevendejongnl/retrospekt/commit/9378a1a189023674eeb2e70304f0491efa0d0978))
+
 ## [1.25.1](https://github.com/stevendejongnl/retrospekt/compare/v1.25.0...v1.25.1) (2026-03-02)
 
 ### Bug Fixes
