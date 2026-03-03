@@ -483,49 +483,54 @@ test.describe('retro-timer mute toggle (participant pill)', () => {
 
 test.describe('retro-timer ding sound', () => {
   test('AudioContext is not created when page loads with an already-expired timer (wasRunning guard)', async ({ page }) => {
+    const frozenNow = Date.now()
+    await page.clock.install({ time: frozenNow })
     await mockAudioContext(page)
     await withName(page, 'Alice', FAC_TOKEN)
     const session = {
       ...BASE,
       timer: {
         duration_seconds: 5,
-        started_at: new Date(Date.now() - 60_000).toISOString(), // expired 55s ago
+        started_at: new Date(frozenNow - 60_000).toISOString(), // expired 55s ago
         paused_remaining: null,
       },
     }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-timer')).toBeVisible()
-    await page.waitForTimeout(1500) // let at least one interval tick fire
+    await page.clock.fastForward(2000) // fire two interval ticks instantly
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
     expect(created).toBe(false)
   })
 
   test('AudioContext is created when a running timer reaches zero', async ({ page }) => {
+    const frozenNow = Date.now()
+    await page.clock.install({ time: frozenNow })
     await mockAudioContext(page)
     await withName(page, 'Alice', FAC_TOKEN)
-    // 30s timer started 25s ago → ~5s remaining on page load; gives enough buffer for slow
-    // environments to load the page before the timer expires (avoids the wasRunning guard).
+    // 30s timer started 25s ago → 5s remaining; fastForward drives setInterval
+    // callbacks instantly — no real wall-clock waiting needed.
     const session = {
       ...BASE,
       timer: {
         duration_seconds: 30,
-        started_at: new Date(Date.now() - 25_000).toISOString(),
+        started_at: new Date(frozenNow - 25_000).toISOString(),
         paused_remaining: null,
       },
     }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-timer')).toBeVisible()
-    await expect(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
-      expect(created).toBe(true)
-    }).toPass({ timeout: 12000 })
+    await page.clock.fastForward(6000) // advance past expiry; triggers interval callbacks
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
+    expect(created).toBe(true)
   })
 
   test('AudioContext is not created when timer reaches zero while muted', async ({ page }) => {
+    const frozenNow = Date.now()
+    await page.clock.install({ time: frozenNow })
     await mockAudioContext(page)
     await withName(page, 'Alice', FAC_TOKEN)
     await page.addInitScript(() => localStorage.setItem('retro_timer_muted', 'true'))
@@ -533,14 +538,14 @@ test.describe('retro-timer ding sound', () => {
       ...BASE,
       timer: {
         duration_seconds: 30,
-        started_at: new Date(Date.now() - 28_500).toISOString(),
+        started_at: new Date(frozenNow - 28_500).toISOString(),
         paused_remaining: null,
       },
     }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-timer')).toBeVisible()
-    await page.waitForTimeout(3000) // wait past expiry with margin
+    await page.clock.fastForward(3000) // advance past expiry instantly
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
     expect(created).toBe(false)
