@@ -505,13 +505,13 @@ test.describe('retro-timer ding sound', () => {
   test('AudioContext is created when a running timer reaches zero', async ({ page }) => {
     await mockAudioContext(page)
     await withName(page, 'Alice', FAC_TOKEN)
-    // 30s timer started 27s ago → ~3s remaining on page load; gives enough buffer for slow
+    // 30s timer started 25s ago → ~5s remaining on page load; gives enough buffer for slow
     // environments to load the page before the timer expires (avoids the wasRunning guard).
     const session = {
       ...BASE,
       timer: {
         duration_seconds: 30,
-        started_at: new Date(Date.now() - 27_000).toISOString(),
+        started_at: new Date(Date.now() - 25_000).toISOString(),
         paused_remaining: null,
       },
     }
@@ -522,7 +522,7 @@ test.describe('retro-timer ding sound', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
       expect(created).toBe(true)
-    }).toPass({ timeout: 8000 })
+    }).toPass({ timeout: 12000 })
   })
 
   test('AudioContext is not created when timer reaches zero while muted', async ({ page }) => {
