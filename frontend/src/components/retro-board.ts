@@ -797,7 +797,7 @@ export class RetroBoard extends LitElement {
                   <span class="help-phase-icon">${iconCommentDots()}</span>
                   <div class="help-phase-body">
                     <h4>Discussing</h4>
-                    <p>Each participant publishes their own cards to reveal them to the team. Once published, others can vote on them. No new cards can be added.</p>
+                    <p>Each participant publishes their own cards to reveal them to the team. Once published, others can vote on them. New cards can still be added as drafts.</p>
                   </div>
                 </div>
                 <div class="help-phase">

@@ -310,6 +310,132 @@ test.describe('retro-column publish-all', () => {
   })
 })
 
+// ── Add card in discussing phase ──────────────────────────────────────────────
+
+test.describe('retro-column add card in discussing phase', () => {
+  test('Add a card button is visible in discussing phase', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = { ...BASE, phase: 'discussing', cards: [] }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.getByRole('button', { name: '+ Add a card' }).first()).toBeVisible()
+  })
+
+  test('adding a card in discussing phase calls POST /cards', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = { ...BASE, phase: 'discussing', cards: [] }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+
+    await page.getByRole('button', { name: '+ Add a card' }).first().click()
+    await page.locator('textarea').fill('New idea during discussion')
+
+    const req = page.waitForRequest(r => r.url().includes('/cards') && r.method() === 'POST')
+    await page.locator('textarea').press('Control+Enter')
+    await req
+  })
+
+  test('Add a card button is NOT visible in closed phase', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = { ...BASE, phase: 'closed', cards: [] }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.getByRole('button', { name: '+ Add a card' })).not.toBeVisible()
+  })
+})
+
+// ── Sort by votes toggle ──────────────────────────────────────────────────────
+
+test.describe('retro-column sort by votes', () => {
+  function makeVotedCard(id: string, text: string, voteCount: number) {
+    return makeCard({
+      id,
+      text,
+      author_name: 'Alice',
+      published: true,
+      votes: Array.from({ length: voteCount }, (_, i) => ({ participant_name: `User${i}` })),
+    })
+  }
+
+  test('sort-votes button is visible in discussing phase', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = { ...BASE, phase: 'discussing', cards: [makeVotedCard('c1', 'Card A', 0)] }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.sort-votes-btn').first()).toBeVisible()
+  })
+
+  test('sort-votes button is NOT visible in collecting phase', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, BASE as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.sort-votes-btn')).not.toBeVisible()
+  })
+
+  test('sort-votes button is NOT visible in closed phase', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = { ...BASE, phase: 'closed', cards: [makeVotedCard('c1', 'Card A', 0)] }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.sort-votes-btn')).not.toBeVisible()
+  })
+
+  test('clicking sort-votes orders cards by vote count descending', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = {
+      ...BASE,
+      phase: 'discussing',
+      cards: [
+        makeVotedCard('c1', 'Zero votes', 0),
+        makeVotedCard('c2', 'Two votes', 2),
+        makeVotedCard('c3', 'One vote', 1),
+      ],
+    }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+
+    await page.locator('.sort-votes-btn').first().click()
+
+    const cards = page.locator('retro-column').first().locator('retro-card')
+    await expect(cards.nth(0)).toContainText('Two votes')
+    await expect(cards.nth(1)).toContainText('One vote')
+    await expect(cards.nth(2)).toContainText('Zero votes')
+  })
+
+  test('sort-votes button has active class when sorting is on', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = { ...BASE, phase: 'discussing', cards: [makeVotedCard('c1', 'Card A', 0)] }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+
+    const btn = page.locator('.sort-votes-btn').first()
+    await expect(btn).not.toHaveClass(/active/)
+    await btn.click()
+    await expect(btn).toHaveClass(/active/)
+  })
+
+  test('clicking sort-votes again restores default order', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = {
+      ...BASE,
+      phase: 'discussing',
+      cards: [
+        makeVotedCard('c1', 'Zero votes', 0),
+        makeVotedCard('c2', 'Two votes', 2),
+      ],
+    }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+
+    const btn = page.locator('.sort-votes-btn').first()
+    await btn.click()
+    await expect(page.locator('retro-column').first().locator('retro-card').nth(0)).toContainText('Two votes')
+
+    await btn.click()
+    await expect(page.locator('retro-column').first().locator('retro-card').nth(0)).toContainText('Zero votes')
+  })
+})
+
 // ── Card visibility in closed phase ──────────────────────────────────────────
 
 test.describe('retro-column closed phase card sorting', () => {

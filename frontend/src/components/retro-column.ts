@@ -39,6 +39,7 @@ export class RetroColumn extends LitElement {
   @state() private showEmojiPicker = false
   @state() private expandedGroupId: string | null = null
   @state() private dragOverGroupId: string | null = null
+  @state() private sortByVotes = false
 
   private readonly _outsideClickHandler = (e: MouseEvent): void => {
     if (!e.composedPath().includes(this)) {
@@ -279,6 +280,28 @@ export class RetroColumn extends LitElement {
     .delete-col-btn:hover {
       color: var(--retro-accent);
     }
+    .sort-votes-btn {
+      background: none;
+      border: 1px solid var(--retro-border-default);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--retro-text-disabled);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+      white-space: nowrap;
+    }
+    .sort-votes-btn:hover {
+      border-color: var(--col-accent);
+      color: var(--col-accent);
+    }
+    .sort-votes-btn.active {
+      border-color: var(--col-accent);
+      color: var(--col-accent);
+      background: color-mix(in srgb, var(--col-accent) 8%, transparent);
+    }
 
     /* ── Card group stack ── */
     .stack-tile {
@@ -501,7 +524,7 @@ export class RetroColumn extends LitElement {
     // During discussing/closed: published cards are visible to all;
     // unpublished cards are only visible to their author
     const visible = this.cards.filter((c) => c.published || c.author_name === this.participantName)
-    if (this.phase === 'closed') {
+    if (this.phase === 'closed' || (this.phase === 'discussing' && this.sortByVotes)) {
       return [...visible].sort((a, b) => b.votes.length - a.votes.length)
     }
     return visible
@@ -533,6 +556,7 @@ export class RetroColumn extends LitElement {
   updated(changedProps: Map<string, unknown>): void {
     if (changedProps.has('phase') && this.phase !== 'discussing') {
       this.expandedGroupId = null
+      this.sortByVotes = false
     }
   }
 
@@ -547,7 +571,7 @@ export class RetroColumn extends LitElement {
   }
 
   render() {
-    const canAdd = this.phase === 'collecting' && !!this.participantName
+    const canAdd = this.phase !== 'closed' && !!this.participantName
     const accentStyle = `--col-accent: ${this.accent};`
     const items = this.cardItems
     const canReact = this.phase === 'discussing' || this.phase === 'closed'
@@ -599,6 +623,13 @@ export class RetroColumn extends LitElement {
           <div class="header-right">
             ${this.phase === 'discussing' && this.hasUnpublishedCards
               ? html`<button class="publish-all-btn" @click=${this.onPublishAllClick}>Publish all</button>`
+              : ''}
+            ${this.phase === 'discussing'
+              ? html`<button
+                  class="sort-votes-btn ${this.sortByVotes ? 'active' : ''}"
+                  title="${this.sortByVotes ? 'Default order' : 'Sort by votes'}"
+                  @click=${() => { this.sortByVotes = !this.sortByVotes }}
+                >↕ Votes</button>`
               : ''}
             ${this.isFacilitator && this.phase === 'collecting'
               ? html`<button class="delete-col-btn" @click=${this.onRemoveColumn} title="Remove column">×</button>`
