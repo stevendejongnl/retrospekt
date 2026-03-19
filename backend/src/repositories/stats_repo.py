@@ -63,6 +63,26 @@ class SessionLifetimeStats(BaseModel):
     avg_time_to_close_hours: float | None  # None = no closed sessions
 
 
+class RatingCount(BaseModel):
+    rating: int
+    count: int
+
+
+class RecentFeedbackEntry(BaseModel):
+    id: str
+    rating: int
+    comment: str
+    app_version: str
+    created_at: str  # ISO string
+
+
+class FeedbackStats(BaseModel):
+    total: int
+    avg_rating: float | None
+    by_rating: list[RatingCount]
+    recent: list[RecentFeedbackEntry]
+
+
 class PublicStats(BaseModel):
     total_sessions: int
     active_sessions: int
@@ -72,6 +92,7 @@ class PublicStats(BaseModel):
     avg_cards_per_session: float
     total_votes: int
     total_reactions: int
+    feedback_total: int = 0
 
 
 class SentryIssue(BaseModel):
@@ -102,6 +123,7 @@ class AdminStats(BaseModel):
     session_lifetime: SessionLifetimeStats
     sentry: SentryHealth | None = None
     sentry_frontend: SentryHealth | None = None
+    feedback: FeedbackStats = FeedbackStats(total=0, avg_rating=None, by_rating=[], recent=[])
 
 
 class StatsRepository:
@@ -201,6 +223,8 @@ class StatsRepository:
         )
         avg = round(total_cards / total, 2) if total > 0 else 0.0
 
+        feedback_total = await self.collection.database["feedback"].count_documents({})
+
         return PublicStats(
             total_sessions=total,
             active_sessions=active,
@@ -210,6 +234,7 @@ class StatsRepository:
             avg_cards_per_session=avg,
             total_votes=total_votes,
             total_reactions=total_reactions,
+            feedback_total=feedback_total,
         )
 
     async def get_admin_stats(self, expiry_days: int = 30) -> AdminStats:
@@ -466,13 +491,64 @@ class StatsRepository:
             avg_time_to_close_hours=avg_time_to_close,
         )
 
+        feedback = await self._get_feedback_stats()
+
         return AdminStats(
             reaction_breakdown=reaction_breakdown,
             cards_per_column=cards_per_column,
             activity_heatmap=activity_heatmap,
             engagement_funnel=funnel,
             session_lifetime=session_lifetime,
+            feedback=feedback,
         )
+
+
+    async def _get_feedback_stats(self) -> FeedbackStats:
+        feedback_col = self.collection.database["feedback"]
+        total = await feedback_col.count_documents({})
+        if total == 0:
+            return FeedbackStats(total=0, avg_rating=None, by_rating=[], recent=[])
+
+        pipeline: list[dict] = [
+            {
+                "$facet": {
+                    "avg": [{"$group": {"_id": None, "avg": {"$avg": "$rating"}}}],
+                    "by_rating": [
+                        {"$group": {"_id": "$rating", "count": {"$sum": 1}}},
+                        {"$sort": {"_id": 1}},
+                    ],
+                    "recent": [
+                        {"$sort": {"created_at": -1}},
+                        {"$limit": 5},
+                    ],
+                }
+            }
+        ]
+        result = await feedback_col.aggregate(pipeline).to_list(length=1)
+        if not result:
+            return FeedbackStats(total=total, avg_rating=None, by_rating=[], recent=[])
+
+        facets = result[0]
+        avg_raw = facets["avg"][0]["avg"] if facets["avg"] else None
+        avg_rating = round(float(avg_raw), 2) if avg_raw is not None else None
+        by_rating = [
+            RatingCount(rating=d["_id"], count=d["count"]) for d in facets["by_rating"]
+        ]
+        recent = []
+        for d in facets["recent"]:
+            created = d.get("created_at", "")
+            created_str = created.isoformat() if hasattr(created, "isoformat") else str(created)
+            recent.append(
+                RecentFeedbackEntry(
+                    id=d["id"],
+                    rating=d["rating"],
+                    comment=d.get("comment", ""),
+                    app_version=d.get("app_version", ""),
+                    created_at=created_str,
+                )
+            )
+
+        return FeedbackStats(total=total, avg_rating=avg_rating, by_rating=by_rating, recent=recent)
 
 
 def _empty_public_stats() -> PublicStats:
@@ -508,4 +584,5 @@ def _empty_admin_stats() -> AdminStats:
             ),
             avg_time_to_close_hours=None,
         ),
+        feedback=FeedbackStats(total=0, avg_rating=None, by_rating=[], recent=[]),
     )

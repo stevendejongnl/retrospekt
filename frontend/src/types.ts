@@ -105,6 +105,7 @@ export interface PublicStats {
   avg_cards_per_session: number
   total_votes: number
   total_reactions: number
+  feedback_total: number
 }
 
 export interface LifetimeBucket {
@@ -149,6 +150,35 @@ export interface SentryHealth {
   error: string | null
 }
 
+export interface Feedback {
+  id: string
+  rating: number
+  comment: string
+  session_id: string | null
+  app_version: string
+  created_at: string
+}
+
+export interface RatingCount {
+  rating: number
+  count: number
+}
+
+export interface RecentFeedbackEntry {
+  id: string
+  rating: number
+  comment: string
+  app_version: string
+  created_at: string
+}
+
+export interface FeedbackStats {
+  total: number
+  avg_rating: number | null
+  by_rating: RatingCount[]
+  recent: RecentFeedbackEntry[]
+}
+
 export interface AdminStats {
   reaction_breakdown: ReactionCount[]
   cards_per_column: ColumnCount[]
@@ -157,6 +187,7 @@ export interface AdminStats {
   session_lifetime: SessionLifetimeStats
   sentry: SentryHealth | null
   sentry_frontend: SentryHealth | null
+  feedback: FeedbackStats
 }
 
 export const PARTICIPANT_COLORS = [

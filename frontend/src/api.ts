@@ -1,4 +1,4 @@
-import type { AdminStats, Card, CreateSessionResponse, Note, PublicStats, Session } from './types'
+import type { AdminStats, Card, CreateSessionResponse, Feedback, Note, PublicStats, Session } from './types'
 
 const BASE = '/api/v1'
 
@@ -181,6 +181,17 @@ export function createApi(fetchFn: typeof fetch = fetch) {
       request<void>(`/sessions/${sessionId}/cards/${cardId}/group`, {
         method: 'DELETE',
         headers: { 'X-Participant-Name': participantName },
+      }),
+
+    submitFeedback: (rating: number, comment: string, sessionId?: string) =>
+      request<Feedback>('/feedback', {
+        method: 'POST',
+        body: JSON.stringify({ rating, comment, session_id: sessionId ?? null, app_version: __APP_VERSION__ }),
+      }),
+
+    listFeedback: (token: string) =>
+      request<Feedback[]>('/feedback', {
+        headers: { 'X-Admin-Token': token },
       }),
 
     getPublicStats: () => request<PublicStats>('/stats'),

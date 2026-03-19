@@ -5,12 +5,18 @@ from fastapi import Request
 
 from .config import settings
 from .database import database
+from .repositories.feedback_repo import FeedbackRepository
 from .repositories.session_repo import SessionRepository
 
 
 def get_repo() -> SessionRepository:
     assert database.db is not None, "Database not connected"
     return SessionRepository(database.db)
+
+
+def get_feedback_repo() -> FeedbackRepository:
+    assert database.db is not None, "Database not connected"
+    return FeedbackRepository(database.db)
 
 
 def get_redis(request: Request) -> aioredis.Redis:

@@ -17,7 +17,7 @@ from sentry_sdk.integrations.starlette import StarletteIntegration
 from .config import settings
 from .database import database
 from .repositories.session_repo import SessionRepository
-from .routers import cards, groups, health, notes, sessions, stats
+from .routers import cards, feedback, groups, health, notes, sessions, stats
 from .services.sse_manager import sse_manager
 
 logger = logging.getLogger(__name__)
@@ -88,6 +88,7 @@ def create_app() -> FastAPI:
     app.include_router(groups.router)
     app.include_router(notes.router)
     app.include_router(stats.router)
+    app.include_router(feedback.router)
 
     return app
 

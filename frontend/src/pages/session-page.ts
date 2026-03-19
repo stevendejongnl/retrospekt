@@ -1,4 +1,4 @@
-import { LitElement, css, html, nothing } from 'lit'
+import { LitElement, PropertyValues, css, html, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Session } from '../types'
@@ -25,6 +25,10 @@ import {
 import '../components/retro-board'
 import '../components/session-history'
 import '../components/board-notes'
+import '../components/feedback-dialog'
+
+const IDLE_THRESHOLD_MS = 10 * 60 * 1000  // 10 minutes
+const FEEDBACK_CLOSE_DELAY_MS = 1500       // delay before showing after session close
 
 @customElement('session-page')
 export class SessionPage extends LitElement {
@@ -41,10 +45,14 @@ export class SessionPage extends LitElement {
   @state() private showHelp = false
   @state() private showHistory = false
   @state() private showNotes = false
+  @state() private showFeedback = false
 
   private sseClient: SSEClient | null = null
   private _themeListener!: EventListener
   private _brandListener!: EventListener
+  private _idleCheckInterval: ReturnType<typeof setInterval> | null = null
+  private _lastActivityAt = Date.now()
+  private _onActivity = (): void => { this._lastActivityAt = Date.now() }
 
   static styles = [faIconStyles, css`
     :host {
@@ -496,6 +504,9 @@ export class SessionPage extends LitElement {
     }
     window.addEventListener('retro-theme-change', this._themeListener)
     window.addEventListener('retro-brand-change', this._brandListener)
+    window.addEventListener('pointermove', this._onActivity)
+    window.addEventListener('keydown', this._onActivity)
+    this._idleCheckInterval = setInterval(() => this._checkIdle(), 30_000)
     await this.loadSession()
   }
 
@@ -504,6 +515,9 @@ export class SessionPage extends LitElement {
     this.sseClient?.disconnect()
     window.removeEventListener('retro-theme-change', this._themeListener)
     window.removeEventListener('retro-brand-change', this._brandListener)
+    window.removeEventListener('pointermove', this._onActivity)
+    window.removeEventListener('keydown', this._onActivity)
+    if (this._idleCheckInterval !== null) clearInterval(this._idleCheckInterval)
   }
 
   private async loadSession(): Promise<void> {
@@ -562,6 +576,29 @@ export class SessionPage extends LitElement {
     if (!this.session || !this.participantName) return 'var(--retro-accent)'
     const map = buildParticipantColorMap(this.session.participants)
     return map[this.participantName] ?? 'var(--retro-accent)'
+  }
+
+  protected override updated(changedProps: PropertyValues): void {
+    super.updated(changedProps)
+    if (changedProps.has('session')) {
+      const prev = changedProps.get('session') as Session | null
+      // Show feedback after session closes (once per app version)
+      if (prev && this.session?.phase === 'closed' && prev.phase !== 'closed') {
+        if (!storage.getFeedbackGiven(__APP_VERSION__)) {
+          setTimeout(() => { this.showFeedback = true }, FEEDBACK_CLOSE_DELAY_MS)
+        }
+      }
+      // Reset idle timer on every SSE update
+      this._lastActivityAt = Date.now()
+    }
+  }
+
+  private _checkIdle(): void {
+    if (this.showFeedback || !this.participantName) return
+    if (storage.getFeedbackGiven(__APP_VERSION__)) return
+    if (Date.now() - this._lastActivityAt > IDLE_THRESHOLD_MS) {
+      this.showFeedback = true
+    }
   }
 
   private saveToHistory(session: Session, name: string): void {
@@ -645,6 +682,11 @@ export class SessionPage extends LitElement {
 
     return html`
       <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
+      <feedback-dialog
+        .open=${this.showFeedback}
+        .sessionId=${this.sessionId}
+        @feedback-dismissed=${() => { this.showFeedback = false }}
+      ></feedback-dialog>
       <board-notes
         .open=${this.showNotes}
         .notes=${session.notes ?? []}
@@ -737,6 +779,7 @@ export class SessionPage extends LitElement {
         </span>
         <button class="icon-btn" @click=${() => { this.showHistory = true }} title="Your sessions">${iconClockRotateLeft()}</button>
         <button class="icon-btn" @click=${() => { this.showNotes = true }} title="Board notes">${iconNoteSticky()}</button>
+        <button class="icon-btn feedback-btn" @click=${() => { this.showFeedback = true }} title="Give feedback">💬</button>
         ${this.brand === 'cs'
           ? html`<button class="icon-btn brand-reset" @click=${this.onBrandReset} title="Reset to default theme">${iconRotateLeft()}</button>`
           : html`<button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>`}

@@ -4,7 +4,7 @@ import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 import { faIconStyles } from '../icons'
-import type { AdminStats, LifetimeBucket, PublicStats, SentryDataPoint, SentryHealth } from '../types'
+import type { AdminStats, FeedbackStats, LifetimeBucket, PublicStats, RatingCount, SentryDataPoint, SentryHealth } from '../types'
 
 type AdminPhase = 'locked' | 'loading' | 'unlocked' | 'error'
 
@@ -194,6 +194,7 @@ export class StatsPage extends LitElement {
   private _renderAdminCharts(): void {
     this._renderReactionChart()
     this._renderLifetimeChart()
+    this._renderFeedbackChart()
     if (this.adminStats?.sentry) {
       this._renderSentryBarChart('#sentry-backend-error-chart', this.adminStats.sentry.error_rate_7d, 'danger')
       this._renderSentryBarChart('#sentry-backend-p95-chart', this.adminStats.sentry.p95_latency_7d, 'accent')
@@ -202,6 +203,56 @@ export class StatsPage extends LitElement {
       this._renderSentryBarChart('#sentry-frontend-error-chart', this.adminStats.sentry_frontend.error_rate_7d, 'danger')
       this._renderSentryBarChart('#sentry-frontend-p95-chart', this.adminStats.sentry_frontend.p95_latency_7d, 'accent')
     }
+  }
+
+  private _renderFeedbackChart(): void {
+    const data = this.adminStats?.feedback?.by_rating ?? []
+    const el = this.shadowRoot!.querySelector<SVGSVGElement>('#feedback-rating-chart')
+    if (!el || data.length === 0) return
+
+    const svg = d3.select(el)
+    svg.selectAll('*').remove()
+
+    const margin = { top: 4, right: 20, bottom: 4, left: 36 }
+    const width = 220 - margin.left - margin.right
+    const rowH = 26
+    const height = 5 * rowH
+
+    svg.attr('height', height + margin.top + margin.bottom)
+
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
+
+    const maxCount = d3.max(data, (d: RatingCount) => d.count) ?? 1
+    const x = d3.scaleLinear().domain([0, maxCount]).range([0, width])
+    const labels = ['1★', '2★', '3★', '4★', '5★']
+    const y = d3.scaleBand().domain(labels).range([0, height]).padding(0.15)
+
+    const accent = getComputedStyle(this).getPropertyValue('--retro-accent').trim()
+
+    const ratingMap = Object.fromEntries(data.map((d: RatingCount) => [d.rating, d.count]))
+
+    g.selectAll('rect')
+      .data(labels)
+      .enter()
+      .append('rect')
+      .attr('y', (label) => y(label) as number)
+      .attr('x', 0)
+      .attr('height', y.bandwidth())
+      .attr('width', (label) => x(ratingMap[Number(label[0])] ?? 0))
+      .attr('fill', accent)
+      .attr('rx', 2)
+
+    g.selectAll<SVGTextElement, string>('text.rating-label')
+      .data(labels)
+      .enter()
+      .append('text')
+      .attr('class', 'rating-label')
+      .attr('x', -4)
+      .attr('y', (label) => (y(label) as number) + y.bandwidth() / 2 + 4)
+      .attr('text-anchor', 'end')
+      .attr('font-size', '11px')
+      .attr('fill', 'var(--retro-text-muted)')
+      .text((label) => label)
   }
 
   private _renderSentryBarChart(id: string, data: SentryDataPoint[], colorVar: 'danger' | 'accent'): void {
@@ -401,7 +452,7 @@ export class StatsPage extends LitElement {
                   ?disabled=${!this.password}
                   @click=${this._handleAuth}
                 >
-                  Unlock
+                  Unlock${this.stats && this.stats.feedback_total > 0 ? html` <span class="feedback-badge">${this.stats.feedback_total}</span>` : nothing}
                 </button>
               </div>
               ${this.adminPhase === 'error'
@@ -483,6 +534,54 @@ export class StatsPage extends LitElement {
     `
   }
 
+  private _renderFeedbackSection(feedback: FeedbackStats) {
+    const avgStars = feedback.avg_rating !== null
+      ? '⭐'.repeat(Math.round(feedback.avg_rating))
+      : '–'
+
+    return html`
+      <div class="feedback-block chart-block">
+        <h3 class="chart-title">User Feedback</h3>
+
+        <div class="stat-grid">
+          ${this._renderStatCard('Submissions', feedback.total)}
+          ${this._renderStatCard('Avg Rating', feedback.avg_rating !== null ? feedback.avg_rating.toFixed(1) : '–')}
+        </div>
+
+        ${feedback.total > 0 ? html`
+          <h4 class="chart-title" style="margin-top: 12px;">Rating Distribution</h4>
+          <svg id="feedback-rating-chart" width="240" height="40" class="chart-svg"></svg>
+
+          ${feedback.recent.length > 0 ? html`
+            <h4 class="chart-title" style="margin-top: 12px;">Recent Feedback</h4>
+            <table class="feedback-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Rating</th>
+                  <th>Comment</th>
+                  <th>Version</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${feedback.recent.map((entry) => html`
+                  <tr>
+                    <td class="feedback-date">${new Date(entry.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</td>
+                    <td class="feedback-stars">${'★'.repeat(entry.rating)}${'☆'.repeat(5 - entry.rating)}</td>
+                    <td class="feedback-comment">${entry.comment || html`<span class="muted">—</span>`}</td>
+                    <td class="feedback-version">${entry.app_version || html`<span class="muted">—</span>`}</td>
+                  </tr>
+                `)}
+              </tbody>
+            </table>
+          ` : nothing}
+        ` : html`<p class="muted" style="margin-top: 8px;">No feedback submitted yet.</p>`}
+
+        <p class="feedback-avg-stars" style="margin-top: 8px; font-size: 20px;">${avgStars}</p>
+      </div>
+    `
+  }
+
   private _renderAdminStats() {
     if (this.adminPhase !== 'unlocked' || !this.adminStats) return nothing
 
@@ -538,6 +637,7 @@ export class StatsPage extends LitElement {
         ${this._renderLifetimeStats()}
         ${this._renderSentryHealth('Backend', this.adminStats?.sentry, 'sentry-backend')}
         ${this._renderSentryHealth('Frontend', this.adminStats?.sentry_frontend, 'sentry-frontend')}
+        ${this.adminStats.feedback ? this._renderFeedbackSection(this.adminStats.feedback) : nothing}
       </section>
     `
   }
@@ -969,6 +1069,78 @@ export class StatsPage extends LitElement {
         border-radius: 8px;
         padding: 8px 12px;
         margin: 0;
+      }
+
+      /* --- Feedback --- */
+      .feedback-block {
+        margin-top: 16px;
+      }
+
+      .feedback-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--retro-danger, #ef4444);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        border-radius: 10px;
+        padding: 1px 6px;
+        margin-left: 6px;
+        vertical-align: middle;
+      }
+
+      .feedback-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin-top: 8px;
+      }
+
+      .feedback-table th {
+        text-align: left;
+        color: var(--retro-text-muted);
+        font-weight: 600;
+        padding: 4px 8px 8px;
+        border-bottom: 1px solid var(--retro-border-default);
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+      }
+
+      .feedback-table td {
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--retro-border-subtle);
+        color: var(--retro-text-secondary);
+        vertical-align: top;
+      }
+
+      .feedback-stars {
+        color: var(--retro-accent);
+        white-space: nowrap;
+        font-size: 13px;
+      }
+
+      .feedback-comment {
+        max-width: 240px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .feedback-version {
+        color: var(--retro-text-disabled);
+        font-size: 11px;
+      }
+
+      .feedback-date {
+        white-space: nowrap;
+        color: var(--retro-text-muted);
+      }
+
+      .feedback-avg-stars {
+        margin: 0;
+        color: var(--retro-accent);
       }
     `,
   ]
