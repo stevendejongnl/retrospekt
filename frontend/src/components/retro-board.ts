@@ -33,9 +33,6 @@ export class RetroBoard extends LitElement {
   @state() private settingName = ''
   @state() private settingReactions = true
   @state() private settingOpenFacilitator = false
-  @state() private settingJiraEnabled = false
-  @state() private settingJiraUrl = ''
-  @state() private settingJiraKey = ''
 
   static styles = [faIconStyles, css`
     :host {
@@ -686,10 +683,6 @@ export class RetroBoard extends LitElement {
     this.settingName = this.session.name
     this.settingReactions = this.session.reactions_enabled
     this.settingOpenFacilitator = this.session.open_facilitator
-    const jiraConfig = storage.getJiraConfig()
-    this.settingJiraEnabled = jiraConfig !== null
-    this.settingJiraUrl = jiraConfig?.baseUrl ?? ''
-    this.settingJiraKey = jiraConfig?.projectKey ?? ''
     this.showSettings = true
   }
 
@@ -700,11 +693,6 @@ export class RetroBoard extends LitElement {
     if (this.settingOpenFacilitator !== this.session.open_facilitator) updates.open_facilitator = this.settingOpenFacilitator
     if (Object.keys(updates).length > 0) {
       await api.updateSession(this.session.id, updates, this.facilitatorToken, this.participantName)
-    }
-    if (this.settingJiraEnabled && this.settingJiraUrl && this.settingJiraKey) {
-      storage.setJiraConfig({ baseUrl: this.settingJiraUrl, projectKey: this.settingJiraKey })
-    } else {
-      storage.clearJiraConfig()
     }
     this.showSettings = false
   }
@@ -783,41 +771,6 @@ export class RetroBoard extends LitElement {
                   />
                   <label for="settings-open-facilitator">Allow all participants to manage the board</label>
                 </div>
-                <div class="settings-section">Jira export</div>
-                <div class="settings-checkbox-row">
-                  <input
-                    class="settings-jira-enabled-input"
-                    type="checkbox"
-                    id="settings-jira-enabled"
-                    .checked=${this.settingJiraEnabled}
-                    @change=${(e: Event) => { this.settingJiraEnabled = (e.target as HTMLInputElement).checked }}
-                  />
-                  <label for="settings-jira-enabled">Enable Jira export</label>
-                </div>
-                ${this.settingJiraEnabled
-                  ? html`
-                      <div class="settings-field">
-                        <label class="settings-label">Jira URL</label>
-                        <input
-                          class="settings-input settings-jira-url-input"
-                          type="url"
-                          placeholder="https://yourorg.atlassian.net"
-                          .value=${this.settingJiraUrl}
-                          @input=${(e: InputEvent) => { this.settingJiraUrl = (e.target as HTMLInputElement).value }}
-                        />
-                      </div>
-                      <div class="settings-field">
-                        <label class="settings-label">Project key</label>
-                        <input
-                          class="settings-input settings-jira-key-input"
-                          type="text"
-                          placeholder="PROJ"
-                          .value=${this.settingJiraKey}
-                          @input=${(e: InputEvent) => { this.settingJiraKey = (e.target as HTMLInputElement).value }}
-                        />
-                      </div>
-                    `
-                  : ''}
                 <div class="settings-actions">
                   <button class="settings-cancel-btn" @click=${() => (this.showSettings = false)}>Cancel</button>
                   <button class="settings-save-btn" @click=${this.saveSettings}>Save</button>
@@ -934,7 +887,6 @@ export class RetroBoard extends LitElement {
               .title=${col}
               .cards=${session.cards.filter((c) => c.column === col)}
               .participantName=${this.participantName}
-              .sessionName=${session.name}
               .participantNames=${participantNames}
               .phase=${session.phase}
               .accent=${COLUMN_ACCENTS[col] ?? '#e85d04'}

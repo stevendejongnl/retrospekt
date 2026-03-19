@@ -779,31 +779,6 @@ test.describe('session-page settings dialog', () => {
     expect(body.reactions_enabled).toBe(false)
   })
 
-  test('enabling Jira export and clicking Save stores config in localStorage', async ({ page }) => {
-    await page.locator('.settings-btn').click()
-    await page.locator('.settings-jira-enabled-input').click()
-    await expect(page.locator('.settings-jira-url-input')).toBeVisible()
-    await page.locator('.settings-jira-url-input').fill('https://acme.atlassian.net')
-    await page.locator('.settings-jira-key-input').fill('ACME')
-    await page.getByRole('button', { name: 'Save' }).click()
-    const stored = await page.evaluate(() => localStorage.getItem('retro_jira'))
-    expect(JSON.parse(stored ?? '{}')).toMatchObject({ baseUrl: 'https://acme.atlassian.net', projectKey: 'ACME' })
-  })
-
-  test('disabling Jira export and clicking Save clears localStorage', async ({ page }) => {
-    await page.addInitScript(() =>
-      localStorage.setItem('retro_jira', JSON.stringify({ baseUrl: 'https://x.atlassian.net', projectKey: 'X' })),
-    )
-    await withName(page, 'Alice', FAC_TOKEN)
-    await mockApi(page, { ...BASE, reactions_enabled: true })
-    await page.goto(`/session/${SESSION_ID}`)
-    await page.locator('.settings-btn').click()
-    // Jira is pre-filled from localStorage — uncheck to disable
-    await page.locator('.settings-jira-enabled-input').click()
-    await page.getByRole('button', { name: 'Save' }).click()
-    const stored = await page.evaluate(() => localStorage.getItem('retro_jira'))
-    expect(stored).toBeNull()
-  })
 })
 
 test.describe('session-page settings button (participant)', () => {

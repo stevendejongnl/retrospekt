@@ -5,14 +5,8 @@
  *
  * Cross-session localStorage contract:
  *   retro_history            — JSON array of SessionHistoryEntry (newest first, max 50)
- *   retro_jira               — JiraConfig (baseUrl + projectKey for Jira export)
  *   retro_feedback_v{ver}    — "true" when feedback was submitted for that app version
  */
-
-export interface JiraConfig {
-  baseUrl: string
-  projectKey: string
-}
 
 export interface SessionHistoryEntry {
   id: string
@@ -72,23 +66,6 @@ class RetroStorage {
 
   clearHistory(): void {
     localStorage.removeItem('retro_history')
-  }
-
-  getJiraConfig(): JiraConfig | null {
-    try {
-      const raw = localStorage.getItem('retro_jira')
-      return raw ? (JSON.parse(raw) as JiraConfig) : null
-    } catch {
-      return null
-    }
-  }
-
-  setJiraConfig(config: JiraConfig): void {
-    localStorage.setItem('retro_jira', JSON.stringify(config))
-  }
-
-  clearJiraConfig(): void {
-    localStorage.removeItem('retro_jira')
   }
 
   getFeedbackGiven(version: string): boolean {

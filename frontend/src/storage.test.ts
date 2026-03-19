@@ -121,25 +121,4 @@ describe('RetroStorage', () => {
     })
   })
 
-  describe('getJiraConfig / setJiraConfig / clearJiraConfig', () => {
-    it('returns null when no Jira config is stored', () => {
-      expect(storage.getJiraConfig()).toBeNull()
-    })
-
-    it('returns the config after setJiraConfig', () => {
-      storage.setJiraConfig({ baseUrl: 'https://myorg.atlassian.net', projectKey: 'RETRO' })
-      expect(storage.getJiraConfig()).toEqual({ baseUrl: 'https://myorg.atlassian.net', projectKey: 'RETRO' })
-    })
-
-    it('returns null after clearJiraConfig', () => {
-      storage.setJiraConfig({ baseUrl: 'https://myorg.atlassian.net', projectKey: 'RETRO' })
-      storage.clearJiraConfig()
-      expect(storage.getJiraConfig()).toBeNull()
-    })
-
-    it('returns null when stored JSON is corrupted', () => {
-      localStorage.setItem('retro_jira', 'not-json{')
-      expect(storage.getJiraConfig()).toBeNull()
-    })
-  })
 })

@@ -469,68 +469,6 @@ test.describe('home-page mobile layout', () => {
   })
 })
 
-// ── home-page jira config ─────────────────────────────────────────────────────
-
-test.describe('home-page jira config', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/')
-  })
-
-  test('Jira export checkbox is visible in Options', async ({ page }) => {
-    await expect(page.getByLabel(/Jira export/i)).toBeVisible()
-  })
-
-  test('Jira sub-inputs are hidden when checkbox is unchecked', async ({ page }) => {
-    await expect(page.locator('.jira-config')).toBeHidden()
-  })
-
-  test('Jira sub-inputs become visible when checkbox is checked', async ({ page }) => {
-    await page.getByLabel(/Jira export/i).check()
-    await expect(page.locator('.jira-config')).toBeVisible()
-  })
-
-  test('pasting a Jira URL shows the extracted base URL as hint text', async ({ page }) => {
-    await page.getByLabel(/Jira export/i).check()
-    await page.locator('.jira-url-input').fill('https://myorg.atlassian.net/browse/RETRO-1')
-    await expect(page.locator('.jira-url-hint')).toContainText('https://myorg.atlassian.net')
-  })
-
-  test('hint text is empty for an invalid URL', async ({ page }) => {
-    await page.getByLabel(/Jira export/i).check()
-    await page.locator('.jira-url-input').fill('not-a-url')
-    await expect(page.locator('.jira-url-hint')).toHaveText('')
-  })
-
-  test('filling both URL and project key saves config to localStorage', async ({ page }) => {
-    await page.getByLabel(/Jira export/i).check()
-    await page.locator('.jira-url-input').fill('https://myorg.atlassian.net/browse/RETRO-1')
-    await page.locator('.jira-key-input').fill('RETRO')
-    const config = await page.evaluate(() => JSON.parse(localStorage.getItem('retro_jira') ?? 'null'))
-    expect(config).toEqual({ baseUrl: 'https://myorg.atlassian.net', projectKey: 'RETRO' })
-  })
-
-  test('unchecking the Jira checkbox clears the config from localStorage', async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem('retro_jira', JSON.stringify({ baseUrl: 'https://x.atlassian.net', projectKey: 'X' }))
-    })
-    await page.reload()
-    await expect(page.getByLabel(/Jira export/i)).toBeChecked()
-    await page.getByLabel(/Jira export/i).uncheck()
-    const config = await page.evaluate(() => localStorage.getItem('retro_jira'))
-    expect(config).toBeNull()
-  })
-
-  test('restores saved config values on reload', async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem('retro_jira', JSON.stringify({ baseUrl: 'https://myorg.atlassian.net', projectKey: 'RETRO' }))
-    })
-    await page.reload()
-    await expect(page.getByLabel(/Jira export/i)).toBeChecked()
-    await expect(page.locator('.jira-url-input')).toHaveValue('https://myorg.atlassian.net')
-    await expect(page.locator('.jira-key-input')).toHaveValue('RETRO')
-  })
-})
-
 // ── home-page open facilitator option ────────────────────────────────────────
 
 test.describe('home-page open facilitator option', () => {
