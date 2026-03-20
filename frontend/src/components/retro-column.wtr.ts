@@ -39,11 +39,16 @@ describe('retro-column', () => {
     expect(retroCards.length).to.equal(3)
   })
 
-  it('add area is hidden when phase is not "collecting" or when participantName is empty', async () => {
+  it('add area is shown in collecting and discussing phases, hidden in closed or without participant', async () => {
     const discussing = await fixture<RetroColumn>(
       html`<retro-column .title=${'Went Well'} .phase=${'discussing'} .participantName=${'Alice'}></retro-column>`,
     )
-    expect(discussing.shadowRoot!.querySelector('.add-area')).to.be.null
+    expect(discussing.shadowRoot!.querySelector('.add-area')).to.not.be.null
+
+    const closed = await fixture<RetroColumn>(
+      html`<retro-column .title=${'Went Well'} .phase=${'closed'} .participantName=${'Alice'}></retro-column>`,
+    )
+    expect(closed.shadowRoot!.querySelector('.add-area')).to.be.null
 
     const noName = await fixture<RetroColumn>(
       html`<retro-column .title=${'Went Well'} .phase=${'collecting'} .participantName=${''}></retro-column>`,
