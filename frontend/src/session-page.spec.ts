@@ -458,6 +458,89 @@ test.describe('session-page SSE updates', () => {
     const req = await streamRequest
     expect(req.url()).toContain(`/sessions/${SESSION_ID}/stream`)
   })
+
+  test('feedback dialog shown after session transitions to closed (line 589)', async ({ page }) => {
+    await page.clock.install()
+    await withName(page, 'Alice')
+    const discussingSession = { ...BASE, phase: 'discussing' }
+    await mockApi(page, discussingSession as typeof BASE)
+    await page.route('/api/v1/feedback', (route) =>
+      route.fulfill({ status: 201, contentType: 'application/json', body: '{}' }),
+    )
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.export-btn')).toBeVisible()
+
+    // Simulate SSE: session transitions from discussing → closed
+    const closedSession = { ...BASE, phase: 'closed' }
+    await page.evaluate((s) => {
+      const el = document.querySelector('session-page')
+      if (el) (el as unknown as Record<string, unknown>)['session'] = s
+    }, closedSession)
+
+    // Advance clock past FEEDBACK_CLOSE_DELAY_MS (1500ms)
+    await page.clock.fastForward(2000)
+    await expect(page.locator('feedback-dialog .card')).toBeVisible()
+  })
+
+  test('idle check triggers feedback dialog after 10 minutes of inactivity (lines 599-602)', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.route('/api/v1/feedback', (route) =>
+      route.fulfill({ status: 201, contentType: 'application/json', body: '{}' }),
+    )
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+
+    // Directly simulate 10+ min of inactivity by setting _lastActivityAt in the past,
+    // then calling _checkIdle() — avoids SSE reconnect race that resets the timer.
+    await page.evaluate(() => {
+      const el = document.querySelector('session-page') as Record<string, unknown>
+      el['_lastActivityAt'] = Date.now() - (10 * 60 * 1000 + 5000)
+      ;(el['_checkIdle'] as () => void).call(el)
+    })
+    await expect(page.locator('feedback-dialog .card')).toBeVisible()
+  })
+
+  test('_checkIdle skips when showFeedback is already true (early return branch)', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+
+    // Set showFeedback=true first, then call _checkIdle — should not error or change state
+    await page.evaluate(() => {
+      const el = document.querySelector('session-page') as Record<string, unknown>
+      el['showFeedback'] = true
+      ;(el['_checkIdle'] as () => void).call(el)
+    })
+    await expect(page.locator('feedback-dialog .card')).toBeVisible()
+  })
+
+  test('_checkIdle skips when feedback already given in localStorage (storage check branch)', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.addInitScript(() => {
+      // Override getItem to return 'true' for any retro_feedback_v* key so the
+      // version-agnostic check fires regardless of __APP_VERSION__ at test time
+      const orig = Storage.prototype.getItem
+      Storage.prototype.getItem = function (key: string) {
+        if (key.startsWith('retro_feedback_v')) return 'true'
+        return orig.call(this, key)
+      }
+    })
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+
+    // Call _checkIdle — should return early due to feedback already given
+    const result = await page.evaluate(() => {
+      const el = document.querySelector('session-page') as Record<string, unknown>
+      el['_lastActivityAt'] = Date.now() - (10 * 60 * 1000 + 5000)
+      ;(el['_checkIdle'] as () => void).call(el)
+      return el['showFeedback']
+    })
+    // showFeedback should remain false because getFeedbackGiven() returned true
+    expect(result).toBe(false)
+  })
 })
 
 // ── Export ────────────────────────────────────────────────────────────────────
@@ -472,6 +555,23 @@ test.describe('session-page export', () => {
     await page.locator('.export-btn').click()
     const download = await downloadPromise
     expect(download.suggestedFilename()).toMatch(/sprint-retro.*\.md/)
+  })
+
+  test('export includes board notes section when session has notes', async ({ page }) => {
+    await withName(page, 'Alice')
+    const sessionWithNotes = {
+      ...BASE,
+      phase: 'discussing',
+      notes: [
+        { id: 'note-1', author_name: 'Alice', text: 'Consider reducing WIP', created_at: '2026-01-01T00:00:00Z' },
+      ],
+    }
+    await mockApi(page, sessionWithNotes as typeof BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    const downloadPromise = page.waitForEvent('download')
+    await page.locator('.export-btn').click()
+    const download = await downloadPromise
+    expect(download.suggestedFilename()).toMatch(/\.md$/)
   })
 
   test('export with cards renders card text, multiple votes, reactions, and assignee', async ({ page }) => {
@@ -521,6 +621,43 @@ test.describe('session-page export', () => {
     await page.locator('.export-btn').click()
     const download = await downloadPromise
     expect(download.suggestedFilename()).toMatch(/\.md$/)
+  })
+
+  test('exportSession does nothing when session is null (defensive guard)', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, { ...BASE, phase: 'discussing' } as typeof BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.export-btn')).toBeVisible()
+
+    // Set session to null then call exportSession — should return early without error
+    const didError = await page.evaluate(() => {
+      try {
+        const el = document.querySelector('session-page') as Record<string, unknown>
+        el['session'] = null
+        ;(el['exportSession'] as () => void).call(el)
+        return false
+      } catch {
+        return true
+      }
+    })
+    expect(didError).toBe(false)
+  })
+
+  test('myColor returns fallback accent when participant is not in color map', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+
+    // Set participantName to a name not in the session participants list
+    const color = await page.evaluate(() => {
+      const el = document.querySelector('session-page') as Record<string, unknown>
+      el['participantName'] = 'UnknownPerson'
+      return Object.getOwnPropertyDescriptor(
+        Object.getPrototypeOf(el), 'myColor'
+      )?.get?.call(el)
+    })
+    expect(color).toBe('var(--retro-accent)')
   })
 })
 

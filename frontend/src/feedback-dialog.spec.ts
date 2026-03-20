@@ -141,6 +141,12 @@ test.describe('feedback-dialog submission', () => {
     }).toPass({ timeout: 3000 })
   })
 
+  test('typing in textarea updates comment (covers @input handler)', async ({ page }) => {
+    await setupAndOpenDialog(page)
+    await page.locator('feedback-dialog textarea').fill('Really useful!')
+    await expect(page.locator('feedback-dialog textarea')).toHaveValue('Really useful!')
+  })
+
   test('shows thank-you state after successful submit', async ({ page }) => {
     await withName(page, 'Alice')
     await mockApi(page, makeSession())
@@ -163,6 +169,42 @@ test.describe('feedback-dialog submission', () => {
       page.locator('feedback-dialog .submit-btn').click(),
     ])
     await expect(page.locator('feedback-dialog .thank-you')).toBeVisible({ timeout: 8000 })
+  })
+
+  test('submitting without a session context sends null session_id (covers sessionId fallback branch)', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, makeSession())
+
+    let capturedBody: Record<string, unknown> | null = null
+    await page.route('/api/v1/feedback', async route => {
+      capturedBody = JSON.parse(route.request().postData() ?? '{}') as Record<string, unknown>
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: 'fb-1', rating: 3, comment: '', session_id: null, app_version: '1.26.0', created_at: '2026-01-01T00:00:00Z' }),
+      })
+    })
+
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button.feedback-btn').click()
+
+    // Clear the sessionId on the dialog before submitting (exercises the `|| undefined` fallback)
+    await page.evaluate(() => {
+      const dialog = document.querySelector('session-page')?.shadowRoot?.querySelector('feedback-dialog') as Record<string, unknown>
+      dialog['sessionId'] = ''
+    })
+
+    await page.locator('feedback-dialog .emoji-btn').nth(2).click()
+    const [,] = await Promise.all([
+      page.waitForResponse('/api/v1/feedback'),
+      page.locator('feedback-dialog .submit-btn').click(),
+    ])
+
+    await expect(async () => {
+      expect(capturedBody).not.toBeNull()
+      expect(capturedBody!['session_id']).toBeNull()
+    }).toPass({ timeout: 3000 })
   })
 })
 

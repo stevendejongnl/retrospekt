@@ -11,6 +11,7 @@ type CardItem =
   | { kind: 'group'; groupId: string; cards: Card[] }
 
 const isMac = navigator.platform.startsWith('Mac') || navigator.userAgent.includes('Mac')
+/* istanbul ignore next -- Mac keyboard shortcut: '⌘' branch unreachable on Linux/Chromium CI */
 const modKey = isMac ? '⌘' : 'Ctrl'
 
 const EMOJI_PICKER_SET = [

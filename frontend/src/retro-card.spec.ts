@@ -563,4 +563,19 @@ test.describe('retro-card inline editing', () => {
     await page.locator('.card-text').click()
     await expect(page.locator('.card-edit-input')).toHaveValue('Original text')
   })
+
+  test('blur while editing exits edit mode (covers blur handler branch)', async ({ page }) => {
+    const session = {
+      ...BASE,
+      phase: 'collecting',
+      cards: [makeCard({ author_name: 'Alice', published: false, text: 'To blur' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.card-text').click()
+    await expect(page.locator('.card-edit-input')).toBeVisible()
+    // Programmatically blur the textarea — triggers blur with editing=true, calling _saveEdit()
+    // Text is unchanged so no PATCH is dispatched, but _saveEdit() IS called (covering branch 23 arm=0)
+    await page.locator('.card-edit-input').evaluate((el: HTMLElement) => el.blur())
+    await expect(page.locator('.card-edit-input')).not.toBeVisible()
+  })
 })

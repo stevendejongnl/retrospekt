@@ -22,7 +22,7 @@ export default defineConfig({
             if (/node_modules/.test(id) || !/\.(ts|tsx)$/.test(id)) return null
             if (!code.includes('var __decorateClass =')) return null
             return {
-              code: code.replace('var __decorateClass =', '/* istanbul ignore next */ var __decorateClass ='),
+              code: code.replace('var __decorateClass =', '\n/* istanbul ignore next */\nvar __decorateClass ='),
               map: null,
             }
           },

@@ -189,11 +189,6 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         body: JSON.stringify({ rating, comment, session_id: sessionId ?? null, app_version: __APP_VERSION__ }),
       }),
 
-    listFeedback: (token: string) =>
-      request<Feedback[]>('/feedback', {
-        headers: { 'X-Admin-Token': token },
-      }),
-
     getPublicStats: () => request<PublicStats>('/stats'),
 
     adminAuth: (password: string) =>

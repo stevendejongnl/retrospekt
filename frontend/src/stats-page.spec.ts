@@ -22,6 +22,7 @@ const MOCK_PUBLIC_STATS = {
   avg_cards_per_session: 3.0,
   total_votes: 89,
   total_reactions: 45,
+  feedback_total: 3,
 }
 
 const MOCK_SENTRY_HEALTH = {
@@ -74,6 +75,18 @@ const MOCK_ADMIN_STATS = {
     avg_time_to_close_hours: 36.0,
   },
   sentry: null,
+  sentry_frontend: null,
+  feedback: {
+    total: 3,
+    avg_rating: 4.0,
+    by_rating: [
+      { rating: 4, count: 2 },
+      { rating: 5, count: 1 },
+    ],
+    recent: [
+      { id: '1', rating: 5, comment: 'Great tool!', app_version: '1.25.0', created_at: '2026-03-18T12:00:00Z' },
+    ],
+  },
 }
 
 async function mockStats(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
@@ -615,6 +628,26 @@ test.describe('stats-page sentry health section', () => {
     await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
     await expect(page.locator('stats-page').getByText(/Connection refused to sentry.io/, { exact: false })).toBeVisible()
   })
+
+  test('sentry section with empty top_issues shows no issue list', async ({ page }) => {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    const sentryNoIssues = { ...MOCK_SENTRY_HEALTH, top_issues: [] }
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ...MOCK_ADMIN_STATS, sentry: sentryNoIssues }),
+      }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText(/Sentry Health/i)).toBeVisible()
+    // Empty top_issues → no issue list rendered
+    await expect(page.locator('stats-page .sentry-issue-list')).not.toBeVisible()
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -729,5 +762,103 @@ test.describe('stats-page frontend sentry health section', () => {
     await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
     await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
     await expect(page.locator('stats-page').getByText(/Frontend Sentry unreachable/, { exact: false })).toBeVisible()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Feedback section
+// ---------------------------------------------------------------------------
+
+test.describe('stats-page feedback section', () => {
+  test('feedback badge shows submission count on unlock button', async ({ page }) => {
+    await mockStats(page)
+    await page.goto('/stats')
+    await expect(page.locator('stats-page .feedback-badge')).toHaveText('3')
+  })
+
+  test('feedback section visible after admin unlock', async ({ page }) => {
+    await unlockAdmin(page)
+    await expect(page.locator('stats-page').getByText('User Feedback', { exact: false })).toBeVisible()
+  })
+
+  test('feedback section shows submission count and avg rating', async ({ page }) => {
+    await unlockAdmin(page)
+    await expect(page.locator('stats-page').getByText('Submissions', { exact: true })).toBeVisible()
+    await expect(page.locator('stats-page').getByText('Avg Rating', { exact: true })).toBeVisible()
+  })
+
+  test('feedback rating chart rendered when feedback.total > 0', async ({ page }) => {
+    await unlockAdmin(page)
+    await expect(page.locator('stats-page #feedback-rating-chart')).toBeVisible()
+  })
+
+  test('feedback recent entries table shown when recent list is non-empty', async ({ page }) => {
+    await unlockAdmin(page)
+    await expect(page.locator('stats-page').getByText('Great tool!')).toBeVisible()
+  })
+
+  test('feedback section hidden when feedback.total is 0', async ({ page }) => {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    const noFeedbackStats = {
+      ...MOCK_ADMIN_STATS,
+      feedback: { total: 0, avg_rating: null, by_rating: [], recent: [] },
+    }
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(noFeedbackStats) }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
+    // Chart not rendered when total is 0
+    await expect(page.locator('stats-page #feedback-rating-chart')).not.toBeVisible()
+  })
+
+  test('feedback section shows no recent table when recent list is empty', async ({ page }) => {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    const feedbackNoRecent = {
+      ...MOCK_ADMIN_STATS,
+      feedback: { total: 2, avg_rating: 3.5, by_rating: [{ rating: 3, count: 1 }, { rating: 4, count: 1 }], recent: [] },
+    }
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(feedbackNoRecent) }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText(/User Feedback/i)).toBeVisible()
+    // Rating chart shown (total > 0)
+    await expect(page.locator('stats-page #feedback-rating-chart')).toBeVisible()
+    // But no recent table (recent is empty)
+    await expect(page.locator('stats-page .feedback-table')).not.toBeVisible()
+  })
+
+  test('feedback entry with null comment shows dash placeholder', async ({ page }) => {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    const feedbackNullComment = {
+      ...MOCK_ADMIN_STATS,
+      feedback: {
+        total: 1,
+        avg_rating: null,
+        by_rating: [{ rating: 3, count: 1 }],
+        recent: [{ id: '2', rating: 3, comment: '', app_version: '', created_at: '2026-03-18T12:00:00Z' }],
+      },
+    }
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(feedbackNullComment) }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText(/User Feedback/i)).toBeVisible()
+    // Empty comment and version trigger the fallback "–" spans
+    const dashCells = page.locator('stats-page .feedback-table .muted')
+    await expect(dashCells).toHaveCount(2)
   })
 })

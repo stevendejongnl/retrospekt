@@ -16,6 +16,7 @@ function matchRoute(path: string): { route: Route; params: Record<string, string
     if (route.path === path) return { route, params: {} }
 
     if (route.path.includes(':')) {
+      /* istanbul ignore next -- path.includes(':') guarantees match() is non-null; ?? [] is unreachable */
       const paramNames = (route.path.match(/:[^/]+/g) ?? []).map((p) => p.slice(1))
       const pattern = route.path.replace(/:[^/]+/g, '([^/]+)')
       const match = path.match(new RegExp(`^${pattern}$`))
