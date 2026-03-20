@@ -1,3 +1,14 @@
+## [1.27.0](https://github.com/stevendejongnl/retrospekt/compare/v1.26.0...v1.27.0) (2026-03-20)
+
+### Features
+
+* **column:** allow adding cards in discussing phase and add sort-by-votes toggle ([f8fb8b7](https://github.com/stevendejongnl/retrospekt/commit/f8fb8b782a57b25cc882703baec73007924c9c25))
+* **feedback:** add user feedback system ([87eeee7](https://github.com/stevendejongnl/retrospekt/commit/87eeee773edc8c3804303512146c1ebbd80d0890))
+
+### Bug Fixes
+
+* **column:** update WTR test to reflect add-area visible in discussing phase ([81340c7](https://github.com/stevendejongnl/retrospekt/commit/81340c7c6a43cefea54d36cc94ce61d36ac91c5d))
+
 ## [1.26.0](https://github.com/stevendejongnl/retrospekt/compare/v1.25.1...v1.26.0) (2026-03-03)
 
 ### Features
