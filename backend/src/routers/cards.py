@@ -30,8 +30,8 @@ async def add_card(
     session = await repo.get_by_id(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    if session.phase != "collecting":
-        raise HTTPException(status_code=409, detail="Cards can only be added during collecting phase")
+    if session.phase == "closed":
+        raise HTTPException(status_code=409, detail="Cards cannot be added in the closed phase")
 
     card = Card(column=body.column, text=body.text, author_name=body.author_name)
     session.cards.append(card)

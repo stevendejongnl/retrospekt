@@ -22,12 +22,33 @@ async def test_participant_can_add_a_card_in_collecting_phase(client: AsyncClien
     assert card["author_name"] == "Alice"
 
 
-async def test_cards_cannot_be_added_outside_collecting_phase(client: AsyncClient):
+async def test_participant_can_add_a_card_in_discussing_phase(client: AsyncClient):
     session = await make_session(client)
-    # Advance to discussing
     await client.post(
         f"/api/v1/sessions/{session.id}/phase",
         json={"phase": "discussing"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    response = await client.post(
+        f"/api/v1/sessions/{session.id}/cards",
+        json={"column": "Went Well", "text": "Late thought", "author_name": "Alice"},
+    )
+    assert response.status_code == 201
+    card = response.json()
+    assert card["text"] == "Late thought"
+    assert not card["published"]
+
+
+async def test_cards_cannot_be_added_in_closed_phase(client: AsyncClient):
+    session = await make_session(client)
+    await client.post(
+        f"/api/v1/sessions/{session.id}/phase",
+        json={"phase": "discussing"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    await client.post(
+        f"/api/v1/sessions/{session.id}/phase",
+        json={"phase": "closed"},
         headers={"X-Facilitator-Token": session.facilitator_token},
     )
     response = await client.post(

@@ -85,7 +85,7 @@ Every mutation (add card, vote, publish, phase change) calls the REST API → ba
 
 ### Phase-based visibility (frontend enforced)
 - `collecting`: each participant only sees their own cards; facilitator can add/rename/delete columns
-- `discussing`: published cards visible to all; drafts only to author; each author can publish their own cards; facilitator can publish-all per column (publishes the facilitator's own cards in that column)
+- `discussing`: published cards visible to all; drafts only to author; each author can publish their own cards; facilitator can publish-all per column (publishes the facilitator's own cards in that column); participants can still add new cards (created as unpublished drafts)
 - `closed`: read-only
 - Phase transitions are bidirectional — facilitator can move forward or backward between any phases
 
