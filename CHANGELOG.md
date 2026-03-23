@@ -1,3 +1,9 @@
+## [1.27.1](https://github.com/stevendejongnl/retrospekt/compare/v1.27.0...v1.27.1) (2026-03-23)
+
+### Bug Fixes
+
+* **cards:** allow adding cards in discussing phase ([d736f65](https://github.com/stevendejongnl/retrospekt/commit/d736f6530d4187063cc2dfa0c62c2e27dc8bb12a))
+
 ## [1.27.0](https://github.com/stevendejongnl/retrospekt/compare/v1.26.0...v1.27.0) (2026-03-20)
 
 ### Features
