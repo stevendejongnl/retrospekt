@@ -1,3 +1,18 @@
+## [1.28.0](https://github.com/stevendejongnl/retrospekt/compare/v1.27.1...v1.28.0) (2026-04-20)
+
+### Features
+
+* **help:** add features section to both help modals ([39607bf](https://github.com/stevendejongnl/retrospekt/commit/39607bf13dd14298cb5c57075a1f42cf8ce803da))
+* **session:** sync vote sort across all participants via SSE ([dab1fff](https://github.com/stevendejongnl/retrospekt/commit/dab1fff022c9c8f2ef94dd864163734855c703ef))
+
+### Code Refactoring
+
+* **stats:** replace feedback table with card list layout ([78992f4](https://github.com/stevendejongnl/retrospekt/commit/78992f4fed2f035141325237aecd2238684de76b))
+
+### Documentation
+
+* add dependency-cruiser visualization graphs ([a433962](https://github.com/stevendejongnl/retrospekt/commit/a43396248b29d7560f47c44e504a46647cb14596))
+
 ## [1.27.1](https://github.com/stevendejongnl/retrospekt/compare/v1.27.0...v1.27.1) (2026-03-23)
 
 ### Bug Fixes
