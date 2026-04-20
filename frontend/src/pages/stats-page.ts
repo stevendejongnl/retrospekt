@@ -554,26 +554,20 @@ export class StatsPage extends LitElement {
 
           ${feedback.recent.length > 0 ? html`
             <h4 class="chart-title" style="margin-top: 12px;">Recent Feedback</h4>
-            <table class="feedback-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Rating</th>
-                  <th>Comment</th>
-                  <th>Version</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${feedback.recent.map((entry) => html`
-                  <tr>
-                    <td class="feedback-date">${new Date(entry.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</td>
-                    <td class="feedback-stars">${'★'.repeat(entry.rating)}${'☆'.repeat(5 - entry.rating)}</td>
-                    <td class="feedback-comment">${entry.comment || html`<span class="muted">—</span>`}</td>
-                    <td class="feedback-version">${entry.app_version || html`<span class="muted">—</span>`}</td>
-                  </tr>
-                `)}
-              </tbody>
-            </table>
+            <div class="feedback-list">
+              ${feedback.recent.map((entry) => html`
+                <div class="feedback-entry">
+                  <div class="feedback-entry-meta">
+                    <span class="feedback-stars">${'★'.repeat(entry.rating)}${'☆'.repeat(5 - entry.rating)}</span>
+                    <span class="feedback-entry-date">${new Date(entry.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
+                    ${entry.app_version ? html`<span class="feedback-version">${entry.app_version}</span>` : nothing}
+                  </div>
+                  <p class="feedback-entry-comment">
+                    ${entry.comment || html`<span class="muted">—</span>`}
+                  </p>
+                </div>
+              `)}
+            </div>
           ` : nothing}
         ` : html`<p class="muted" style="margin-top: 8px;">No feedback submitted yet.</p>`}
 
@@ -1090,29 +1084,25 @@ export class StatsPage extends LitElement {
         vertical-align: middle;
       }
 
-      .feedback-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12px;
+      .feedback-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
         margin-top: 8px;
       }
 
-      .feedback-table th {
-        text-align: left;
-        color: var(--retro-text-muted);
-        font-weight: 600;
-        padding: 4px 8px 8px;
-        border-bottom: 1px solid var(--retro-border-default);
-        text-transform: uppercase;
-        font-size: 11px;
-        letter-spacing: 0.04em;
+      .feedback-entry {
+        border: 1px solid var(--retro-border-subtle);
+        border-radius: 8px;
+        padding: 10px 12px;
+        background: var(--retro-bg-subtle);
       }
 
-      .feedback-table td {
-        padding: 6px 8px;
-        border-bottom: 1px solid var(--retro-border-subtle);
-        color: var(--retro-text-secondary);
-        vertical-align: top;
+      .feedback-entry-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
       }
 
       .feedback-stars {
@@ -1121,11 +1111,9 @@ export class StatsPage extends LitElement {
         font-size: 13px;
       }
 
-      .feedback-comment {
-        max-width: 240px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+      .feedback-entry-date {
+        color: var(--retro-text-muted);
+        font-size: 11px;
       }
 
       .feedback-version {
@@ -1133,9 +1121,13 @@ export class StatsPage extends LitElement {
         font-size: 11px;
       }
 
-      .feedback-date {
-        white-space: nowrap;
-        color: var(--retro-text-muted);
+      .feedback-entry-comment {
+        margin: 0;
+        font-size: 13px;
+        color: var(--retro-text-secondary);
+        line-height: 1.4;
+        white-space: pre-wrap;
+        word-break: break-word;
       }
 
       .feedback-avg-stars {

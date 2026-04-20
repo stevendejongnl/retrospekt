@@ -792,8 +792,9 @@ test.describe('stats-page feedback section', () => {
     await expect(page.locator('stats-page #feedback-rating-chart')).toBeVisible()
   })
 
-  test('feedback recent entries table shown when recent list is non-empty', async ({ page }) => {
+  test('feedback recent entries shown as cards when recent list is non-empty', async ({ page }) => {
     await unlockAdmin(page)
+    await expect(page.locator('stats-page .feedback-entry')).toHaveCount(1)
     await expect(page.locator('stats-page').getByText('Great tool!')).toBeVisible()
   })
 
@@ -833,8 +834,8 @@ test.describe('stats-page feedback section', () => {
     await expect(page.locator('stats-page').getByText(/User Feedback/i)).toBeVisible()
     // Rating chart shown (total > 0)
     await expect(page.locator('stats-page #feedback-rating-chart')).toBeVisible()
-    // But no recent table (recent is empty)
-    await expect(page.locator('stats-page .feedback-table')).not.toBeVisible()
+    // But no recent cards (recent is empty)
+    await expect(page.locator('stats-page .feedback-entry')).not.toBeVisible()
   })
 
   test('feedback entry with null comment shows dash placeholder', async ({ page }) => {
@@ -857,8 +858,8 @@ test.describe('stats-page feedback section', () => {
     await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
     await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
     await expect(page.locator('stats-page').getByText(/User Feedback/i)).toBeVisible()
-    // Empty comment and version trigger the fallback "–" spans
-    const dashCells = page.locator('stats-page .feedback-table .muted')
-    await expect(dashCells).toHaveCount(2)
+    // Empty comment triggers the fallback "—" span inside the card
+    const dashCells = page.locator('stats-page .feedback-entry .muted')
+    await expect(dashCells).toHaveCount(1)
   })
 })
