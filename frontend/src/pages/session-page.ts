@@ -20,6 +20,9 @@ import {
   iconFileArrowDown,
   iconNoteSticky,
   iconRotateLeft,
+  iconThumbsUp,
+  iconLayerGroup,
+  iconUsers,
   csLogo,
 } from '../icons'
 import '../components/retro-board'
@@ -237,6 +240,8 @@ export class SessionPage extends LitElement {
       border-radius: 20px;
       padding: 32px;
       max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
       width: 100%;
       box-shadow: 0 16px 64px rgba(0, 0, 0, 0.16);
     }
@@ -305,6 +310,42 @@ export class SessionPage extends LitElement {
     }
     .help-footer a:hover {
       text-decoration: underline;
+    }
+    .help-features {
+      margin-top: 20px;
+      border-top: 1px solid var(--retro-border-subtle);
+      padding-top: 16px;
+    }
+    .help-features-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--retro-text-muted);
+      margin: 0 0 10px;
+    }
+    .help-feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .help-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--retro-text-secondary);
+      line-height: 1.4;
+    }
+    .help-feature-icon {
+      flex-shrink: 0;
+      color: var(--retro-accent);
+      font-size: 14px;
+      margin-top: 1px;
+    }
+    .help-feature strong {
+      color: var(--retro-text-primary);
+      font-weight: 600;
     }
 
     /* ── Main ── */
@@ -718,8 +759,8 @@ export class SessionPage extends LitElement {
                   <div class="help-phase-body">
                     <h4>Discussing</h4>
                     <p>
-                      Publish your cards to share them with the team. Once visible, others can vote
-                      on them. No new cards can be added.
+                      Publish your cards to share them with the team. Once visible, others can
+                      vote on them. You can still add new cards as drafts during this phase.
                     </p>
                   </div>
                 </div>
@@ -731,6 +772,31 @@ export class SessionPage extends LitElement {
                       The session is read-only. The facilitator has wrapped up — results are
                       available to review.
                     </p>
+                  </div>
+                </div>
+                <div class="help-features">
+                  <p class="help-features-title">Features</p>
+                  <div class="help-feature-list">
+                    <div class="help-feature">
+                      <span class="help-feature-icon">${iconThumbsUp()}</span>
+                      <span><strong>Voting</strong> — tap the vote button on any published card during discussing to upvote it. One vote per card.</span>
+                    </div>
+                    <div class="help-feature">
+                      <span class="help-feature-icon">${iconLayerGroup()}</span>
+                      <span><strong>Card grouping</strong> — drag a published card onto another to stack related cards together. Click the stack to expand it.</span>
+                    </div>
+                    <div class="help-feature">
+                      <span class="help-feature-icon">${iconCommentDots()}</span>
+                      <span><strong>Reactions</strong> — react to any published card with an emoji. Enabled or disabled by the facilitator.</span>
+                    </div>
+                    <div class="help-feature">
+                      <span class="help-feature-icon">${iconNoteSticky()}</span>
+                      <span><strong>Notes</strong> — shared session notes are available via the notes panel, visible to everyone.</span>
+                    </div>
+                    <div class="help-feature">
+                      <span class="help-feature-icon">${iconUsers()}</span>
+                      <span><strong>History</strong> — access your previous sessions from the history sidebar on the home page.</span>
+                    </div>
                   </div>
                 </div>
                 <button class="help-close-btn" @click=${() => (this.showHelp = false)}>

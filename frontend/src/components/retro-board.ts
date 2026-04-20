@@ -6,7 +6,21 @@ import type { Card, Session, SessionPhase } from '../types'
 import { buildParticipantColorMap } from '../types'
 import { api } from '../api'
 import { storage } from '../storage'
-import { faIconStyles, iconPencil, iconCommentDots, iconLock, iconUsers, iconCircleCheck, iconGear } from '../icons'
+import {
+  faIconStyles,
+  iconPencil,
+  iconCommentDots,
+  iconLock,
+  iconUsers,
+  iconCircleCheck,
+  iconGear,
+  iconThumbsUp,
+  iconLayerGroup,
+  iconNoteSticky,
+  iconFileArrowDown,
+  iconClock,
+  iconClockRotateLeft,
+} from '../icons'
 import './retro-column'
 import './retro-timer'
 
@@ -174,6 +188,8 @@ export class RetroBoard extends LitElement {
       border-radius: 20px;
       padding: 32px;
       max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
       width: 100%;
       box-shadow: 0 16px 64px var(--retro-card-shadow);
     }
@@ -229,6 +245,42 @@ export class RetroBoard extends LitElement {
     }
     .help-close-btn:hover {
       background: var(--retro-accent-hover);
+    }
+    .help-features {
+      margin-top: 20px;
+      border-top: 1px solid var(--retro-border-subtle);
+      padding-top: 16px;
+    }
+    .help-features-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--retro-text-muted);
+      margin: 0 0 10px;
+    }
+    .help-feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .help-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--retro-text-secondary);
+      line-height: 1.4;
+    }
+    .help-feature-icon {
+      flex-shrink: 0;
+      color: var(--retro-accent);
+      font-size: 14px;
+      margin-top: 1px;
+    }
+    .help-feature strong {
+      color: var(--retro-text-primary);
+      font-weight: 600;
     }
 
     /* ── Participant count button ── */
@@ -790,26 +842,59 @@ export class RetroBoard extends LitElement {
             <div class="help-overlay" @click=${() => (this.showHelp = false)}>
               <div class="help-card" @click=${(e: Event) => e.stopPropagation()}>
                 <h3>How Retrospekt works</h3>
-                <p class="subtitle">A session moves through three phases — only you as facilitator can advance or go back.</p>
+                <p class="subtitle">You control the session. Use the phase buttons to move forward or back at any time.</p>
                 <div class="help-phase">
                   <span class="help-phase-icon">${iconPencil()}</span>
                   <div class="help-phase-body">
                     <h4>Collecting</h4>
-                    <p>Everyone adds cards to the columns anonymously. Use this phase to gather honest, unfiltered feedback before the team sees each other's responses.</p>
+                    <p>Everyone writes cards privately. Cards are invisible to others until published. Add, rename, or remove columns here. Move to discussing when everyone is ready.</p>
                   </div>
                 </div>
                 <div class="help-phase">
                   <span class="help-phase-icon">${iconCommentDots()}</span>
                   <div class="help-phase-body">
                     <h4>Discussing</h4>
-                    <p>Each participant publishes their own cards to reveal them to the team. Once published, others can vote on them. New cards can still be added as drafts.</p>
+                    <p>Participants publish and vote on cards. Use "Publish all" to reveal your own cards per column. Sort columns by votes, group related cards, and assign action items.</p>
                   </div>
                 </div>
                 <div class="help-phase">
                   <span class="help-phase-icon">${iconLock()}</span>
                   <div class="help-phase-body">
                     <h4>Closed</h4>
-                    <p>The session is read-only. Use this phase to wrap up and share results. Voting and card creation are disabled.</p>
+                    <p>Session is read-only. Export results as Markdown or share the link. Cards are sorted by vote count for easy review.</p>
+                  </div>
+                </div>
+                <div class="help-features">
+                  <p class="help-features-title">Facilitator tools</p>
+                  <div class="help-feature-list">
+                    <div class="help-feature">
+                      <span class="help-feature-icon">${iconClock()}</span>
+                      <span><strong>Timer</strong> — start a countdown to timebox discussions. Visible to all participants in real time.</span>
+                    </div>
+                    <div class="help-feature">
+                      <span class="help-feature-icon">${iconThumbsUp()}</span>
+                      <span><strong>Vote sorting</strong> — click ↕ Votes on any column during discussing to sort all participants' views by vote count.</span>
+                    </div>
+                    <div class="help-feature">
+                      <span class="help-feature-icon">${iconLayerGroup()}</span>
+                      <span><strong>Card grouping</strong> — drag published cards onto each other to stack related items. Click a stack to expand it.</span>
+                    </div>
+                    <div class="help-feature">
+                      <span class="help-feature-icon">${iconUsers()}</span>
+                      <span><strong>Open facilitator</strong> — enable in settings to let all participants manage phase, columns, and timer.</span>
+                    </div>
+                    <div class="help-feature">
+                      <span class="help-feature-icon">${iconNoteSticky()}</span>
+                      <span><strong>Notes</strong> — shared session notes panel for capturing decisions or follow-ups visible to everyone.</span>
+                    </div>
+                    <div class="help-feature">
+                      <span class="help-feature-icon">${iconFileArrowDown()}</span>
+                      <span><strong>Export</strong> — download the session as a Markdown file from the header once the session is closed.</span>
+                    </div>
+                    <div class="help-feature">
+                      <span class="help-feature-icon">${iconClockRotateLeft()}</span>
+                      <span><strong>History</strong> — previous sessions are saved locally and accessible from the home page sidebar.</span>
+                    </div>
                   </div>
                 </div>
                 <button class="help-close-btn" @click=${() => (this.showHelp = false)}>Got it</button>
