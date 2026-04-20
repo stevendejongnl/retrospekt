@@ -124,6 +124,16 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         },
       }),
 
+    setColumnSort: (sessionId: string, columnName: string, sortByVotes: boolean, facilitatorToken: string, participantName?: string) =>
+      request<Session>(`/sessions/${sessionId}/columns/${encodeURIComponent(columnName)}/sort`, {
+        method: 'PATCH',
+        body: JSON.stringify({ sort_by_votes: sortByVotes }),
+        headers: {
+          'X-Facilitator-Token': facilitatorToken,
+          ...(participantName && { 'X-Participant-Name': participantName }),
+        },
+      }),
+
     addReaction: (sessionId: string, cardId: string, emoji: string, participantName: string) =>
       request<Card>(`/sessions/${sessionId}/cards/${cardId}/reactions`, {
         method: 'POST',

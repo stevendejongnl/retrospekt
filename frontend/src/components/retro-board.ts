@@ -679,6 +679,11 @@ export class RetroBoard extends LitElement {
     )
   }
 
+  private async onSortColumn(e: CustomEvent): Promise<void> {
+    const { column, sortByVotes } = e.detail as { column: string; sortByVotes: boolean }
+    await api.setColumnSort(this.session.id, column, sortByVotes, this.facilitatorToken, this.participantName)
+  }
+
   private openSettings(): void {
     this.settingName = this.session.name
     this.settingReactions = this.session.reactions_enabled
@@ -880,6 +885,7 @@ export class RetroBoard extends LitElement {
         @ungroup-card=${this.onUngroupCard}
         @rename-column=${this.onRenameColumn}
         @remove-column=${this.onRemoveColumn}
+        @sort-column=${this.onSortColumn}
       >
         ${session.columns.map(
           (col) => html`
@@ -893,6 +899,7 @@ export class RetroBoard extends LitElement {
               .participantColorMap=${this.participantColorMap}
               ?isFacilitator=${this.isFacilitator}
               .reactionsEnabled=${session.reactions_enabled}
+              .sortByVotes=${session.column_sorts?.[col] ?? false}
             ></retro-column>
           `,
         )}

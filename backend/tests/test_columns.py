@@ -10,7 +10,7 @@ from urllib.parse import quote
 
 from httpx import AsyncClient
 
-from tests.conftest import make_session
+from tests.conftest import SessionFixture, make_session
 
 # ── helpers ─────────────────────────────────────────────────────────────────
 
@@ -280,3 +280,85 @@ async def test_remove_column_unknown_session_returns_404(client: AsyncClient):
         headers={"X-Facilitator-Token": "any"},
     )
     assert response.status_code == 404
+
+
+# ── set column sort ───────────────────────────────────────────────────────────
+
+
+def sort_url(session_id: str, name: str) -> str:
+    return f"{col_url(session_id, name)}/sort"
+
+
+async def _discussing_session(client: AsyncClient) -> "SessionFixture":
+    session = await make_session(client)
+    await client.post(
+        f"/api/v1/sessions/{session.id}/phase",
+        json={"phase": "discussing"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    return session
+
+
+async def test_facilitator_can_enable_column_sort(client: AsyncClient):
+    session = await _discussing_session(client)
+    response = await client.patch(
+        sort_url(session.id, "Went Well"),
+        json={"sort_by_votes": True},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 200
+    assert response.json()["column_sorts"]["Went Well"] is True
+
+
+async def test_facilitator_can_disable_column_sort(client: AsyncClient):
+    session = await _discussing_session(client)
+    await client.patch(
+        sort_url(session.id, "Went Well"),
+        json={"sort_by_votes": True},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    response = await client.patch(
+        sort_url(session.id, "Went Well"),
+        json={"sort_by_votes": False},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 200
+    assert response.json()["column_sorts"]["Went Well"] is False
+
+
+async def test_set_column_sort_requires_facilitator_token(client: AsyncClient):
+    session = await _discussing_session(client)
+    response = await client.patch(
+        sort_url(session.id, "Went Well"),
+        json={"sort_by_votes": True},
+    )
+    assert response.status_code == 403
+
+
+async def test_set_column_sort_unknown_session_returns_404(client: AsyncClient):
+    response = await client.patch(
+        sort_url("no-such", "Went Well"),
+        json={"sort_by_votes": True},
+        headers={"X-Facilitator-Token": "any"},
+    )
+    assert response.status_code == 404
+
+
+async def test_set_column_sort_unknown_column_returns_404(client: AsyncClient):
+    session = await _discussing_session(client)
+    response = await client.patch(
+        sort_url(session.id, "No Such Column"),
+        json={"sort_by_votes": True},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 404
+
+
+async def test_set_column_sort_requires_discussing_phase(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.patch(
+        sort_url(session.id, "Went Well"),
+        json={"sort_by_votes": True},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 409

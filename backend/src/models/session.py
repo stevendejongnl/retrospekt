@@ -76,6 +76,7 @@ class Session(BaseModel):
     cards: list[Card] = []
     notes: list[Note] = []
     timer: TimerState | None = None
+    column_sorts: dict[str, bool] = Field(default_factory=dict)
     reactions_enabled: bool = True
     open_facilitator: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

@@ -22,6 +22,7 @@ function makeSessionResponse(overrides: Partial<CreateSessionResponse> = {}): Cr
     name: 'Test Sprint Retro',
     facilitator_token: 'tok-abc',
     columns: ['Went Well', 'To Improve', 'Action Items'],
+    column_sorts: {},
     phase: 'collecting',
     participants: [],
     cards: [],

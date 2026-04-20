@@ -44,6 +44,7 @@ export interface Session {
   id: string
   name: string
   columns: string[]
+  column_sorts: Record<string, boolean>
   phase: SessionPhase
   participants: Participant[]
   cards: Card[]

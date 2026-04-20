@@ -10,6 +10,7 @@ function makeSession(overrides: Partial<Session> = {}): Session {
     id: 'session-1',
     name: 'Sprint Retro',
     columns: ['Went Well', 'To Improve', 'Action Items'],
+    column_sorts: {},
     phase: 'collecting',
     participants: [{ name: 'Alice', joined_at: '2025-01-01T00:00:00Z' }],
     cards: [],

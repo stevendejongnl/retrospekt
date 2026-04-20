@@ -68,3 +68,7 @@ class UpdateNoteRequest(BaseModel):
 
 class GroupCardRequest(BaseModel):
     target_card_id: str
+
+
+class SetColumnSortRequest(BaseModel):
+    sort_by_votes: bool

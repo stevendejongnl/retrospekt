@@ -11,6 +11,7 @@ from ..models.requests import (
     CreateSessionRequest,
     JoinSessionRequest,
     RenameColumnRequest,
+    SetColumnSortRequest,
     SetPhaseRequest,
     SetTimerDurationRequest,
     UpdateSessionRequest,
@@ -218,6 +219,30 @@ async def remove_column(
     session.cards = [c for c in session.cards if c.column != column_name]
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
+
+
+@router.patch("/{session_id}/columns/{column_name}/sort")
+async def set_column_sort(
+    session_id: str,
+    column_name: str,
+    body: SetColumnSortRequest,
+    x_facilitator_token: str | None = Header(default=None),
+    x_participant_name: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
+    if session.phase != SessionPhase.DISCUSSING:
+        raise HTTPException(status_code=409, detail="Column sort can only be changed during discussing phase")
+    if column_name not in session.columns:
+        raise HTTPException(status_code=404, detail="Column not found")
+
+    session.column_sorts[column_name] = body.sort_by_votes
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
+    return _public(session)
 
 
 @router.patch("/{session_id}/timer")

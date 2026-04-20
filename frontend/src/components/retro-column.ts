@@ -32,6 +32,7 @@ export class RetroColumn extends LitElement {
   @property({ type: Object }) participantColorMap: Record<string, string> = {}
   @property({ type: Array }) participantNames: string[] = []
   @property({ type: Boolean }) reactionsEnabled = true
+  @property({ type: Boolean }) sortByVotes = false
 
   @state() private newCardText = ''
   @state() private isAdding = false
@@ -40,7 +41,6 @@ export class RetroColumn extends LitElement {
   @state() private showEmojiPicker = false
   @state() private expandedGroupId: string | null = null
   @state() private dragOverGroupId: string | null = null
-  @state() private sortByVotes = false
 
   private readonly _outsideClickHandler = (e: MouseEvent): void => {
     if (!e.composedPath().includes(this)) {
@@ -557,7 +557,6 @@ export class RetroColumn extends LitElement {
   updated(changedProps: Map<string, unknown>): void {
     if (changedProps.has('phase') && this.phase !== 'discussing') {
       this.expandedGroupId = null
-      this.sortByVotes = false
     }
   }
 
@@ -629,7 +628,13 @@ export class RetroColumn extends LitElement {
               ? html`<button
                   class="sort-votes-btn ${this.sortByVotes ? 'active' : ''}"
                   title="${this.sortByVotes ? 'Default order' : 'Sort by votes'}"
-                  @click=${() => { this.sortByVotes = !this.sortByVotes }}
+                  @click=${() => {
+                    this.dispatchEvent(new CustomEvent('sort-column', {
+                      detail: { column: this.title, sortByVotes: !this.sortByVotes },
+                      bubbles: true,
+                      composed: true,
+                    }))
+                  }}
                 >↕ Votes</button>`
               : ''}
             ${this.isFacilitator && this.phase === 'collecting'
