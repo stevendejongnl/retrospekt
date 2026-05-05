@@ -543,6 +543,82 @@ test.describe('session-page SSE updates', () => {
   })
 })
 
+// ── What's New dialog ─────────────────────────────────────────────────────────
+
+test.describe('session-page whats-new dialog', () => {
+  test('dialog not shown when no other sessions in history (first-time user)', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    // No other history entries — dialog should not appear
+    const dialog = page.locator('whats-new-dialog .overlay')
+    await expect(dialog).not.toBeVisible()
+  })
+
+  test('dialog shown when returning user has other sessions in history', async ({ page }) => {
+    await page.addInitScript((id) => {
+      const other = [{ id: 'other-sess', name: 'Old Retro', phase: 'closed', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '2026-01-01' }]
+      localStorage.setItem('retro_history', JSON.stringify(other))
+      localStorage.setItem(`retro_name_${id}`, 'Alice')
+    }, SESSION_ID)
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await expect(page.locator('whats-new-dialog .overlay')).toBeVisible()
+  })
+
+  test('"Later" button dismisses the dialog without marking seen', async ({ page }) => {
+    await page.addInitScript((id) => {
+      const other = [{ id: 'other-sess', name: 'Old Retro', phase: 'closed', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '2026-01-01' }]
+      localStorage.setItem('retro_history', JSON.stringify(other))
+      localStorage.setItem(`retro_name_${id}`, 'Alice')
+    }, SESSION_ID)
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.locator('whats-new-dialog .later-btn').click()
+    await expect(page.locator('whats-new-dialog .overlay')).not.toBeVisible()
+    // seenChangelogVersion should NOT be set
+    const seen = await page.evaluate(() => {
+      const h = JSON.parse(localStorage.getItem('retro_history') ?? '[]') as { seenChangelogVersion?: string }[]
+      return h[0]?.seenChangelogVersion
+    })
+    expect(seen).toBeUndefined()
+  })
+
+  test('"Got it" button marks changelog seen and dismisses', async ({ page }) => {
+    await page.addInitScript((id) => {
+      const other = [{ id: 'other-sess', name: 'Old Retro', phase: 'closed', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '2026-01-01' }]
+      localStorage.setItem('retro_history', JSON.stringify(other))
+      localStorage.setItem(`retro_name_${id}`, 'Alice')
+    }, SESSION_ID)
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.locator('whats-new-dialog .got-it-btn').click()
+    await expect(page.locator('whats-new-dialog .overlay')).not.toBeVisible()
+    // seenChangelogVersion should be set on the current session entry
+    const seen = await page.evaluate((id) => {
+      const h = JSON.parse(localStorage.getItem('retro_history') ?? '[]') as { id: string; seenChangelogVersion?: string }[]
+      return h.find((e) => e.id === id)?.seenChangelogVersion
+    }, SESSION_ID)
+    expect(seen).toBeTruthy()
+  })
+
+  test('dialog not shown when current version already seen', async ({ page }) => {
+    await page.addInitScript((id) => {
+      const other = [
+        { id: 'other-sess', name: 'Old Retro', phase: 'closed', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '2026-01-01', seenChangelogVersion: '99.99.99' },
+      ]
+      localStorage.setItem('retro_history', JSON.stringify(other))
+      localStorage.setItem(`retro_name_${id}`, 'Alice')
+    }, SESSION_ID)
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await expect(page.locator('whats-new-dialog .overlay')).not.toBeVisible()
+  })
+})
+
 // ── Export ────────────────────────────────────────────────────────────────────
 
 test.describe('session-page export', () => {
