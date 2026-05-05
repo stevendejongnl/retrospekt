@@ -649,7 +649,9 @@ export class SessionPage extends LitElement {
 
   private _checkWhatsNew(): void {
     const history = storage.getHistory()
-    if (history.length === 0) return
+    // Only show to returning users — must have at least one *other* session in history
+    const otherSessions = history.filter((e) => e.id !== this.sessionId)
+    if (otherSessions.length === 0) return
     const lastSeen = storage.getMaxSeenChangelogVersion()
     const current = __APP_VERSION__
     if (!lastSeen || semverGt(current, lastSeen)) {
