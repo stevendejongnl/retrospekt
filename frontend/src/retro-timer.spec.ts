@@ -521,7 +521,8 @@ test.describe('retro-timer ding sound', () => {
     }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('retro-timer')).toBeVisible()
+    // Wait for the countdown to show — confirms displaySeconds is set before advancing
+    await expect(page.locator('retro-timer')).toContainText('0:0')
     await page.clock.fastForward(6000) // advance past expiry; triggers interval callbacks
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
@@ -544,7 +545,8 @@ test.describe('retro-timer ding sound', () => {
     }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('retro-timer')).toBeVisible()
+    // Wait for the countdown to show — confirms displaySeconds is set before advancing
+    await expect(page.locator('retro-timer')).toContainText('0:0')
     await page.clock.fastForward(3000) // advance past expiry instantly
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
