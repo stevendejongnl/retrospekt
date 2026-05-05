@@ -1,3 +1,9 @@
+## [1.29.6](https://github.com/stevendejongnl/retrospekt/compare/v1.29.5...v1.29.6) (2026-05-05)
+
+### Code Refactoring
+
+* **glass:** shift to near-opaque clean panels with crisp borders ([c452294](https://github.com/stevendejongnl/retrospekt/commit/c452294d1eed2b94de55e7b4f090a64649f9360d))
+
 ## [1.29.5](https://github.com/stevendejongnl/retrospekt/compare/v1.29.4...v1.29.5) (2026-05-05)
 
 ### Bug Fixes
