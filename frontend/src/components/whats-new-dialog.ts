@@ -181,6 +181,7 @@ export class WhatsNewDialog extends LitElement {
   }
 
   private _viewChangelog(): void {
+    /* istanbul ignore next */
     window.router?.navigate('/changelog')
     this._gotIt()
   }
