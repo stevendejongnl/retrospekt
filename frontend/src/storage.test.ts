@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { storage } from './storage'
+import { storage, semverGt } from './storage'
+
+describe('semverGt', () => {
+  it('returns true when major is greater', () => expect(semverGt('2.0.0', '1.9.9')).toBe(true))
+  it('returns true when minor is greater', () => expect(semverGt('1.28.0', '1.27.9')).toBe(true))
+  it('returns true when patch is greater', () => expect(semverGt('1.27.10', '1.27.9')).toBe(true))
+  it('returns false when equal', () => expect(semverGt('1.27.1', '1.27.1')).toBe(false))
+  it('returns false when less', () => expect(semverGt('1.27.0', '1.27.1')).toBe(false))
+})
 
 describe('RetroStorage', () => {
   beforeEach(() => {
