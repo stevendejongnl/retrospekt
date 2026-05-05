@@ -3,6 +3,7 @@ import { LitElement, PropertyValues, css, html, nothing } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
+import '../components/background-blobs'
 import { faIconStyles } from '../icons'
 import type { AdminStats, FeedbackStats, LifetimeBucket, PublicStats, RatingCount, SentryDataPoint, SentryHealth } from '../types'
 
@@ -638,6 +639,7 @@ export class StatsPage extends LitElement {
 
   render() {
     return html`
+      <background-blobs></background-blobs>
       <div class="page">
         <header class="page-header">
           <a

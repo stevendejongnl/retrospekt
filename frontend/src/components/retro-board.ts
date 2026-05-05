@@ -58,9 +58,9 @@ export class RetroBoard extends LitElement {
       flex-wrap: wrap;
       gap: 12px;
       padding: 12px 14px;
-      background: var(--retro-glass-bg-medium);
-      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      background: var(--retro-glass-bg-strong);
+      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
       border-radius: 12px;
       margin-bottom: 16px;
