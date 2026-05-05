@@ -1,3 +1,9 @@
+## [1.30.0](https://github.com/stevendejongnl/retrospekt/compare/v1.29.6...v1.30.0) (2026-05-05)
+
+### Features
+
+* **glass:** restore blobs on 404+stats, strengthen facilitator-bar blur ([c9792c1](https://github.com/stevendejongnl/retrospekt/commit/c9792c1d935144381a1f8d2b86c4f1fff6830c57))
+
 ## [1.29.6](https://github.com/stevendejongnl/retrospekt/compare/v1.29.5...v1.29.6) (2026-05-05)
 
 ### Code Refactoring
