@@ -150,7 +150,7 @@ export class ChangelogPage extends LitElement {
       font-weight: 700;
       letter-spacing: 0.5px;
       text-transform: uppercase;
-      background: linear-gradient(135deg, oklch(0.72 0.16 50), oklch(0.66 0.17 42));
+      background: var(--retro-accent);
       color: white;
       border-radius: 5px;
       padding: 2px 7px;

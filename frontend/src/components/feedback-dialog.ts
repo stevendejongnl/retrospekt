@@ -135,20 +135,20 @@ export class FeedbackDialog extends LitElement {
 
     .submit-btn {
       padding: 10px 18px;
-      background: linear-gradient(135deg, oklch(0.72 0.16 50), oklch(0.66 0.17 42));
+      background: var(--retro-accent);
       color: white;
-      border: 1px solid rgba(217, 116, 38, 0.5);
+      border: none;
       border-radius: 10px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: opacity 0.12s;
+      transition: background 0.12s;
       box-shadow: 0 4px 12px rgba(217, 116, 38, 0.3);
     }
 
     .submit-btn:hover:not(:disabled) {
-      opacity: 0.9;
+      background: var(--retro-accent-hover);
     }
 
     .submit-btn:disabled {

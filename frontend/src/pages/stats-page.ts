@@ -4,7 +4,6 @@ import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 import { faIconStyles } from '../icons'
-import '../components/background-blobs'
 import type { AdminStats, FeedbackStats, LifetimeBucket, PublicStats, RatingCount, SentryDataPoint, SentryHealth } from '../types'
 
 type AdminPhase = 'locked' | 'loading' | 'unlocked' | 'error'
@@ -639,7 +638,6 @@ export class StatsPage extends LitElement {
 
   render() {
     return html`
-      <background-blobs></background-blobs>
       <div class="page">
         <header class="page-header">
           <a
@@ -867,15 +865,18 @@ export class StatsPage extends LitElement {
 
       .unlock-btn {
         padding: 8px 20px;
-        background: linear-gradient(135deg, oklch(0.72 0.16 50), oklch(0.66 0.17 42));
+        background: var(--retro-accent);
         color: #fff;
-        border: 1px solid rgba(217, 116, 38, 0.4);
+        border: none;
         border-radius: 8px;
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
-        transition: opacity 0.12s;
+        transition: background 0.12s;
         box-shadow: 0 4px 12px rgba(217, 116, 38, 0.25);
+      }
+      .unlock-btn:hover {
+        background: var(--retro-accent-hover);
       }
       .unlock-btn:hover:not(:disabled) {
         opacity: 0.85;

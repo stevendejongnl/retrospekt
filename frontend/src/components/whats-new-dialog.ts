@@ -36,7 +36,7 @@ export class WhatsNewDialog extends LitElement {
     }
 
     .hero {
-      background: linear-gradient(135deg, oklch(0.72 0.16 50), oklch(0.58 0.17 38));
+      background: linear-gradient(135deg, var(--retro-accent), var(--retro-accent-hover));
       padding: 24px 28px 20px;
       color: white;
     }
@@ -156,8 +156,8 @@ export class WhatsNewDialog extends LitElement {
     }
 
     .got-it-btn {
-      background: linear-gradient(135deg, oklch(0.72 0.16 50), oklch(0.66 0.17 42));
-      border: 1px solid rgba(217,116,38,0.5);
+      background: var(--retro-accent);
+      border: none;
       border-radius: 8px;
       padding: 8px 18px;
       font-size: 13px;
@@ -165,11 +165,11 @@ export class WhatsNewDialog extends LitElement {
       color: white;
       cursor: pointer;
       font-family: inherit;
-      transition: opacity 0.12s;
+      transition: background 0.12s;
       box-shadow: 0 4px 12px rgba(217,116,38,0.3);
     }
 
-    .got-it-btn:hover { opacity: 0.9; }
+    .got-it-btn:hover { background: var(--retro-accent-hover); }
   `
 
   private _later(): void {

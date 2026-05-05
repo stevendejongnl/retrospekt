@@ -215,20 +215,20 @@ export class HomePage extends LitElement {
       width: 100%;
       margin-top: 8px;
       padding: 14px;
-      background: linear-gradient(135deg, oklch(0.72 0.16 50), oklch(0.66 0.17 42));
+      background: var(--retro-accent);
       color: white;
-      border: 1px solid rgba(217, 116, 38, 0.5);
+      border: none;
       border-radius: 12px;
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: opacity 0.12s, transform 0.1s;
+      transition: background 0.12s, transform 0.1s;
       letter-spacing: 0.1px;
-      box-shadow: 0 8px 24px rgba(217, 116, 38, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      box-shadow: 0 4px 16px rgba(217, 116, 38, 0.35);
     }
     .create-btn:hover:not(:disabled) {
-      opacity: 0.9;
+      background: var(--retro-accent-hover);
     }
     .create-btn:active:not(:disabled) {
       transform: scale(0.99);
