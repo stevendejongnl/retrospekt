@@ -1,3 +1,11 @@
+## [1.29.1](https://github.com/stevendejongnl/retrospekt/compare/v1.29.0...v1.29.1) (2026-05-05)
+
+### Bug Fixes
+
+* **build:** add tsx as devDependency for parse-changelog prebuild script ([a38acc1](https://github.com/stevendejongnl/retrospekt/commit/a38acc1ae1e76ecfac972fc0fa5659349c16e77b))
+* **build:** make changelog generation work in CI, Docker, and dev environments ([46e1937](https://github.com/stevendejongnl/retrospekt/commit/46e1937af15a7181e80b502af85b3390ad2f6b38))
+* **gitignore:** correctly ignore frontend/src/generated/ and untrack changelog.ts ([61c9229](https://github.com/stevendejongnl/retrospekt/commit/61c922973339824f16264f983644872400c43e9e))
+
 ## [1.29.0](https://github.com/stevendejongnl/retrospekt/compare/v1.28.0...v1.29.0) (2026-05-05)
 
 ### Features
