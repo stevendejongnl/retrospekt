@@ -1,3 +1,9 @@
+## [1.29.4](https://github.com/stevendejongnl/retrospekt/compare/v1.29.3...v1.29.4) (2026-05-05)
+
+### Bug Fixes
+
+* **glass:** lower glass opacity so backdrop-filter blur is actually visible ([fa62a4d](https://github.com/stevendejongnl/retrospekt/commit/fa62a4d3bf1b82357dafb0185ec9d8ca1cc581cb))
+
 ## [1.29.3](https://github.com/stevendejongnl/retrospekt/compare/v1.29.2...v1.29.3) (2026-05-05)
 
 ### Bug Fixes
