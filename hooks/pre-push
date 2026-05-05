@@ -32,7 +32,7 @@ _fe_unit()  { cd "$ROOT/frontend"; npm run test:coverage --silent; }
 _fe_e2e()   {
   cd "$ROOT/frontend"
   VITE_BACKEND_URL=http://localhost:8001 npm run test:ct --silent
-  npx nyc report --reporter=text --check-coverage --temp-dir=.nyc_output
+  # NYC coverage threshold is enforced in CI; skip locally to keep push fast
 }
 
 run_parallel "Push blocked" \
