@@ -42,7 +42,7 @@ export class RetroCard extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-left: 3px solid var(--card-accent, #d97426);
+      border-left: 4px solid var(--card-accent, #d97426);
       border-radius: 10px;
       padding: 12px 14px;
       margin-bottom: 8px;

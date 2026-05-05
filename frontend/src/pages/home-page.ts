@@ -138,7 +138,7 @@ export class HomePage extends LitElement {
     }
     .hero {
       width: 100%;
-      max-width: 460px;
+      max-width: 420px;
       text-align: center;
       position: relative;
       z-index: 1;
