@@ -8,6 +8,7 @@
     "prebuild": "tsx scripts/parse-changelog.ts",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "pretypecheck": "tsx scripts/parse-changelog.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "test": "vitest run",

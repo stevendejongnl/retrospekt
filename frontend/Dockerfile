@@ -2,9 +2,10 @@
 FROM node:20-alpine AS dev
 
 WORKDIR /app
-COPY package.json package-lock.json* ./
+COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
-COPY . .
+COPY frontend/ .
+COPY CHANGELOG.md ./CHANGELOG.md
 
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
@@ -13,9 +14,10 @@ CMD ["npm", "run", "dev"]
 FROM node:20-alpine AS build
 
 WORKDIR /app
-COPY package.json package-lock.json* ./
+COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
-COPY . .
+COPY frontend/ .
+COPY CHANGELOG.md ./CHANGELOG.md
 RUN npm run build
 
 # ── Production stage (nginx) ───────────────────────────────────────────────────
