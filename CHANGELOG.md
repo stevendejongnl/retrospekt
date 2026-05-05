@@ -1,3 +1,9 @@
+## [1.29.2](https://github.com/stevendejongnl/retrospekt/compare/v1.29.1...v1.29.2) (2026-05-05)
+
+### Bug Fixes
+
+* **docker:** prefix prod stage COPY paths for repo-root build context ([a33af21](https://github.com/stevendejongnl/retrospekt/commit/a33af21462b4223eb000add311d7e4543f86c33f))
+
 ## [1.29.1](https://github.com/stevendejongnl/retrospekt/compare/v1.29.0...v1.29.1) (2026-05-05)
 
 ### Bug Fixes
