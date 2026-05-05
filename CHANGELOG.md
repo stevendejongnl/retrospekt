@@ -1,3 +1,11 @@
+## [1.29.5](https://github.com/stevendejongnl/retrospekt/compare/v1.29.4...v1.29.5) (2026-05-05)
+
+### Bug Fixes
+
+* **test:** use Promise.all for waitForRequest+dispatch to prevent stale request matches ([b37903d](https://github.com/stevendejongnl/retrospekt/commit/b37903ddf48799b8ffeb16253a446242e9854228))
+* **test:** wait for countdown display before clock.fastForward in AudioContext tests ([34945a9](https://github.com/stevendejongnl/retrospekt/commit/34945a9679200d18eb097fa507deccbb9f1b1991))
+* **ui:** replace washed-out button gradients with solid accent color and remove blobs from stats/404 pages ([2e063ab](https://github.com/stevendejongnl/retrospekt/commit/2e063ab934a1d044e72431da0ab57219b0beaf05))
+
 ## [1.29.4](https://github.com/stevendejongnl/retrospekt/compare/v1.29.3...v1.29.4) (2026-05-05)
 
 ### Bug Fixes
