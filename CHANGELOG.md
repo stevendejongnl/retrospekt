@@ -1,3 +1,9 @@
+## [1.29.3](https://github.com/stevendejongnl/retrospekt/compare/v1.29.2...v1.29.3) (2026-05-05)
+
+### Bug Fixes
+
+* **blobs:** move drift keyframes into shadow DOM and make light-mode blobs visible ([35c910a](https://github.com/stevendejongnl/retrospekt/commit/35c910a2cc52cbb5ec790b7b0fb32eeea07a1b54))
+
 ## [1.29.2](https://github.com/stevendejongnl/retrospekt/compare/v1.29.1...v1.29.2) (2026-05-05)
 
 ### Bug Fixes
