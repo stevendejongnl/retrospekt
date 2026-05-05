@@ -17,7 +17,7 @@ export class BackgroundBlobs extends LitElement {
     .blob {
       position: absolute;
       border-radius: 50%;
-      filter: blur(40px);
+      filter: blur(60px);
       transform: translate(-50%, -50%);
     }
     .blob-0 { animation: drift-0 120s ease-in-out 0s infinite alternate; }
@@ -32,6 +32,24 @@ export class BackgroundBlobs extends LitElement {
     :host([dark]) .noise {
       opacity: 0.4;
       mix-blend-mode: overlay;
+    }
+    @keyframes drift-0 {
+      0%   { transform: translate(-50%, -50%) scale(1); }
+      33%  { transform: translate(calc(-50% + 80px), calc(-50% - 60px)) scale(1.08); }
+      66%  { transform: translate(calc(-50% - 50px), calc(-50% + 70px)) scale(0.95); }
+      100% { transform: translate(calc(-50% + 40px), calc(-50% + 30px)) scale(1.05); }
+    }
+    @keyframes drift-1 {
+      0%   { transform: translate(-50%, -50%) scale(1.05); }
+      33%  { transform: translate(calc(-50% - 70px), calc(-50% + 50px)) scale(0.96); }
+      66%  { transform: translate(calc(-50% + 60px), calc(-50% - 80px)) scale(1.1); }
+      100% { transform: translate(calc(-50% - 30px), calc(-50% - 40px)) scale(1); }
+    }
+    @keyframes drift-2 {
+      0%   { transform: translate(-50%, -50%) scale(0.97); }
+      33%  { transform: translate(calc(-50% + 50px), calc(-50% + 80px)) scale(1.06); }
+      66%  { transform: translate(calc(-50% - 60px), calc(-50% - 50px)) scale(0.93); }
+      100% { transform: translate(calc(-50% + 20px), calc(-50% + 60px)) scale(1.03); }
     }
   `
 
@@ -59,9 +77,9 @@ export class BackgroundBlobs extends LitElement {
       ]
     }
     return [
-      { color: 'oklch(0.97 0.04 55)', x: '10%', y: '15%', size: 620, opacity: 0.55 },
-      { color: 'oklch(0.98 0.025 25)', x: '82%', y: '72%', size: 540, opacity: 0.55 },
-      { color: 'oklch(0.985 0.015 250)', x: '55%', y: '50%', size: 460, opacity: 0.55 },
+      { color: 'oklch(0.88 0.10 55)', x: '10%', y: '15%', size: 700, opacity: 0.7 },
+      { color: 'oklch(0.90 0.07 25)', x: '82%', y: '72%', size: 600, opacity: 0.65 },
+      { color: 'oklch(0.92 0.04 250)', x: '55%', y: '50%', size: 520, opacity: 0.55 },
     ]
   }
 
