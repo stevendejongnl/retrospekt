@@ -31,7 +31,7 @@ _fe_types() { cd "$ROOT/frontend"; npm run typecheck --silent; }
 _fe_unit()  { cd "$ROOT/frontend"; npm run test:coverage --silent; }
 _fe_e2e()   {
   cd "$ROOT/frontend"
-  npm run test:ct --silent
+  VITE_BACKEND_URL=http://localhost:8001 npm run test:ct --silent
   npx nyc report --reporter=text --check-coverage --temp-dir=.nyc_output
 }
 
