@@ -36,4 +36,4 @@ test-results/
 # Keep docs assets
 !docs/assets/*.jpg
 !docs/assets/*.png
-src/generated/
+frontend/src/generated/
