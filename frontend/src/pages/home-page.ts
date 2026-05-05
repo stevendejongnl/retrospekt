@@ -6,6 +6,7 @@ import { storage } from '../storage'
 import { getEffectiveTheme, toggleTheme, getBrand, clearBrand } from '../theme'
 import { faIconStyles, iconSun, iconMoon, iconClockRotateLeft, iconRotateLeft } from '../icons'
 import '../components/session-history'
+import '../components/background-blobs'
 
 const COLUMN_TEMPLATES = [
   { label: 'Standard', columns: ['Went Well', 'To Improve', 'Action Items'] },
@@ -60,9 +61,10 @@ export class HomePage extends LitElement {
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: linear-gradient(160deg, var(--retro-bg-page) 0%, var(--retro-accent-tint) 100%);
+      background: var(--retro-bg-page);
       padding: 24px;
       position: relative;
+      overflow: hidden;
     }
     .history-toggle {
       position: absolute;
@@ -71,19 +73,21 @@ export class HomePage extends LitElement {
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: var(--retro-bg-surface);
-      border: 1.5px solid var(--retro-border-default);
+      background: var(--retro-glass-bg-medium);
+      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
       cursor: pointer;
       font-size: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: background 0.12s, border-color 0.12s;
-      z-index: 1;
+      z-index: 2;
+      color: var(--retro-text-secondary);
     }
     .history-toggle:hover {
       border-color: var(--retro-accent);
-      background: var(--retro-accent-tint);
       color: var(--retro-accent);
     }
     .theme-toggle {
@@ -93,16 +97,18 @@ export class HomePage extends LitElement {
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: var(--retro-bg-surface);
-      border: 1.5px solid var(--retro-border-default);
-      color: var(--retro-text-primary);
+      background: var(--retro-glass-bg-medium);
+      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
+      color: var(--retro-text-secondary);
       cursor: pointer;
       font-size: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: background 0.12s, border-color 0.12s;
-      z-index: 1;
+      z-index: 2;
     }
     .brand-reset {
       position: absolute;
@@ -111,41 +117,43 @@ export class HomePage extends LitElement {
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: var(--retro-bg-surface);
-      border: 1.5px solid var(--retro-border-default);
-      color: var(--retro-text-primary);
+      background: var(--retro-glass-bg-medium);
+      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
+      color: var(--retro-text-secondary);
       cursor: pointer;
       font-size: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: background 0.12s, border-color 0.12s;
-      z-index: 1;
+      z-index: 2;
     }
     .brand-reset:hover {
       border-color: var(--retro-accent);
-      background: var(--retro-accent-tint);
     }
     .theme-toggle:hover {
       border-color: var(--retro-accent);
-      background: var(--retro-accent-tint);
     }
     .hero {
       width: 100%;
       max-width: 460px;
       text-align: center;
+      position: relative;
+      z-index: 1;
     }
     .logo {
       font-size: 72px;
       line-height: 1;
       margin-bottom: 12px;
-      filter: drop-shadow(0 4px 8px rgba(232, 93, 4, 0.2));
+      filter: drop-shadow(0 8px 24px rgba(217, 116, 38, 0.35));
     }
     h1 {
       font-size: 44px;
-      font-weight: 900;
+      font-weight: 800;
       color: var(--retro-text-primary);
-      letter-spacing: -2px;
+      letter-spacing: -0.025em;
       line-height: 1;
       margin-bottom: 10px;
     }
@@ -154,15 +162,18 @@ export class HomePage extends LitElement {
       color: var(--retro-accent);
     }
     .tagline {
-      font-size: 16px;
-      color: var(--retro-text-muted);
-      margin-bottom: 36px;
+      font-size: 15px;
+      color: var(--retro-text-secondary);
+      margin-bottom: 28px;
     }
     .card {
-      background: var(--retro-bg-surface);
-      border-radius: 20px;
-      padding: 32px;
-      box-shadow: 0 4px 32px var(--retro-card-shadow), 0 1px 4px var(--retro-card-shadow);
+      background: var(--retro-glass-bg-strong);
+      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: var(--retro-glass-shadow);
     }
     .field {
       margin-bottom: 16px;
@@ -170,28 +181,29 @@ export class HomePage extends LitElement {
     }
     label {
       display: block;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
-      color: var(--retro-text-secondary);
+      color: var(--retro-text-primary);
       margin-bottom: 6px;
       letter-spacing: 0.2px;
     }
     input {
       width: 100%;
-      padding: 12px 16px;
-      border: 1.5px solid var(--retro-border-default);
+      padding: 10px 12px;
+      border: 1px solid var(--retro-border-default);
       border-radius: 10px;
-      font-size: 15px;
+      font-size: 14px;
       font-family: inherit;
       color: var(--retro-text-primary);
       box-sizing: border-box;
-      transition: border-color 0.12s;
-      background: var(--retro-bg-subtle);
+      transition: border-color 0.12s, box-shadow 0.12s;
+      background: rgba(255, 255, 255, 0.5);
     }
     input:focus {
       outline: none;
       border-color: var(--retro-accent);
-      background: var(--retro-bg-surface);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--retro-accent) 12%, transparent);
+      background: rgba(255, 255, 255, 0.7);
     }
     input::placeholder {
       color: var(--retro-text-disabled);
@@ -203,19 +215,20 @@ export class HomePage extends LitElement {
       width: 100%;
       margin-top: 8px;
       padding: 14px;
-      background: var(--retro-accent);
+      background: linear-gradient(135deg, oklch(0.72 0.16 50), oklch(0.66 0.17 42));
       color: white;
-      border: none;
+      border: 1px solid rgba(217, 116, 38, 0.5);
       border-radius: 12px;
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 15px;
+      font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: background 0.12s, transform 0.1s;
+      transition: opacity 0.12s, transform 0.1s;
       letter-spacing: 0.1px;
+      box-shadow: 0 8px 24px rgba(217, 116, 38, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
     }
     .create-btn:hover:not(:disabled) {
-      background: var(--retro-accent-hover);
+      opacity: 0.9;
     }
     .create-btn:active:not(:disabled) {
       transform: scale(0.99);
@@ -231,9 +244,9 @@ export class HomePage extends LitElement {
       text-align: center;
     }
     .footer {
-      margin-top: 28px;
-      font-size: 13px;
-      color: var(--retro-text-disabled);
+      margin-top: 20px;
+      font-size: 11px;
+      color: var(--retro-text-muted);
     }
     .footer a {
       color: var(--retro-accent);
@@ -246,26 +259,27 @@ export class HomePage extends LitElement {
     }
     .template-btn {
       padding: 10px 12px;
-      border: 1.5px solid var(--retro-border-default);
+      border: 1px solid var(--retro-border-default);
       border-radius: 10px;
       cursor: pointer;
-      background: var(--retro-bg-subtle);
+      background: rgba(255, 255, 255, 0.55);
       text-align: left;
       font-family: inherit;
-      transition: border-color 0.12s, background 0.12s;
+      transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
     }
     .template-btn:hover {
       border-color: var(--retro-accent);
-      background: var(--retro-accent-tint);
+      background: color-mix(in srgb, var(--retro-accent) 8%, rgba(255,255,255,0.7));
     }
     .template-btn.selected {
       border-color: var(--retro-accent);
-      background: var(--retro-accent-tint);
+      background: color-mix(in srgb, var(--retro-accent) 8%, rgba(255,255,255,0.7));
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--retro-accent) 12%, transparent);
     }
     .template-btn .t-label {
       font-size: 12px;
-      font-weight: 700;
-      color: var(--retro-text-secondary);
+      font-weight: 600;
+      color: var(--retro-text-primary);
       margin-bottom: 3px;
     }
     .template-btn .t-cols {
@@ -276,17 +290,16 @@ export class HomePage extends LitElement {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 10px 14px;
-      border: 1.5px solid var(--retro-border-default);
+      padding: 10px 12px;
+      border: 1px solid var(--retro-border-default);
       border-radius: 10px;
       cursor: pointer;
-      background: var(--retro-bg-subtle);
+      background: rgba(255, 255, 255, 0.55);
       transition: border-color 0.12s, background 0.12s;
       user-select: none;
     }
     .option-row:hover {
       border-color: var(--retro-accent);
-      background: var(--retro-accent-tint);
     }
     .option-row input[type="checkbox"] {
       width: 16px;
@@ -301,7 +314,7 @@ export class HomePage extends LitElement {
     .option-label {
       font-size: 13px;
       color: var(--retro-text-primary);
-      font-weight: 500;
+      font-weight: 600;
       line-height: 1.4;
     }
     .option-label small {
@@ -319,14 +332,16 @@ export class HomePage extends LitElement {
       display: flex;
       align-items: center;
       gap: 10px;
-      background: var(--retro-bg-surface);
+      background: var(--retro-glass-bg-strong);
+      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1.5px solid var(--retro-error);
       border-radius: 10px;
       padding: 10px 16px;
       font-size: 13px;
       color: var(--retro-text-primary);
       white-space: nowrap;
-      box-shadow: 0 2px 8px var(--retro-card-shadow);
+      box-shadow: var(--retro-glass-shadow);
       z-index: 10;
     }
     .not-found-banner .dismiss {
@@ -389,6 +404,7 @@ export class HomePage extends LitElement {
     const canCreate = !!this.sessionName.trim() && !this.loading
 
     return html`
+      <background-blobs></background-blobs>
       ${this.sessionNotFound ? html`
         <div class="not-found-banner">
           <span>Session not found — it may have expired or the link is broken.</span>

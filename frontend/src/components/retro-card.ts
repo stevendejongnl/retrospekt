@@ -38,16 +38,19 @@ export class RetroCard extends LitElement {
       display: block;
     }
     .card {
-      background: var(--retro-bg-surface);
-      border-radius: 8px;
+      background: var(--retro-glass-bg-medium);
+      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
+      border-left: 3px solid var(--card-accent, #d97426);
+      border-radius: 10px;
       padding: 12px 14px;
       margin-bottom: 8px;
-      box-shadow: 0 1px 3px var(--retro-card-shadow), 0 1px 2px var(--retro-card-shadow);
-      border-left: 3px solid var(--card-accent, #e85d04);
+      box-shadow: var(--retro-glass-shadow);
     }
     .card.draft {
       border-left-style: dashed;
-      background: var(--retro-bg-subtle);
+      background: var(--retro-glass-bg-light);
     }
     .card.drag-over {
       outline: 2px dashed var(--retro-accent);
@@ -197,9 +200,11 @@ export class RetroCard extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      background: none;
-      border: 1px solid var(--retro-border-default);
-      border-radius: 20px;
+      background: var(--retro-glass-bg-light);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: 999px;
       padding: 3px 10px;
       font-size: 12px;
       cursor: pointer;

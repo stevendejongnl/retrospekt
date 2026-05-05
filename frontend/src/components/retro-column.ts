@@ -66,12 +66,16 @@ export class RetroColumn extends LitElement {
       min-width: 280px;
     }
     .column {
-      background: var(--retro-bg-subtle);
+      background: var(--retro-glass-bg-light);
+      backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
       border-radius: 14px;
-      padding: 16px;
+      padding: 12px;
       height: 100%;
       display: flex;
       flex-direction: column;
+      box-shadow: var(--retro-glass-shadow);
     }
     .column-header {
       display: flex;
@@ -129,15 +133,16 @@ export class RetroColumn extends LitElement {
     }
     .add-btn {
       width: 100%;
-      background: none;
-      border: 1.5px dashed var(--retro-border-strong);
-      border-radius: 8px;
-      padding: 8px 12px;
+      background: transparent;
+      border: 1px dashed var(--retro-border-default);
+      border-radius: 10px;
+      padding: 10px 12px;
       cursor: pointer;
       color: var(--retro-text-muted);
       font-size: 13px;
       font-family: inherit;
-      transition: all 0.12s;
+      transition: border-color 0.12s, color 0.12s;
+      text-align: center;
     }
     .add-btn:hover {
       border-color: var(--col-accent);
@@ -154,8 +159,8 @@ export class RetroColumn extends LitElement {
     textarea {
       width: 100%;
       padding: 10px 12px;
-      border: 1.5px solid var(--retro-border-default);
-      border-radius: 8px;
+      border: 1px solid var(--retro-border-default);
+      border-radius: 10px;
       font-size: 13px;
       font-family: inherit;
       resize: vertical;
@@ -164,7 +169,9 @@ export class RetroColumn extends LitElement {
       line-height: 1.5;
       transition: border-color 0.12s;
       color: var(--retro-text-primary);
-      background: var(--retro-bg-surface);
+      background: var(--retro-glass-bg-medium);
+      backdrop-filter: blur(var(--retro-glass-blur-light));
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-light));
     }
     textarea:focus {
       outline: none;

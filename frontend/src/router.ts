@@ -8,6 +8,7 @@ const routes: Route[] = [
   { path: '/', component: 'home-page', title: 'Retrospekt' },
   { path: '/session/:id', component: 'session-page', title: 'Retrospekt — Session' },
   { path: '/stats', component: 'stats-page', title: 'Stats — Retrospekt' },
+  { path: '/changelog', component: 'changelog-page', title: 'Changelog — Retrospekt' },
   { path: '*', component: 'not-found-page', title: 'Not Found — Retrospekt' },
 ]
 

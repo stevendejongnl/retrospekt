@@ -4,6 +4,7 @@ import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 import { faIconStyles } from '../icons'
+import '../components/background-blobs'
 import type { AdminStats, FeedbackStats, LifetimeBucket, PublicStats, RatingCount, SentryDataPoint, SentryHealth } from '../types'
 
 type AdminPhase = 'locked' | 'loading' | 'unlocked' | 'error'
@@ -638,6 +639,7 @@ export class StatsPage extends LitElement {
 
   render() {
     return html`
+      <background-blobs></background-blobs>
       <div class="page">
         <header class="page-header">
           <a
@@ -691,12 +693,16 @@ export class StatsPage extends LitElement {
         background: var(--retro-bg-page);
         color: var(--retro-text-primary);
         font-family: inherit;
+        position: relative;
+        overflow: hidden;
       }
 
       .page {
         max-width: 900px;
         margin: 0 auto;
         padding: 32px 24px 64px;
+        position: relative;
+        z-index: 1;
       }
 
       .page-header {
@@ -743,14 +749,17 @@ export class StatsPage extends LitElement {
       }
 
       .stat-card {
-        background: var(--retro-bg-surface);
-        border: 1.5px solid var(--retro-border-default);
-        border-radius: 12px;
-        padding: 20px 16px;
+        background: var(--retro-glass-bg-medium);
+        backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+        -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+        border: 1px solid var(--retro-glass-border);
+        border-radius: 14px;
+        padding: 18px 16px;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 4px;
+        box-shadow: var(--retro-glass-shadow);
       }
 
       .stat-value {
@@ -784,10 +793,13 @@ export class StatsPage extends LitElement {
       }
 
       .chart-block {
-        background: var(--retro-bg-surface);
-        border: 1.5px solid var(--retro-border-default);
-        border-radius: 12px;
-        padding: 16px;
+        background: var(--retro-glass-bg-medium);
+        backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+        -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+        border: 1px solid var(--retro-glass-border);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: var(--retro-glass-shadow);
       }
 
       .chart-title {
@@ -816,11 +828,14 @@ export class StatsPage extends LitElement {
       }
 
       .admin-unlock {
-        background: var(--retro-bg-surface);
-        border: 1.5px solid var(--retro-border-default);
-        border-radius: 12px;
-        padding: 24px;
+        background: var(--retro-glass-bg-medium);
+        backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+        -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+        border: 1px solid var(--retro-glass-border);
+        border-radius: 14px;
+        padding: 20px 24px;
         margin-bottom: 24px;
+        box-shadow: var(--retro-glass-shadow);
       }
 
       .muted {
@@ -852,14 +867,15 @@ export class StatsPage extends LitElement {
 
       .unlock-btn {
         padding: 8px 20px;
-        background: var(--retro-accent);
+        background: linear-gradient(135deg, oklch(0.72 0.16 50), oklch(0.66 0.17 42));
         color: #fff;
-        border: none;
+        border: 1px solid rgba(217, 116, 38, 0.4);
         border-radius: 8px;
         font-size: 14px;
-        font-weight: 700;
+        font-weight: 600;
         cursor: pointer;
         transition: opacity 0.12s;
+        box-shadow: 0 4px 12px rgba(217, 116, 38, 0.25);
       }
       .unlock-btn:hover:not(:disabled) {
         opacity: 0.85;
@@ -877,11 +893,14 @@ export class StatsPage extends LitElement {
 
       /* --- Admin section --- */
       .admin-section {
-        background: var(--retro-bg-surface);
-        border: 1.5px solid var(--retro-border-default);
-        border-radius: 12px;
+        background: var(--retro-glass-bg-medium);
+        backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+        -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+        border: 1px solid var(--retro-glass-border);
+        border-radius: 14px;
         padding: 24px;
         margin-bottom: 24px;
+        box-shadow: var(--retro-glass-shadow);
       }
 
       .admin-charts {

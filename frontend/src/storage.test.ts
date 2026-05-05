@@ -121,4 +121,63 @@ describe('RetroStorage', () => {
     })
   })
 
+  describe('getMaxSeenChangelogVersion', () => {
+    const base = { name: 'Retro', phase: 'collecting', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '' }
+
+    it('returns null when history is empty', () => {
+      expect(storage.getMaxSeenChangelogVersion()).toBeNull()
+    })
+
+    it('returns null when no entries have seenChangelogVersion', () => {
+      storage.addOrUpdateHistory({ id: 's1', ...base })
+      expect(storage.getMaxSeenChangelogVersion()).toBeNull()
+    })
+
+    it('returns the version from the only entry that has it', () => {
+      storage.addOrUpdateHistory({ id: 's1', ...base, seenChangelogVersion: '1.27.1' })
+      expect(storage.getMaxSeenChangelogVersion()).toBe('1.27.1')
+    })
+
+    it('returns the highest version across multiple entries', () => {
+      storage.addOrUpdateHistory({ id: 's1', ...base, seenChangelogVersion: '1.27.0' })
+      storage.addOrUpdateHistory({ id: 's2', ...base, seenChangelogVersion: '1.28.0' })
+      storage.addOrUpdateHistory({ id: 's3', ...base, seenChangelogVersion: '1.27.1' })
+      expect(storage.getMaxSeenChangelogVersion()).toBe('1.28.0')
+    })
+
+    it('handles semver correctly (1.27.10 > 1.27.9)', () => {
+      storage.addOrUpdateHistory({ id: 's1', ...base, seenChangelogVersion: '1.27.9' })
+      storage.addOrUpdateHistory({ id: 's2', ...base, seenChangelogVersion: '1.27.10' })
+      expect(storage.getMaxSeenChangelogVersion()).toBe('1.27.10')
+    })
+
+    it('ignores entries without seenChangelogVersion when computing max', () => {
+      storage.addOrUpdateHistory({ id: 's1', ...base })
+      storage.addOrUpdateHistory({ id: 's2', ...base, seenChangelogVersion: '1.26.0' })
+      expect(storage.getMaxSeenChangelogVersion()).toBe('1.26.0')
+    })
+  })
+
+  describe('markChangelogSeen', () => {
+    const base = { name: 'Retro', phase: 'collecting', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '' }
+
+    it('sets seenChangelogVersion on the matching entry', () => {
+      storage.addOrUpdateHistory({ id: 's1', ...base })
+      storage.markChangelogSeen('s1', '1.28.0')
+      const history = storage.getHistory()
+      expect(history[0].seenChangelogVersion).toBe('1.28.0')
+    })
+
+    it('is a no-op when session id not in history', () => {
+      storage.markChangelogSeen('ghost', '1.28.0')
+      expect(storage.getHistory()).toEqual([])
+    })
+
+    it('updates the version when called again with a newer version', () => {
+      storage.addOrUpdateHistory({ id: 's1', ...base, seenChangelogVersion: '1.27.1' })
+      storage.markChangelogSeen('s1', '1.28.0')
+      expect(storage.getHistory()[0].seenChangelogVersion).toBe('1.28.0')
+    })
+  })
+
 })

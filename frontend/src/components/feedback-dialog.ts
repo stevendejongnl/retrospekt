@@ -30,7 +30,8 @@ export class FeedbackDialog extends LitElement {
       position: fixed;
       inset: 0;
       background: var(--retro-overlay-bg);
-      backdrop-filter: blur(2px);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -39,12 +40,15 @@ export class FeedbackDialog extends LitElement {
     }
 
     .card {
-      background: var(--retro-bg-surface);
-      border-radius: 20px;
-      padding: 36px 32px 28px;
-      max-width: 420px;
+      background: var(--retro-glass-bg-strong);
+      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: 18px;
+      padding: 28px 28px 22px;
+      max-width: 460px;
       width: 100%;
-      box-shadow: 0 16px 64px var(--retro-card-shadow);
+      box-shadow: var(--retro-glass-shadow);
     }
 
     .headline {
@@ -69,51 +73,54 @@ export class FeedbackDialog extends LitElement {
     }
 
     .emoji-btn {
-      background: none;
-      border: 2px solid transparent;
-      border-radius: 50%;
-      width: 52px;
-      height: 52px;
+      background: var(--retro-glass-bg-light);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: 14px;
+      width: 60px;
+      height: 60px;
       font-size: 28px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.12s, border-color 0.12s, background 0.12s;
+      transition: transform 0.12s, border-color 0.12s, background 0.12s, box-shadow 0.12s;
       padding: 0;
     }
 
     .emoji-btn:hover {
-      transform: scale(1.2);
-      background: var(--retro-accent-tint);
+      transform: scale(1.1);
+      border-color: color-mix(in srgb, var(--retro-accent) 40%, transparent);
     }
 
     .emoji-btn.selected {
       border-color: var(--retro-accent);
-      background: var(--retro-accent-tint);
-      transform: scale(1.15);
+      background: color-mix(in srgb, var(--retro-accent) 12%, rgba(255,255,255,0.7));
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--retro-accent) 15%, transparent);
+      transform: scale(1.05);
     }
 
     textarea {
       width: 100%;
-      padding: 12px 14px;
-      border: 1.5px solid var(--retro-border-default);
+      padding: 10px 12px;
+      border: 1px solid var(--retro-border-default);
       border-radius: 10px;
       font-size: 14px;
       font-family: inherit;
       resize: vertical;
       min-height: 80px;
       box-sizing: border-box;
-      background: var(--retro-bg-subtle);
+      background: rgba(255, 255, 255, 0.5);
       color: var(--retro-text-primary);
       transition: border-color 0.12s;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     textarea:focus {
       outline: none;
       border-color: var(--retro-accent);
-      background: var(--retro-bg-surface);
+      background: rgba(255, 255, 255, 0.7);
     }
 
     textarea::placeholder {
@@ -127,20 +134,21 @@ export class FeedbackDialog extends LitElement {
     }
 
     .submit-btn {
-      padding: 11px 24px;
-      background: var(--retro-accent);
+      padding: 10px 18px;
+      background: linear-gradient(135deg, oklch(0.72 0.16 50), oklch(0.66 0.17 42));
       color: white;
-      border: none;
+      border: 1px solid rgba(217, 116, 38, 0.5);
       border-radius: 10px;
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: background 0.12s, opacity 0.12s;
+      transition: opacity 0.12s;
+      box-shadow: 0 4px 12px rgba(217, 116, 38, 0.3);
     }
 
     .submit-btn:hover:not(:disabled) {
-      background: var(--retro-accent-hover);
+      opacity: 0.9;
     }
 
     .submit-btn:disabled {

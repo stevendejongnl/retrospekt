@@ -5,10 +5,12 @@ import { initTheme, initBrand } from './theme'
 if (window.__SENTRY_DSN__) {
   Sentry.init({ dsn: window.__SENTRY_DSN__, tracesSampleRate: 0 })
 }
+import './components/background-blobs'
 import './pages/home-page'
 import './pages/session-page'
 import './pages/not-found-page'
 import './pages/stats-page'
+import './pages/changelog-page'
 import './components/retro-board'
 import './components/retro-column'
 import './components/retro-card'

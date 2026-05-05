@@ -16,7 +16,20 @@ export interface SessionHistoryEntry {
   participantName: string
   isFacilitator: boolean
   joinedAt: string
+  seenChangelogVersion?: string
 }
+
+function semverGt(a: string, b: string): boolean {
+  const pa = a.split('.').map(Number)
+  const pb = b.split('.').map(Number)
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] ?? 0) > (pb[i] ?? 0)) return true
+    if ((pa[i] ?? 0) < (pb[i] ?? 0)) return false
+  }
+  return false
+}
+
+export { semverGt }
 
 class RetroStorage {
   getName(sessionId: string): string | null {
@@ -66,6 +79,22 @@ class RetroStorage {
 
   clearHistory(): void {
     localStorage.removeItem('retro_history')
+  }
+
+  getMaxSeenChangelogVersion(): string | null {
+    const versions = this.getHistory()
+      .map((e) => e.seenChangelogVersion)
+      .filter((v): v is string => v !== undefined)
+    if (versions.length === 0) return null
+    return versions.reduce((max, v) => (semverGt(v, max) ? v : max))
+  }
+
+  markChangelogSeen(sessionId: string, version: string): void {
+    const history = this.getHistory()
+    const idx = history.findIndex((e) => e.id === sessionId)
+    if (idx < 0) return
+    history[idx] = { ...history[idx], seenChangelogVersion: version }
+    localStorage.setItem('retro_history', JSON.stringify(history))
   }
 
   getFeedbackGiven(version: string): boolean {

@@ -1,7 +1,23 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import { readFileSync } from 'fs'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
 import istanbul from 'vite-plugin-istanbul'
+import { generateChangelog } from './scripts/parse-changelog'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+function changelogPlugin(): Plugin {
+  const changelogPath = resolve(__dirname, '../CHANGELOG.md')
+  return {
+    name: 'retrospekt-changelog',
+    buildStart() { generateChangelog() },
+    handleHotUpdate({ file }) {
+      if (file === changelogPath) generateChangelog()
+    },
+  }
+}
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8')) as { version: string }
 const apiTarget = process.env.VITE_BACKEND_URL ?? 'http://localhost:8000'
@@ -28,8 +44,9 @@ export default defineConfig({
           },
         },
         istanbul({ include: 'src/**', exclude: ['node_modules', '**/*.test.ts', '**/*.spec.ts', '**/*.wtr.ts'], requireEnv: false }),
+        changelogPlugin(),
       ]
-    : [],
+    : [changelogPlugin()],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
@@ -50,6 +67,8 @@ export default defineConfig({
         'src/playwright-fixtures.ts',
         'src/components/**',
         'src/pages/**',
+        'src/generated/**',
+        'src/changelog-highlights.ts',
       ],
       thresholds: {
         lines: 95,

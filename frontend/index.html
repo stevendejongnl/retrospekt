@@ -19,6 +19,24 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       -webkit-font-smoothing: antialiased;
+      background: #ffffff;
+    }
+
+    [data-theme='dark'] body, body[data-theme='dark'] {
+      background: #161410;
+    }
+
+    @keyframes drift-0 {
+      0%   { transform: translate(-50%, -50%) translate(0, 0) scale(1); }
+      100% { transform: translate(-50%, -50%) translate(60px, 40px) scale(1.15); }
+    }
+    @keyframes drift-1 {
+      0%   { transform: translate(-50%, -50%) translate(0, 0) scale(1.1); }
+      100% { transform: translate(-50%, -50%) translate(-50px, -30px) scale(0.95); }
+    }
+    @keyframes drift-2 {
+      0%   { transform: translate(-50%, -50%) translate(0, 0) scale(1); }
+      100% { transform: translate(-50%, -50%) translate(40px, -50px) scale(1.1); }
     }
 
     #app {
@@ -27,20 +45,20 @@
 
     :root {
       color-scheme: light;
-      --retro-bg-page: #faf9f7;
+      --retro-bg-page: #fdfcf9;
       --retro-bg-surface: #ffffff;
       --retro-bg-subtle: #f4f4f2;
       --retro-bg-hover: #fef3e8;
-      --retro-text-primary: #111111;
-      --retro-text-secondary: #555555;
-      --retro-text-muted: #999999;
-      --retro-text-disabled: #bbbbbb;
-      --retro-border-default: #e0e0e0;
+      --retro-text-primary: #1c1a17;
+      --retro-text-secondary: #5a534b;
+      --retro-text-muted: #8a8378;
+      --retro-text-disabled: #b8b0a7;
+      --retro-border-default: #e8e4dd;
       --retro-border-subtle: #f0ede8;
-      --retro-border-strong: #cccccc;
-      --retro-accent: #e85d04;
-      --retro-accent-hover: #c44e00;
-      --retro-accent-tint: #fff3e8;
+      --retro-border-strong: #ccc5bc;
+      --retro-accent: #d97426;
+      --retro-accent-hover: #c5651e;
+      --retro-accent-tint: #fdf3e8;
       --retro-phase-collecting-bg: #dbeafe;
       --retro-phase-collecting-text: #1d4ed8;
       --retro-phase-discussing-bg: #ffedd5;
@@ -54,13 +72,23 @@
       --retro-facilitator-bg: #fff8f0;
       --retro-facilitator-border: #fed7aa;
       --retro-facilitator-text: #9a6a3a;
-      --retro-overlay-bg: rgba(0, 0, 0, 0.4);
-      --retro-card-shadow: rgba(0, 0, 0, 0.08);
+      --retro-overlay-bg: rgba(40, 30, 20, 0.18);
+      --retro-card-shadow: rgba(120, 80, 40, 0.08);
+
+      /* Glass system */
+      --retro-glass-bg-light: rgba(255, 255, 255, 0.78);
+      --retro-glass-bg-medium: rgba(255, 255, 255, 0.88);
+      --retro-glass-bg-strong: rgba(255, 255, 255, 0.95);
+      --retro-glass-blur-light: 16px;
+      --retro-glass-blur-medium: 22px;
+      --retro-glass-blur-strong: 28px;
+      --retro-glass-border: rgba(255, 255, 255, 0.65);
+      --retro-glass-shadow: 0 8px 32px rgba(120, 80, 40, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
     }
 
     [data-theme='dark'] {
       color-scheme: dark;
-      --retro-bg-page: #0f0f0d;
+      --retro-bg-page: #161410;
       --retro-bg-surface: #1c1b18;
       --retro-bg-subtle: #252420;
       --retro-bg-hover: #2a1f10;
@@ -71,8 +99,8 @@
       --retro-border-default: #38352f;
       --retro-border-subtle: #2a2720;
       --retro-border-strong: #4a4540;
-      --retro-accent: #f97316;
-      --retro-accent-hover: #ea6a0a;
+      --retro-accent: #f08746;
+      --retro-accent-hover: #e07030;
       --retro-accent-tint: #2a1500;
       --retro-phase-collecting-bg: #0f1e3a;
       --retro-phase-collecting-text: #93c5fd;
@@ -87,8 +115,18 @@
       --retro-facilitator-bg: #1a0e03;
       --retro-facilitator-border: #92400e;
       --retro-facilitator-text: #d97706;
-      --retro-overlay-bg: rgba(0, 0, 0, 0.65);
-      --retro-card-shadow: rgba(0, 0, 0, 0.35);
+      --retro-overlay-bg: rgba(0, 0, 0, 0.5);
+      --retro-card-shadow: rgba(0, 0, 0, 0.4);
+
+      /* Glass system — dark */
+      --retro-glass-bg-light: rgba(28, 27, 24, 0.45);
+      --retro-glass-bg-medium: rgba(28, 27, 24, 0.62);
+      --retro-glass-bg-strong: rgba(28, 27, 24, 0.78);
+      --retro-glass-blur-light: 16px;
+      --retro-glass-blur-medium: 22px;
+      --retro-glass-blur-strong: 28px;
+      --retro-glass-border: rgba(255, 255, 255, 0.08);
+      --retro-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
 
     [data-brand='cs'] {

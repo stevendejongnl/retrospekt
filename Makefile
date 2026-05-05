@@ -2,7 +2,7 @@
 # Run `uv run --project backend nox -l` to list available sessions.
 # This Makefile only handles Docker/infrastructure tasks.
 
-.PHONY: install hooks start stop logs ps restart help
+.PHONY: install hooks start stop logs ps restart screenshots help
 
 ## Install all project dependencies and git hooks
 install: hooks
@@ -38,16 +38,21 @@ ps:
 restart:
 	docker compose restart
 
+## Capture polished screenshots of every screen via Playwright (requires: make start)
+screenshots:
+	npx playwright test --config=playwright.screenshots.config.ts
+
 ## Show this help
 help:
 	@echo ""
 	@echo "  Retrospekt — self-hosted retro board 🥓"
 	@echo ""
 	@echo "  Infrastructure (this Makefile):"
-	@echo "    make start     Start MongoDB + backend + frontend"
-	@echo "    make stop      Stop all services"
-	@echo "    make logs      Stream logs"
-	@echo "    make install   Install all deps"
+	@echo "    make start         Start MongoDB + backend + frontend"
+	@echo "    make stop          Stop all services"
+	@echo "    make logs          Stream logs"
+	@echo "    make install       Install all deps"
+	@echo "    make screenshots   Capture all UI screenshots (requires services running)"
 	@echo ""
 	@echo "  Quality checks (nox — run from project root):"
 	@echo "    nox -s test          Backend unit + integration tests"

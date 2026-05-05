@@ -29,6 +29,10 @@ import '../components/retro-board'
 import '../components/session-history'
 import '../components/board-notes'
 import '../components/feedback-dialog'
+import '../components/whats-new-dialog'
+import '../components/background-blobs'
+import { CHANGELOG } from '../generated/changelog'
+import { semverGt } from '../storage'
 
 const IDLE_THRESHOLD_MS = 10 * 60 * 1000  // 10 minutes
 const FEEDBACK_CLOSE_DELAY_MS = 1500       // delay before showing after session close
@@ -49,6 +53,7 @@ export class SessionPage extends LitElement {
   @state() private showHistory = false
   @state() private showNotes = false
   @state() private showFeedback = false
+  @state() private showWhatsNew = false
 
   private sseClient: SSEClient | null = null
   private _themeListener!: EventListener
@@ -62,6 +67,8 @@ export class SessionPage extends LitElement {
       display: block;
       min-height: 100vh;
       background: var(--retro-bg-page);
+      position: relative;
+      overflow-x: hidden;
     }
 
     /* ── Header ── */
@@ -70,8 +77,10 @@ export class SessionPage extends LitElement {
       top: 0;
       z-index: 20;
       height: 56px;
-      background: var(--retro-bg-surface);
-      border-bottom: 1px solid var(--retro-border-subtle);
+      background: var(--retro-glass-bg-strong);
+      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      border-bottom: 1px solid var(--retro-glass-border);
       padding: 0 24px;
       display: flex;
       align-items: center;
@@ -122,43 +131,46 @@ export class SessionPage extends LitElement {
       margin-left: 6px;
     }
     .icon-btn {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
-      background: var(--retro-bg-subtle);
-      border: 1.5px solid var(--retro-border-default);
-      color: var(--retro-text-primary);
+      background: var(--retro-glass-bg-light);
+      backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
+      color: var(--retro-text-secondary);
       cursor: pointer;
-      font-size: 16px;
+      font-size: 15px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      transition: border-color 0.12s, color 0.12s;
       flex-shrink: 0;
     }
     .icon-btn:hover {
       border-color: var(--retro-accent);
-      background: var(--retro-accent-tint);
       color: var(--retro-accent);
     }
     .theme-toggle {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
-      background: var(--retro-bg-subtle);
-      border: 1.5px solid var(--retro-border-default);
-      color: var(--retro-text-primary);
+      background: var(--retro-glass-bg-light);
+      backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
+      color: var(--retro-text-secondary);
       cursor: pointer;
-      font-size: 16px;
+      font-size: 15px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.12s, border-color 0.12s;
+      transition: border-color 0.12s, color 0.12s;
       flex-shrink: 0;
     }
     .theme-toggle:hover {
       border-color: var(--retro-accent);
-      background: var(--retro-accent-tint);
+      color: var(--retro-accent);
     }
     .user-chip {
       display: flex;
@@ -584,6 +596,7 @@ export class SessionPage extends LitElement {
         }
       })
       this.sseClient.connect()
+      this._checkWhatsNew()
     } catch {
       window.router.navigate('/?session_not_found')
     } finally {
@@ -631,6 +644,16 @@ export class SessionPage extends LitElement {
       }
       // Reset idle timer on every SSE update
       this._lastActivityAt = Date.now()
+    }
+  }
+
+  private _checkWhatsNew(): void {
+    const history = storage.getHistory()
+    if (history.length === 0) return
+    const lastSeen = storage.getMaxSeenChangelogVersion()
+    const current = __APP_VERSION__
+    if (!lastSeen || semverGt(current, lastSeen)) {
+      this.showWhatsNew = true
     }
   }
 
@@ -722,12 +745,22 @@ export class SessionPage extends LitElement {
     const { session } = this
 
     return html`
+      <background-blobs></background-blobs>
       <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
       <feedback-dialog
         .open=${this.showFeedback}
         .sessionId=${this.sessionId}
         @feedback-dismissed=${() => { this.showFeedback = false }}
       ></feedback-dialog>
+      <whats-new-dialog
+        .open=${this.showWhatsNew}
+        .entry=${CHANGELOG[0] ?? null}
+        @whats-new-dismissed=${() => { this.showWhatsNew = false }}
+        @whats-new-acknowledged=${() => {
+          storage.markChangelogSeen(this.sessionId, __APP_VERSION__)
+          this.showWhatsNew = false
+        }}
+      ></whats-new-dialog>
       <board-notes
         .open=${this.showNotes}
         .notes=${session.notes ?? []}

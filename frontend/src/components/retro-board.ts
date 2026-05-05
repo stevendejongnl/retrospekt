@@ -57,11 +57,14 @@ export class RetroBoard extends LitElement {
       align-items: center;
       flex-wrap: wrap;
       gap: 12px;
-      padding: 12px 16px;
-      background: var(--retro-facilitator-bg);
-      border: 1px solid var(--retro-facilitator-border);
+      padding: 12px 14px;
+      background: var(--retro-glass-bg-medium);
+      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
       border-radius: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--retro-glass-shadow);
     }
     .bar-label {
       font-size: 12px;
@@ -91,25 +94,28 @@ export class RetroBoard extends LitElement {
       color: var(--retro-phase-closed-text);
     }
     .phase-btn {
-      background: var(--retro-accent);
+      background: linear-gradient(135deg, oklch(0.72 0.16 50), oklch(0.66 0.17 42));
       color: white;
-      border: none;
+      border: 1px solid rgba(217, 116, 38, 0.4);
       border-radius: 8px;
-      padding: 7px 18px;
+      padding: 6px 14px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: background 0.12s;
+      transition: opacity 0.12s;
+      box-shadow: 0 4px 12px rgba(217, 116, 38, 0.25);
     }
     .phase-btn:hover {
-      background: var(--retro-accent-hover);
+      opacity: 0.9;
     }
     .phase-btn.close-btn {
-      background: #6b7280;
+      background: rgba(28, 28, 30, 0.9);
+      border-color: rgba(0, 0, 0, 0.2);
+      box-shadow: none;
     }
     .phase-btn.close-btn:hover {
-      background: #4b5563;
+      opacity: 0.85;
     }
     .participant-count {
       margin-left: auto;
@@ -184,14 +190,17 @@ export class RetroBoard extends LitElement {
       padding: 24px;
     }
     .help-card {
-      background: var(--retro-bg-surface);
-      border-radius: 20px;
-      padding: 32px;
+      background: var(--retro-glass-bg-strong);
+      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: 18px;
+      padding: 28px 32px;
       max-width: 480px;
       max-height: 90vh;
       overflow-y: auto;
       width: 100%;
-      box-shadow: 0 16px 64px var(--retro-card-shadow);
+      box-shadow: var(--retro-glass-shadow);
     }
     .help-card h3 {
       font-size: 18px;
@@ -307,11 +316,14 @@ export class RetroBoard extends LitElement {
     .participant-bar {
       display: flex;
       align-items: center;
-      padding: 8px 16px;
-      background: var(--retro-bg-surface);
-      border: 1px solid var(--retro-border-default);
-      border-radius: 10px;
-      margin-bottom: 20px;
+      padding: 8px 14px;
+      background: var(--retro-glass-bg-medium);
+      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: var(--retro-glass-shadow);
     }
 
     /* ── Participants popup ── */
@@ -327,12 +339,15 @@ export class RetroBoard extends LitElement {
       padding: 24px;
     }
     .participants-card {
-      background: var(--retro-bg-surface);
-      border-radius: 20px;
-      padding: 32px;
+      background: var(--retro-glass-bg-strong);
+      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: 18px;
+      padding: 28px 32px;
       max-width: 400px;
       width: 100%;
-      box-shadow: 0 16px 64px var(--retro-card-shadow);
+      box-shadow: var(--retro-glass-shadow);
     }
     .participants-header {
       display: flex;
@@ -494,12 +509,15 @@ export class RetroBoard extends LitElement {
       padding: 24px;
     }
     .settings-card {
-      background: var(--retro-bg-surface);
-      border-radius: 20px;
-      padding: 32px;
+      background: var(--retro-glass-bg-strong);
+      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: 18px;
+      padding: 24px;
       max-width: 440px;
       width: 100%;
-      box-shadow: 0 16px 64px var(--retro-card-shadow);
+      box-shadow: var(--retro-glass-shadow);
     }
     .settings-card h3 {
       font-size: 18px;
@@ -583,19 +601,20 @@ export class RetroBoard extends LitElement {
       background: var(--retro-bg-hover);
     }
     .settings-save-btn {
-      background: var(--retro-accent);
+      background: linear-gradient(135deg, oklch(0.72 0.16 50), oklch(0.66 0.17 42));
       color: white;
-      border: none;
+      border: 1px solid rgba(217, 116, 38, 0.5);
       border-radius: 8px;
-      padding: 9px 18px;
+      padding: 8px 18px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: background 0.12s;
+      transition: opacity 0.12s;
+      box-shadow: 0 4px 12px rgba(217, 116, 38, 0.3);
     }
     .settings-save-btn:hover {
-      background: var(--retro-accent-hover);
+      opacity: 0.9;
     }
   `]
 
