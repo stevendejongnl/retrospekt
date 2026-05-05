@@ -149,16 +149,17 @@ test.describe('stats-page static content', () => {
 
 test.describe('stats-page loading state', () => {
   test('shows loading state initially', async ({ page }) => {
-    // Delay the response so we can observe the loading state
+    // Delay the response long enough to reliably observe loading state
     await page.route('/api/v1/stats', async (route) => {
-      await new Promise((r) => setTimeout(r, 500))
+      await new Promise((r) => setTimeout(r, 2000))
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(MOCK_PUBLIC_STATS),
       })
     })
-    await page.goto('/stats')
+    // Don't wait for full load — check for loading indicator as soon as DOM is ready
+    await page.goto('/stats', { waitUntil: 'domcontentloaded' })
     await expect(page.locator('stats-page').getByText(/loading/i)).toBeVisible()
   })
 })
