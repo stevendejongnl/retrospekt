@@ -220,22 +220,21 @@ test.describe('card grouping — drag interaction', () => {
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
 
-    const groupReq = page.waitForRequest(
-      r => r.url().includes('/group') && r.method() === 'POST',
-    )
-
-    // Dispatch on .columns (where the @group-cards listener is bound)
-    await page.evaluate(() => {
-      const board = (document.querySelector('session-page') as any)
-        ?.shadowRoot?.querySelector('retro-board')
-      const columns = board?.shadowRoot?.querySelector('.columns')
-      columns?.dispatchEvent(new CustomEvent('group-cards', {
-        bubbles: true,
-        detail: { cardId: 'c1', targetCardId: 'c2' },
-      }))
-    })
-
-    const req = await groupReq
+    // Set up request intercept and dispatch atomically to avoid catching earlier requests
+    const [req] = await Promise.all([
+      page.waitForRequest(
+        r => r.url().includes('/cards/c1/group') && r.method() === 'POST',
+      ),
+      page.evaluate(() => {
+        const board = (document.querySelector('session-page') as any)
+          ?.shadowRoot?.querySelector('retro-board')
+        const columns = board?.shadowRoot?.querySelector('.columns')
+        columns?.dispatchEvent(new CustomEvent('group-cards', {
+          bubbles: true,
+          detail: { cardId: 'c1', targetCardId: 'c2' },
+        }))
+      }),
+    ])
     expect(req.url()).toContain('/cards/c1/group')
     const body = req.postDataJSON()
     expect(body.target_card_id).toBe('c2')
@@ -252,22 +251,20 @@ test.describe('card grouping — drag interaction', () => {
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
 
-    const ungroupReq = page.waitForRequest(
-      r => r.url().includes('/group') && r.method() === 'DELETE',
-    )
-
-    // Dispatch on .columns (where the @ungroup-card listener is bound)
-    await page.evaluate(() => {
-      const board = (document.querySelector('session-page') as any)
-        ?.shadowRoot?.querySelector('retro-board')
-      const columns = board?.shadowRoot?.querySelector('.columns')
-      columns?.dispatchEvent(new CustomEvent('ungroup-card', {
-        bubbles: true,
-        detail: { cardId: 'c1' },
-      }))
-    })
-
-    const req = await ungroupReq
+    const [req] = await Promise.all([
+      page.waitForRequest(
+        r => r.url().includes('/cards/c1/group') && r.method() === 'DELETE',
+      ),
+      page.evaluate(() => {
+        const board = (document.querySelector('session-page') as any)
+          ?.shadowRoot?.querySelector('retro-board')
+        const columns = board?.shadowRoot?.querySelector('.columns')
+        columns?.dispatchEvent(new CustomEvent('ungroup-card', {
+          bubbles: true,
+          detail: { cardId: 'c1' },
+        }))
+      }),
+    ])
     expect(req.url()).toContain('/cards/c1/group')
     expect(req.method()).toBe('DELETE')
   })
