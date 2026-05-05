@@ -1,3 +1,14 @@
+## [1.29.0](https://github.com/stevendejongnl/retrospekt/compare/v1.28.0...v1.29.0) (2026-05-05)
+
+### Features
+
+* **ui:** glassmorphism redesign + changelog/whats-new feature ([684cea2](https://github.com/stevendejongnl/retrospekt/commit/684cea2bf6f1f9c9063a01e1610af3ee55be1269))
+
+### Bug Fixes
+
+* **hooks:** pass VITE_BACKEND_URL=8001 to E2E pre-push check ([5e606b8](https://github.com/stevendejongnl/retrospekt/commit/5e606b8ae94bf47d763077e6cda057236596582f))
+* **whats-new:** only show dialog when other sessions exist in history ([95872a6](https://github.com/stevendejongnl/retrospekt/commit/95872a6aea255c6b3553f89d2edc0cd88866d3ef))
+
 ## [1.28.0](https://github.com/stevendejongnl/retrospekt/compare/v1.27.1...v1.28.0) (2026-04-20)
 
 ### Features
