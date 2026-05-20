@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getEffectiveTheme, toggleTheme, initTheme, getBrand, initBrand } from './theme'
+import { getEffectiveTheme, toggleTheme, initTheme, getBrand, initBrand, clearBrand } from './theme'
 
 // jsdom doesn't implement matchMedia — stub it
 function mockMatchMedia(prefersDark: boolean) {
@@ -166,5 +166,29 @@ describe('initBrand', () => {
     window.history.replaceState(null, '', '/?theme=unknown')
     initBrand()
     expect(window.location.search).toBe('')
+  })
+})
+
+describe('clearBrand', () => {
+  it('removes retro_brand from localStorage and data-brand attribute', () => {
+    mockMatchMedia(false)
+    localStorage.setItem('retro_brand', 'cs')
+    document.documentElement.setAttribute('data-brand', 'cs')
+    clearBrand()
+    expect(localStorage.getItem('retro_brand')).toBeNull()
+    expect(document.documentElement.getAttribute('data-brand')).toBeNull()
+  })
+
+  it('dispatches retro-brand-change and retro-theme-change events', () => {
+    mockMatchMedia(false)
+    const brandHandler = vi.fn()
+    const themeHandler = vi.fn()
+    window.addEventListener('retro-brand-change', brandHandler)
+    window.addEventListener('retro-theme-change', themeHandler)
+    clearBrand()
+    expect(brandHandler).toHaveBeenCalledTimes(1)
+    expect(themeHandler).toHaveBeenCalledTimes(1)
+    window.removeEventListener('retro-brand-change', brandHandler)
+    window.removeEventListener('retro-theme-change', themeHandler)
   })
 })

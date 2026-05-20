@@ -421,6 +421,49 @@ describe('ungroupCard', () => {
   })
 })
 
+describe('setColumnSort', () => {
+  it('PATCHes /columns/:name/sort with sort_by_votes and X-Facilitator-Token', async () => {
+    mockOk(mockSession)
+    await api.setColumnSort('sess-1', 'went-well', true, 'tok-1')
+    const [url, opts] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/sessions/sess-1/columns/went-well/sort')
+    expect(opts.method).toBe('PATCH')
+    expect(JSON.parse(opts.body as string)).toEqual({ sort_by_votes: true })
+    expect(opts.headers).toMatchObject({ 'X-Facilitator-Token': 'tok-1' })
+  })
+
+  it('includes X-Participant-Name when participantName provided', async () => {
+    mockOk(mockSession)
+    await api.setColumnSort('sess-1', 'went-well', false, 'tok-1', 'Alice')
+    const [, opts] = mockFetch.mock.calls[0]
+    expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Alice' })
+  })
+})
+
+describe('submitFeedback', () => {
+  it('POSTs rating, comment, session_id, participant_name, and app_version', async () => {
+    mockOk({ id: 'fb-1', rating: 5, comment: 'great', session_id: 'sess-1', participant_name: 'Alice', app_version: '1.0.0', created_at: '' })
+    await api.submitFeedback(5, 'great', 'sess-1', 'Alice')
+    const [url, opts] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/feedback')
+    expect(opts.method).toBe('POST')
+    const body = JSON.parse(opts.body as string)
+    expect(body.rating).toBe(5)
+    expect(body.comment).toBe('great')
+    expect(body.session_id).toBe('sess-1')
+    expect(body.participant_name).toBe('Alice')
+  })
+
+  it('sends null for omitted sessionId and participantName', async () => {
+    mockOk({ id: 'fb-2', rating: 3, comment: '', session_id: null, participant_name: null, app_version: '1.0.0', created_at: '' })
+    await api.submitFeedback(3, '')
+    const [, opts] = mockFetch.mock.calls[0]
+    const body = JSON.parse(opts.body as string)
+    expect(body.session_id).toBeNull()
+    expect(body.participant_name).toBeNull()
+  })
+})
+
 describe('createSession with custom columns', () => {
   it('includes columns array in the request body when provided', async () => {
     mockOk({ ...mockSession, facilitator_token: 'tok-1' }, 201)
