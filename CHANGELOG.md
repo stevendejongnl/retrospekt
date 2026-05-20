@@ -1,3 +1,9 @@
+## [1.31.0](https://github.com/stevendejongnl/retrospekt/compare/v1.30.0...v1.31.0) (2026-05-20)
+
+### Features
+
+* **feedback:** add /feedback page, participant name, Sentry context, and fix sort-btn 403 ([6386491](https://github.com/stevendejongnl/retrospekt/commit/6386491b913873e9db0a803e186da8cc6614d90d))
+
 ## [1.30.0](https://github.com/stevendejongnl/retrospekt/compare/v1.29.6...v1.30.0) (2026-05-05)
 
 ### Features
