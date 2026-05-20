@@ -357,12 +357,22 @@ test.describe('retro-column sort by votes', () => {
     })
   }
 
-  test('sort-votes button is visible in discussing phase', async ({ page }) => {
-    await withName(page, 'Alice')
+  test('sort-votes button is visible for facilitator in discussing phase', async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
     const session = { ...BASE, phase: 'discussing', cards: [makeVotedCard('c1', 'Card A', 0)] }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('.sort-votes-btn').first()).toBeVisible()
+  })
+
+  test('sort-votes button is NOT visible for participant (non-facilitator) in discussing phase', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = { ...BASE, phase: 'discussing', cards: [makeVotedCard('c1', 'Card A', 0)] }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    // Wait for the board to render before checking button visibility
+    await expect(page.locator('.count-badge').first()).toBeVisible()
+    await expect(page.locator('.sort-votes-btn').first()).not.toBeVisible()
   })
 
   test('sort-votes button is NOT visible in collecting phase', async ({ page }) => {
@@ -395,7 +405,7 @@ test.describe('retro-column sort by votes', () => {
   })
 
   test('sort-votes active class reflects column_sorts prop from session', async ({ page }) => {
-    await withName(page, 'Alice')
+    await withName(page, 'Alice', FAC_TOKEN)
     const session = {
       ...BASE,
       phase: 'discussing',

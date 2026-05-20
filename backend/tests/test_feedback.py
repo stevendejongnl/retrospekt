@@ -28,6 +28,22 @@ async def test_submit_feedback_stores_all_fields(client: AsyncClient):
     assert data["app_version"] == "1.2.3"
 
 
+async def test_submit_feedback_stores_participant_name(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/feedback",
+        json={"rating": 4, "participant_name": "Alice"},
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["participant_name"] == "Alice"
+
+
+async def test_submit_feedback_participant_name_optional(client: AsyncClient):
+    response = await client.post("/api/v1/feedback", json={"rating": 3})
+    assert response.status_code == 201
+    assert response.json()["participant_name"] is None
+
+
 async def test_submit_feedback_rating_too_low_returns_422(client: AsyncClient):
     response = await client.post("/api/v1/feedback", json={"rating": 0})
     assert response.status_code == 422
@@ -115,6 +131,18 @@ async def test_admin_stats_feedback_counts_submissions(client: AsyncClient, fake
     feedback = response.json()["feedback"]
     assert feedback["total"] == 2
     assert feedback["avg_rating"] == 3.0
+
+
+async def test_admin_stats_recent_feedback_includes_participant_name(client: AsyncClient, fake_redis):
+    token = "admin-token"
+    await fake_redis.set(f"admin_token:{token}", "1")
+
+    await client.post("/api/v1/feedback", json={"rating": 5, "participant_name": "Bob"})
+
+    response = await client.get("/api/v1/stats/admin", headers={"X-Admin-Token": token})
+    recent = response.json()["feedback"]["recent"]
+    assert len(recent) == 1
+    assert recent[0]["participant_name"] == "Bob"
 
 
 # ---------------------------------------------------------------------------

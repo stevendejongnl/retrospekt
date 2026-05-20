@@ -631,7 +631,7 @@ export class RetroColumn extends LitElement {
             ${this.phase === 'discussing' && this.hasUnpublishedCards
               ? html`<button class="publish-all-btn" @click=${this.onPublishAllClick}>Publish all</button>`
               : ''}
-            ${this.phase === 'discussing'
+            ${this.phase === 'discussing' && this.isFacilitator
               ? html`<button
                   class="sort-votes-btn ${this.sortByVotes ? 'active' : ''}"
                   title="${this.sortByVotes ? 'Default order' : 'Sort by votes'}"

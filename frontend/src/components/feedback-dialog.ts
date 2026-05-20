@@ -2,7 +2,6 @@ import { LitElement, css, html, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import { api } from '../api'
-import { storage } from '../storage'
 
 const EMOJI_SCALE = ['😞', '😕', '😐', '🙂', '😍'] as const
 
@@ -15,6 +14,7 @@ export function isValidRating(rating: number): boolean {
 export class FeedbackDialog extends LitElement {
   @property({ type: Boolean }) open = false
   @property({ type: String }) sessionId = ''
+  @property({ type: String }) participantName = ''
 
   @state() private selectedRating = 0
   @state() private comment = ''
@@ -199,8 +199,7 @@ export class FeedbackDialog extends LitElement {
     if (!isValidRating(this.selectedRating) || this.submitting) return
     this.submitting = true
     try {
-      await api.submitFeedback(this.selectedRating, this.comment, this.sessionId || undefined)
-      storage.setFeedbackGiven(__APP_VERSION__)
+      await api.submitFeedback(this.selectedRating, this.comment, this.sessionId || undefined, this.participantName || undefined)
       this.submitted = true
       this.dispatchEvent(new CustomEvent('feedback-submitted', { bubbles: true, composed: true }))
       setTimeout(() => this._dismiss(), 2000)

@@ -141,6 +141,32 @@ test.describe('feedback-dialog submission', () => {
     }).toPass({ timeout: 3000 })
   })
 
+  test('submitting includes participant_name in request body', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, makeSession())
+
+    let capturedBody: Record<string, unknown> | null = null
+    await page.route('/api/v1/feedback', async route => {
+      capturedBody = JSON.parse(route.request().postData() ?? '{}') as Record<string, unknown>
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: 'fb-1', rating: 5, comment: '', session_id: null, participant_name: 'Alice', app_version: '1.0.0', created_at: '2026-01-01T00:00:00Z' }),
+      })
+    })
+
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button.feedback-btn').click()
+    await page.locator('feedback-dialog .emoji-btn').nth(4).click()
+    await page.locator('feedback-dialog .submit-btn').click()
+
+    await expect(async () => {
+      expect(capturedBody).not.toBeNull()
+      expect(capturedBody!['participant_name']).toBe('Alice')
+    }).toPass({ timeout: 3000 })
+  })
+
   test('typing in textarea updates comment (covers @input handler)', async ({ page }) => {
     await setupAndOpenDialog(page)
     await page.locator('feedback-dialog textarea').fill('Really useful!')

@@ -516,31 +516,6 @@ test.describe('session-page SSE updates', () => {
     await expect(page.locator('feedback-dialog .card')).toBeVisible()
   })
 
-  test('_checkIdle skips when feedback already given in localStorage (storage check branch)', async ({ page }) => {
-    await withName(page, 'Alice')
-    await mockApi(page, BASE)
-    await page.addInitScript(() => {
-      // Override getItem to return 'true' for any retro_feedback_v* key so the
-      // version-agnostic check fires regardless of __APP_VERSION__ at test time
-      const orig = Storage.prototype.getItem
-      Storage.prototype.getItem = function (key: string) {
-        if (key.startsWith('retro_feedback_v')) return 'true'
-        return orig.call(this, key)
-      }
-    })
-    await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('retro-board')).toBeVisible()
-
-    // Call _checkIdle — should return early due to feedback already given
-    const result = await page.evaluate(() => {
-      const el = document.querySelector('session-page') as Record<string, unknown>
-      el['_lastActivityAt'] = Date.now() - (10 * 60 * 1000 + 5000)
-      ;(el['_checkIdle'] as () => void).call(el)
-      return el['showFeedback']
-    })
-    // showFeedback should remain false because getFeedbackGiven() returned true
-    expect(result).toBe(false)
-  })
 })
 
 // ── What's New dialog ─────────────────────────────────────────────────────────

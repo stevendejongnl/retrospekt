@@ -72,6 +72,7 @@ class RecentFeedbackEntry(BaseModel):
     id: str
     rating: int
     comment: str
+    participant_name: str | None = None
     app_version: str
     created_at: str  # ISO string
 
@@ -543,6 +544,7 @@ class StatsRepository:
                     id=d["id"],
                     rating=d["rating"],
                     comment=d.get("comment", ""),
+                    participant_name=d.get("participant_name"),
                     app_version=d.get("app_version", ""),
                     created_at=created_str,
                 )

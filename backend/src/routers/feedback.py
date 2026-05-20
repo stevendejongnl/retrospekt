@@ -17,6 +17,7 @@ class SubmitFeedbackRequest(BaseModel):
     rating: int = Field(..., ge=1, le=5)
     comment: str = ""
     session_id: str | None = None
+    participant_name: str | None = None
     app_version: str = ""
 
 
@@ -29,6 +30,7 @@ async def submit_feedback(
         rating=body.rating,
         comment=body.comment,
         session_id=body.session_id,
+        participant_name=body.participant_name,
         app_version=body.app_version,
     )
     return await repo.add_feedback(fb)

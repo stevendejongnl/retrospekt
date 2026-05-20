@@ -193,10 +193,16 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         headers: { 'X-Participant-Name': participantName },
       }),
 
-    submitFeedback: (rating: number, comment: string, sessionId?: string) =>
+    submitFeedback: (rating: number, comment: string, sessionId?: string, participantName?: string) =>
       request<Feedback>('/feedback', {
         method: 'POST',
-        body: JSON.stringify({ rating, comment, session_id: sessionId ?? null, app_version: __APP_VERSION__ }),
+        body: JSON.stringify({
+          rating,
+          comment,
+          session_id: sessionId ?? null,
+          participant_name: participantName ?? null,
+          app_version: __APP_VERSION__,
+        }),
       }),
 
     getPublicStats: () => request<PublicStats>('/stats'),

@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/browser'
 import { LitElement, PropertyValues, css, html, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
@@ -583,6 +584,10 @@ export class SessionPage extends LitElement {
       const storedName = storage.getName(this.sessionId)
       if (storedName) {
         this.participantName = storedName
+        /* istanbul ignore next */
+        Sentry.setUser({ username: storedName })
+        /* istanbul ignore next */
+        Sentry.setTag('session_id', this.sessionId)
         await api.joinSession(this.sessionId, storedName)
         this.saveToHistory(session, storedName)
       } else {
@@ -610,6 +615,10 @@ export class SessionPage extends LitElement {
 
     storage.setName(this.sessionId, name)
     this.participantName = name
+    /* istanbul ignore next */
+    Sentry.setUser({ username: name })
+    /* istanbul ignore next */
+    Sentry.setTag('session_id', this.sessionId)
     this.showNamePrompt = false
     await api.joinSession(this.sessionId, name)
     if (this.session) this.saveToHistory(this.session, name)
@@ -636,11 +645,9 @@ export class SessionPage extends LitElement {
     super.updated(changedProps)
     if (changedProps.has('session')) {
       const prev = changedProps.get('session') as Session | null
-      // Show feedback after session closes (once per app version)
+      // Show feedback after session closes
       if (prev && this.session?.phase === 'closed' && prev.phase !== 'closed') {
-        if (!storage.getFeedbackGiven(__APP_VERSION__)) {
-          setTimeout(() => { this.showFeedback = true }, FEEDBACK_CLOSE_DELAY_MS)
-        }
+        setTimeout(() => { this.showFeedback = true }, FEEDBACK_CLOSE_DELAY_MS)
       }
       // Reset idle timer on every SSE update
       this._lastActivityAt = Date.now()
@@ -661,7 +668,6 @@ export class SessionPage extends LitElement {
 
   private _checkIdle(): void {
     if (this.showFeedback || !this.participantName) return
-    if (storage.getFeedbackGiven(__APP_VERSION__)) return
     if (Date.now() - this._lastActivityAt > IDLE_THRESHOLD_MS) {
       this.showFeedback = true
     }
@@ -752,6 +758,7 @@ export class SessionPage extends LitElement {
       <feedback-dialog
         .open=${this.showFeedback}
         .sessionId=${this.sessionId}
+        .participantName=${this.participantName}
         @feedback-dismissed=${() => { this.showFeedback = false }}
       ></feedback-dialog>
       <whats-new-dialog

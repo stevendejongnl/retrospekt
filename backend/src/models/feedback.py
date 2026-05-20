@@ -11,6 +11,7 @@ class Feedback(BaseModel):
     rating: int  # 1–5
     comment: str = ""
     session_id: str | None = None
+    participant_name: str | None = None
     app_version: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

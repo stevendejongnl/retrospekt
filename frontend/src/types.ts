@@ -156,6 +156,7 @@ export interface Feedback {
   rating: number
   comment: string
   session_id: string | null
+  participant_name: string | null
   app_version: string
   created_at: string
 }
@@ -169,6 +170,7 @@ export interface RecentFeedbackEntry {
   id: string
   rating: number
   comment: string
+  participant_name: string | null
   app_version: string
   created_at: string
 }

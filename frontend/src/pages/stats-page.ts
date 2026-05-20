@@ -560,6 +560,7 @@ export class StatsPage extends LitElement {
                 <div class="feedback-entry">
                   <div class="feedback-entry-meta">
                     <span class="feedback-stars">${'★'.repeat(entry.rating)}${'☆'.repeat(5 - entry.rating)}</span>
+                    ${entry.participant_name ? html`<span class="feedback-participant">${entry.participant_name}</span>` : nothing}
                     <span class="feedback-entry-date">${new Date(entry.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
                     ${entry.app_version ? html`<span class="feedback-version">${entry.app_version}</span>` : nothing}
                   </div>
@@ -1136,6 +1137,12 @@ export class StatsPage extends LitElement {
       .feedback-entry-date {
         color: var(--retro-text-muted);
         font-size: 11px;
+      }
+
+      .feedback-participant {
+        color: var(--retro-text-primary);
+        font-size: 11px;
+        font-weight: 600;
       }
 
       .feedback-version {
