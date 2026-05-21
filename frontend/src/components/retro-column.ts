@@ -2,7 +2,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Card, SessionPhase } from '../types'
-import { faIconStyles, iconLayerGroup } from '../icons'
+import { faIconStyles, iconLayerGroup, iconThumbsUp } from '../icons'
 import './retro-card'
 import { getDraggedCardInfo } from './retro-card'
 
@@ -433,6 +433,32 @@ export class RetroColumn extends LitElement {
     .ungroup-btn:hover {
       color: var(--retro-text-secondary);
     }
+    .stack-vote-row {
+      display: flex;
+      justify-content: flex-end;
+      padding: 4px 8px 4px;
+    }
+    .stack-tile .vote-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border: 1px solid var(--retro-border);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--retro-text-primary);
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .stack-tile .vote-btn.voted {
+      background: var(--retro-accent);
+      color: #fff;
+      border-color: var(--retro-accent);
+    }
+    .stack-tile .vote-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
   `]
 
   private async submitCard(): Promise<void> {
@@ -577,6 +603,20 @@ export class RetroColumn extends LitElement {
     )
   }
 
+  private _onStackVote(item: { groupId: string; cards: Card[] }): void {
+    const hasVoted = item.cards.some((c) =>
+      c.votes.some((v) => v.participant_name === this.participantName)
+    )
+    const eventType = hasVoted ? 'group-unvote' : 'group-vote'
+    this.dispatchEvent(
+      new CustomEvent(eventType, {
+        bubbles: true,
+        composed: true,
+        detail: { groupCards: item.cards },
+      }),
+    )
+  }
+
   render() {
     const canAdd = this.phase !== 'closed' && !!this.participantName
     const accentStyle = `--col-accent: ${this.accent};`
@@ -707,6 +747,24 @@ export class RetroColumn extends LitElement {
                         <span class="stack-count">${item.cards.length}</span>
                       </div>
                       <p class="stack-hint">+${item.cards.length - 1} more · click to expand</p>
+                      <div class="stack-vote-row" @click=${(e: Event) => e.stopPropagation()}>
+                        ${(() => {
+                          const groupVoters = new Set(item.cards.flatMap((c) => c.votes.map((v) => v.participant_name)))
+                          const hasVotedOnGroup = item.cards.some((c) =>
+                            c.votes.some((v) => v.participant_name === this.participantName)
+                          )
+                          return html`
+                            <button
+                              class="vote-btn ${hasVotedOnGroup ? 'voted' : ''}"
+                              ?disabled=${this.phase !== 'discussing' || !this.participantName}
+                              title="${hasVotedOnGroup ? 'Remove vote from group' : 'Vote for group'}"
+                              @click=${() => this._onStackVote(item)}
+                            >
+                              ${iconThumbsUp()} ${groupVoters.size}
+                            </button>
+                          `
+                        })()}
+                      </div>
                     </div>
                   `,
           )}

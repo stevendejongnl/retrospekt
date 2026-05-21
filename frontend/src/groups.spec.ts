@@ -487,6 +487,54 @@ test.describe('card grouping — cross-column prevention', () => {
   })
 })
 
+// ── Stack tile voting ─────────────────────────────────────────────────────
+
+test.describe('stack tile voting', () => {
+  test('stack tile shows combined unique voter count', async ({ page }) => {
+    const session = {
+      ...BASE,
+      max_votes_per_participant: null,
+      cards: [
+        makeCard({ id: 'c1', group_id: 'g1', votes: [{ participant_name: 'Alice' }, { participant_name: 'Bob' }] }),
+        makeCard({ id: 'c2', group_id: 'g1', votes: [{ participant_name: 'Bob' }] }), // Bob on both
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    const tile = page.locator('.stack-tile')
+    await expect(tile).toBeVisible()
+    // Unique voters: Alice + Bob = 2
+    await expect(tile.locator('.vote-btn')).toContainText('2')
+  })
+
+  test('stack tile shows voted state when participant already voted on any group card', async ({ page }) => {
+    const session = {
+      ...BASE,
+      max_votes_per_participant: null,
+      cards: [
+        makeCard({ id: 'c1', group_id: 'g1', votes: [{ participant_name: 'Alice' }] }),
+        makeCard({ id: 'c2', group_id: 'g1', votes: [] }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    const voteBtn = page.locator('.stack-tile .vote-btn')
+    await expect(voteBtn).toHaveClass(/voted/)
+  })
+
+  test('stack tile shows unvoted state when participant has no vote on group', async ({ page }) => {
+    const session = {
+      ...BASE,
+      max_votes_per_participant: null,
+      cards: [
+        makeCard({ id: 'c1', group_id: 'g1', votes: [{ participant_name: 'Bob' }] }),
+        makeCard({ id: 'c2', group_id: 'g1', votes: [] }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    const voteBtn = page.locator('.stack-tile .vote-btn')
+    await expect(voteBtn).not.toHaveClass(/voted/)
+  })
+})
+
 // ── Drop onto collapsed stack tile ────────────────────────────────────────
 
 test.describe('card grouping — drop onto stack tile', () => {
