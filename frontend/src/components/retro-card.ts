@@ -268,8 +268,8 @@ export class RetroCard extends LitElement {
   private get reactionGroups(): { emoji: string; count: number; myReaction: boolean }[] {
     return REACTION_EMOJI.map((emoji) => ({
       emoji,
-      count: this.card.reactions.filter((r) => r.emoji === emoji).length,
-      myReaction: this.card.reactions.some(
+      count: (this.card.reactions ?? []).filter((r) => r.emoji === emoji).length,
+      myReaction: (this.card.reactions ?? []).some(
         (r) => r.emoji === emoji && r.participant_name === this.participantName,
       ),
     })).filter((g) => this.canReact || g.count > 0)
