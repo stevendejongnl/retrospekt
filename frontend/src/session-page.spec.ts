@@ -1058,6 +1058,38 @@ test('vote indicator is not shown when no limit is set', async ({ page }) => {
   await expect(page.locator('.vote-indicator')).toHaveCount(0)
 })
 
+test('vote on individual card when at limit shows limit message without API call', async ({ page }) => {
+  let voteCalled = false
+  const session = {
+    ...BASE,
+    phase: 'discussing' as const,
+    max_votes_per_participant: 1,
+    cards: [
+      {
+        id: 'c1', column: 'Went Well', text: 'Already voted', author_name: 'Bob',
+        published: true, votes: [{ participant_name: 'Alice' }],
+        reactions: [], assignee: null, group_id: null, created_at: '2026-01-01T00:00:00Z',
+      },
+      {
+        id: 'c2', column: 'Went Well', text: 'Second card', author_name: 'Bob',
+        published: true, votes: [],
+        reactions: [], assignee: null, group_id: null, created_at: '2026-01-01T00:00:00Z',
+      },
+    ],
+  }
+  await withName(page, 'Alice')
+  await mockApi(page, session as typeof BASE)
+  await page.route(`/api/v1/sessions/${SESSION_ID}/cards/*/votes`, (route) => {
+    if (route.request().method() === 'POST') voteCalled = true
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(session) })
+  })
+  await page.goto(`/session/${SESSION_ID}`)
+  // Alice already used her 1 vote on c1; click vote on c2 (no 'voted' class)
+  await page.locator('.vote-btn:not(.voted)').first().click()
+  await expect(page.locator('.vote-limit-msg')).toBeVisible()
+  expect(voteCalled).toBe(false)
+})
+
 // ── Add column deduplication ──────────────────────────────────────────────────
 
 test.describe('retro-board add column deduplication', () => {

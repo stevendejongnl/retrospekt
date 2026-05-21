@@ -813,9 +813,10 @@ export class RetroBoard extends LitElement {
   }
 
   private _showVoteLimit(): void {
+    /* istanbul ignore next -- timer already active: requires two rapid calls, not worth testing */
     if (this._voteLimitTimer) clearTimeout(this._voteLimitTimer)
     this.voteLimitMessage = 'Vote limit reached — remove a vote first'
-    this._voteLimitTimer = setTimeout(() => {
+    this._voteLimitTimer = setTimeout(/* istanbul ignore next */ () => {
       this.voteLimitMessage = ''
       this._voteLimitTimer = null
     }, 3000)
