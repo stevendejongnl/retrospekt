@@ -1,3 +1,9 @@
+## [1.32.1](https://github.com/stevendejongnl/retrospekt/compare/v1.32.0...v1.32.1) (2026-05-21)
+
+### Reverts
+
+* Revert "test(coverage): raise branch coverage to 95.13% with targeted CT tests" ([dfbc5e3](https://github.com/stevendejongnl/retrospekt/commit/dfbc5e30e7981e6905df536f57ab7e2ef2d54386))
+
 ## [1.32.0](https://github.com/stevendejongnl/retrospekt/compare/v1.31.0...v1.32.0) (2026-05-21)
 
 ### Features
