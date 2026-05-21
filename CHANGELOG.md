@@ -1,3 +1,13 @@
+## [1.32.2](https://github.com/stevendejongnl/retrospekt/compare/v1.32.1...v1.32.2) (2026-05-21)
+
+### Bug Fixes
+
+* **reactions:** restore null guard on card.reactions for legacy documents ([cad090b](https://github.com/stevendejongnl/retrospekt/commit/cad090bd51b650df7db5f26c09dce0b174984597))
+
+### Code Refactoring
+
+* remove dead code and artificial coverage-only tests ([e5b5e24](https://github.com/stevendejongnl/retrospekt/commit/e5b5e247d7811e9b6968c5f54d01a96a5c20442c))
+
 ## [1.32.1](https://github.com/stevendejongnl/retrospekt/compare/v1.32.0...v1.32.1) (2026-05-21)
 
 ### Reverts
