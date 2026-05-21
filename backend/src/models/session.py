@@ -79,6 +79,7 @@ class Session(BaseModel):
     column_sorts: dict[str, bool] = Field(default_factory=dict)
     reactions_enabled: bool = True
     open_facilitator: bool = False
+    max_votes_per_participant: int | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_accessed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

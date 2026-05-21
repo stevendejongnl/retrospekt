@@ -144,3 +144,48 @@ async def test_patch_session_with_wrong_token_returns_403(client: AsyncClient):
         headers={"X-Facilitator-Token": "wrong-token"},
     )
     assert response.status_code == 403
+
+
+# ── max_votes_per_participant ────────────────────────────────────────────────
+
+
+async def test_create_session_with_max_votes(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions",
+        json={"name": "Capped Retro", "participant_name": "Alice", "max_votes_per_participant": 3},
+    )
+    assert response.status_code == 201
+    assert response.json()["max_votes_per_participant"] == 3
+
+
+async def test_create_session_max_votes_defaults_to_none(client: AsyncClient):
+    session = await make_session(client)
+    data = (await client.get(f"/api/v1/sessions/{session.id}")).json()
+    assert data["max_votes_per_participant"] is None
+
+
+async def test_update_session_sets_max_votes(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}",
+        json={"max_votes_per_participant": 5},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 200
+    assert response.json()["max_votes_per_participant"] == 5
+
+
+async def test_update_session_clears_max_votes(client: AsyncClient):
+    session = await make_session(client)
+    await client.patch(
+        f"/api/v1/sessions/{session.id}",
+        json={"max_votes_per_participant": 3},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}",
+        json={"max_votes_per_participant": None},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 200
+    assert response.json()["max_votes_per_participant"] is None

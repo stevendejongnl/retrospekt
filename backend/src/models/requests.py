@@ -7,6 +7,7 @@ class CreateSessionRequest(BaseModel):
     columns: list[str] | None = None
     reactions_enabled: bool = True
     open_facilitator: bool = False
+    max_votes_per_participant: int | None = None
 
 
 class JoinSessionRequest(BaseModel):
@@ -55,6 +56,7 @@ class UpdateSessionRequest(BaseModel):
     name: str | None = None
     reactions_enabled: bool | None = None
     open_facilitator: bool | None = None
+    max_votes_per_participant: int | None = None
 
 
 class AddNoteRequest(BaseModel):

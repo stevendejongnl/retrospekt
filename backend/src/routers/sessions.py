@@ -55,6 +55,7 @@ async def create_session(
         name=body.name,
         reactions_enabled=body.reactions_enabled,
         open_facilitator=body.open_facilitator,
+        max_votes_per_participant=body.max_votes_per_participant,
     )
     if body.columns:
         session.columns = body.columns
@@ -96,6 +97,8 @@ async def update_session(
         session.reactions_enabled = body.reactions_enabled
     if body.open_facilitator is not None:
         session.open_facilitator = body.open_facilitator
+    if "max_votes_per_participant" in body.model_fields_set:
+        session.max_votes_per_participant = body.max_votes_per_participant
 
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
