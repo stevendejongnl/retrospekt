@@ -84,7 +84,7 @@ const MOCK_ADMIN_STATS = {
       { rating: 5, count: 1 },
     ],
     recent: [
-      { id: '1', rating: 5, comment: 'Great tool!', app_version: '1.25.0', created_at: '2026-03-18T12:00:00Z' },
+      { id: '1', rating: 5, comment: 'Great tool!', app_version: '1.25.0', participant_name: 'Alice', created_at: '2026-03-18T12:00:00Z' },
     ],
   },
 }
@@ -862,5 +862,21 @@ test.describe('stats-page feedback section', () => {
     // Empty comment triggers the fallback "—" span inside the card
     const dashCells = page.locator('stats-page .feedback-entry .muted')
     await expect(dashCells).toHaveCount(1)
+  })
+
+  test('feedback section not rendered when adminStats.feedback is null (covers nothing branch)', async ({ page }) => {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    const nullFeedbackStats = { ...MOCK_ADMIN_STATS, feedback: null }
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(nullFeedbackStats) }),
+    )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
+    // User Feedback section should NOT be rendered
+    await expect(page.locator('stats-page .feedback-block')).not.toBeVisible()
   })
 })

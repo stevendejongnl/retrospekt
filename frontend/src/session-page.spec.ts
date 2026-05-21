@@ -592,6 +592,27 @@ test.describe('session-page whats-new dialog', () => {
     await expect(page.locator('retro-board')).toBeVisible()
     await expect(page.locator('whats-new-dialog .overlay')).not.toBeVisible()
   })
+
+  test('dialog shown when current version is newer than max seen (covers semverGt true branch and reduce callback both arms)', async ({ page }) => {
+    // Three old seenChangelogVersion entries → reduce callback fires twice, covering both arms:
+    // - v='0.0.2' > max='0.0.1' → arm 0 (return v)
+    // - v='0.0.1' < max='0.0.2' → arm 1 (return max)
+    // Current app version > '0.0.2' → semverGt(current, '0.0.2') = true → dialog shown
+    await page.addInitScript((id) => {
+      const history = [
+        { id: 'other-sess-1', name: 'Old Retro 1', phase: 'closed', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '2026-01-01', seenChangelogVersion: '0.0.1' },
+        { id: 'other-sess-2', name: 'Old Retro 2', phase: 'closed', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '2026-01-01', seenChangelogVersion: '0.0.2' },
+        { id: 'other-sess-3', name: 'Old Retro 3', phase: 'closed', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '2026-01-01', seenChangelogVersion: '0.0.1' },
+      ]
+      localStorage.setItem('retro_history', JSON.stringify(history))
+      localStorage.setItem(`retro_name_${id}`, 'Alice')
+    }, SESSION_ID)
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    // Current app version > '0.0.2' → whats-new dialog should appear
+    await expect(page.locator('whats-new-dialog .overlay')).toBeVisible()
+  })
 })
 
 // ── Export ────────────────────────────────────────────────────────────────────
@@ -1088,6 +1109,41 @@ test('vote on individual card when at limit shows limit message without API call
   await page.locator('.vote-btn:not(.voted)').first().click()
   await expect(page.locator('.vote-limit-msg')).toBeVisible()
   expect(voteCalled).toBe(false)
+})
+
+test('clicking vote limit twice rapidly re-arms the timer (covers _showVoteLimit timer-clear branch)', async ({ page }) => {
+  const session = {
+    ...BASE,
+    phase: 'discussing' as const,
+    max_votes_per_participant: 1,
+    cards: [
+      {
+        id: 'c1', column: 'Went Well', text: 'Already voted', author_name: 'Bob',
+        published: true, votes: [{ participant_name: 'Alice' }],
+        reactions: [], assignee: null, group_id: null, created_at: '2026-01-01T00:00:00Z',
+      },
+      {
+        id: 'c2', column: 'Went Well', text: 'Second card', author_name: 'Bob',
+        published: true, votes: [],
+        reactions: [], assignee: null, group_id: null, created_at: '2026-01-01T00:00:00Z',
+      },
+      {
+        id: 'c3', column: 'Went Well', text: 'Third card', author_name: 'Bob',
+        published: true, votes: [],
+        reactions: [], assignee: null, group_id: null, created_at: '2026-01-01T00:00:00Z',
+      },
+    ],
+  }
+  await withName(page, 'Alice')
+  await mockApi(page, session as typeof BASE)
+  await page.goto(`/session/${SESSION_ID}`)
+  const voteBtns = page.locator('.vote-btn:not(.voted)')
+  // Click two different vote buttons rapidly to trigger _showVoteLimit twice while timer is active
+  await voteBtns.nth(0).click()
+  await expect(page.locator('.vote-limit-msg')).toBeVisible()
+  await voteBtns.nth(0).click()
+  // Message remains visible (timer re-armed)
+  await expect(page.locator('.vote-limit-msg')).toBeVisible()
 })
 
 // ── Add column deduplication ──────────────────────────────────────────────────

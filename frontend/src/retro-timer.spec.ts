@@ -159,6 +159,21 @@ test.describe('retro-timer custom input', () => {
     const body = JSON.parse(request.postData() ?? '{}') as Record<string, unknown>
     expect(body.duration_seconds).toBe(180)
   })
+
+  test('zero or negative minutes in custom input is a no-op (covers isNaN/<=0 guard)', async ({ page }) => {
+    let timerPatchCalled = false
+    await page.route(`/api/v1/sessions/${SESSION_ID}/timer`, (route) => {
+      if (route.request().method() === 'PATCH') timerPatchCalled = true
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+    })
+    // Type "0" — button becomes enabled (not NaN) but minutes <= 0 → early return
+    await page.locator('.custom-input').fill('0')
+    await expect(page.locator('.custom-set-btn')).toBeEnabled()
+    await page.locator('.custom-set-btn').click()
+    // Should NOT have called the timer API
+    await page.waitForTimeout(200)
+    expect(timerPatchCalled).toBe(false)
+  })
 })
 
 // ── Start / Pause / Resume / Reset buttons ────────────────────────────────────

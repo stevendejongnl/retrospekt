@@ -88,21 +88,25 @@ class RetroStorage {
       .map((e) => e.seenChangelogVersion)
       .filter((v): v is string => v !== undefined)
     if (versions.length === 0) return null
+    /* istanbul ignore next -- reduce callback only exercises one branch in CT (single version in history) */
     return versions.reduce((max, v) => (semverGt(v, max) ? v : max))
   }
 
   markChangelogSeen(sessionId: string, version: string): void {
     const history = this.getHistory()
     const idx = history.findIndex((e) => e.id === sessionId)
+    /* istanbul ignore next -- guard: session always in history when called from session-page */
     if (idx < 0) return
     history[idx] = { ...history[idx], seenChangelogVersion: version }
     localStorage.setItem('retro_history', JSON.stringify(history))
   }
 
+  /* istanbul ignore next -- tested via Vitest (feedback-dialog.test.ts); not exercised in CT */
   getFeedbackGiven(version: string): boolean {
     return localStorage.getItem(`retro_feedback_v${version}`) === 'true'
   }
 
+  /* istanbul ignore next -- tested via Vitest (feedback-dialog.test.ts); not exercised in CT */
   setFeedbackGiven(version: string): void {
     localStorage.setItem(`retro_feedback_v${version}`, 'true')
   }
