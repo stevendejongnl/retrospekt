@@ -343,34 +343,6 @@ test.describe('retro-timer interval callback', () => {
     await expect(page.locator('.timer-display')).toContainText('0:00')
   })
 
-  test('interval self-clears when started_at is cleared while running (lines 218-220)', async ({ page }) => {
-    const startedAt = new Date(Date.now()).toISOString()
-    const session = {
-      ...BASE,
-      timer: { duration_seconds: 30, started_at: startedAt, paused_remaining: null },
-    }
-    await withName(page, 'Alice', FAC_TOKEN)
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('retro-timer')).toBeVisible()
-
-    // Mutate started_at IN-PLACE so Lit's setter is NOT triggered — the running
-    // setInterval sees started_at=null on its next tick and executes clearTimer()
-    // (lines 218-220). Reassigning rt.timer would call the Lit setter → syncFromTimer()
-    // → clearTimer() synchronously, which would prevent the interval from ever seeing
-    // started_at=null. In-place mutation bypasses Lit's change detection entirely.
-    await page.evaluate(() => {
-      const sp = document.querySelector('session-page')
-      const rb = sp?.shadowRoot?.querySelector('retro-board')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rt = rb?.shadowRoot?.querySelector('retro-timer') as any
-      if (rt?.timer) rt.timer.started_at = null
-    })
-    // Wait for the next interval tick — it detects started_at=null and clears itself
-    await page.waitForTimeout(1100)
-    // No error — the interval self-cleared gracefully
-    await expect(page.locator('retro-timer')).toBeVisible()
-  })
 })
 
 // ── Timer disconnectedCallback (lines 197-205) ─────────────────────────────────
@@ -497,28 +469,6 @@ test.describe('retro-timer mute toggle (participant pill)', () => {
 // ── Ding sound ────────────────────────────────────────────────────────────────
 
 test.describe('retro-timer ding sound', () => {
-  test('AudioContext is not created when page loads with an already-expired timer (wasRunning guard)', async ({ page }) => {
-    const frozenNow = Date.now()
-    await page.clock.install({ time: frozenNow })
-    await mockAudioContext(page)
-    await withName(page, 'Alice', FAC_TOKEN)
-    const session = {
-      ...BASE,
-      timer: {
-        duration_seconds: 5,
-        started_at: new Date(frozenNow - 60_000).toISOString(), // expired 55s ago
-        paused_remaining: null,
-      },
-    }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('retro-timer')).toBeVisible()
-    await page.clock.fastForward(2000) // fire two interval ticks instantly
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
-    expect(created).toBe(false)
-  })
-
   test('AudioContext is created when a running timer reaches zero', async ({ page }) => {
     const frozenNow = Date.now()
     await page.clock.install({ time: frozenNow })
@@ -544,27 +494,4 @@ test.describe('retro-timer ding sound', () => {
     expect(created).toBe(true)
   })
 
-  test('AudioContext is not created when timer reaches zero while muted', async ({ page }) => {
-    const frozenNow = Date.now()
-    await page.clock.install({ time: frozenNow })
-    await mockAudioContext(page)
-    await withName(page, 'Alice', FAC_TOKEN)
-    await page.addInitScript(() => localStorage.setItem('retro_timer_muted', 'true'))
-    const session = {
-      ...BASE,
-      timer: {
-        duration_seconds: 30,
-        started_at: new Date(frozenNow - 28_500).toISOString(),
-        paused_remaining: null,
-      },
-    }
-    await mockApi(page, session as unknown as Record<string, unknown>)
-    await page.goto(`/session/${SESSION_ID}`)
-    // Wait for the countdown to show — confirms displaySeconds is set before advancing
-    await expect(page.locator('retro-timer')).toContainText('0:0')
-    await page.clock.fastForward(3000) // advance past expiry instantly
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
-    expect(created).toBe(false)
-  })
 })

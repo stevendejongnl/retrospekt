@@ -23,10 +23,8 @@ function semverGt(a: string, b: string): boolean {
   const pa = a.split('.').map(Number)
   const pb = b.split('.').map(Number)
   for (let i = 0; i < 3; i++) {
-    /* istanbul ignore next */
-    if ((pa[i] ?? 0) > (pb[i] ?? 0)) return true
-    /* istanbul ignore next */
-    if ((pa[i] ?? 0) < (pb[i] ?? 0)) return false
+    if (pa[i] > pb[i]) return true
+    if (pa[i] < pb[i]) return false
   }
   return false
 }
