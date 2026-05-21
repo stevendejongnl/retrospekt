@@ -47,6 +47,8 @@ export class RetroBoard extends LitElement {
   @state() private settingName = ''
   @state() private settingReactions = true
   @state() private settingOpenFacilitator = false
+  @state() private voteLimitMessage = ''
+  private _voteLimitTimer: ReturnType<typeof setTimeout> | null = null
 
   static styles = [faIconStyles, css`
     :host {
@@ -616,6 +618,15 @@ export class RetroBoard extends LitElement {
     .settings-save-btn:hover {
       background: var(--retro-accent-hover);
     }
+    .vote-limit-msg {
+      background: var(--retro-warning, #fef3c7);
+      color: var(--retro-warning-text, #92400e);
+      text-align: center;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      margin: 0 16px 8px;
+    }
   `]
 
   private get participantColorMap(): Record<string, string> {
@@ -658,7 +669,15 @@ export class RetroBoard extends LitElement {
   }
 
   private async onVoteCard(e: CustomEvent): Promise<void> {
-    await api.addVote(this.session.id, (e.detail as { cardId: string }).cardId, this.participantName)
+    const { cardId } = e.detail as { cardId: string }
+    if (
+      this.session.max_votes_per_participant !== null &&
+      this.votesUsed >= this.session.max_votes_per_participant
+    ) {
+      this._showVoteLimit()
+      return
+    }
+    await api.addVote(this.session.id, cardId, this.participantName)
   }
 
   private async onUnvoteCard(e: CustomEvent): Promise<void> {
@@ -675,7 +694,7 @@ export class RetroBoard extends LitElement {
       this.session.max_votes_per_participant !== null &&
       countParticipantVotes(this.session, this.participantName) >= this.session.max_votes_per_participant
     ) {
-      // Vote limit message wired in Task 7 — for now just return
+      this._showVoteLimit()
       return
     }
     const groupIds = new Set(groupCards.map((c) => c.id))
@@ -785,6 +804,19 @@ export class RetroBoard extends LitElement {
     this.settingReactions = this.session.reactions_enabled
     this.settingOpenFacilitator = this.session.open_facilitator
     this.showSettings = true
+  }
+
+  private get votesUsed(): number {
+    return this.participantName ? countParticipantVotes(this.session, this.participantName) : 0
+  }
+
+  private _showVoteLimit(): void {
+    if (this._voteLimitTimer) clearTimeout(this._voteLimitTimer)
+    this.voteLimitMessage = 'Vote limit reached — remove a vote first'
+    this._voteLimitTimer = setTimeout(() => {
+      this.voteLimitMessage = ''
+      this._voteLimitTimer = null
+    }, 3000)
   }
 
   private async saveSettings(): Promise<void> {
@@ -997,6 +1029,10 @@ export class RetroBoard extends LitElement {
           `
         : ''}
 
+      ${this.voteLimitMessage
+        ? html`<div class="vote-limit-msg">${this.voteLimitMessage}</div>`
+        : ''}
+
       <div
         class="columns"
         @add-card=${this.onAddCard}
@@ -1031,6 +1067,8 @@ export class RetroBoard extends LitElement {
               ?isFacilitator=${this.isFacilitator}
               .reactionsEnabled=${session.reactions_enabled}
               .sortByVotes=${session.column_sorts?.[col] ?? false}
+              .votesUsed=${this.votesUsed}
+              .maxVotes=${session.max_votes_per_participant}
             ></retro-column>
           `,
         )}

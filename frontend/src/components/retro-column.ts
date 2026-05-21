@@ -33,6 +33,8 @@ export class RetroColumn extends LitElement {
   @property({ type: Array }) participantNames: string[] = []
   @property({ type: Boolean }) reactionsEnabled = true
   @property({ type: Boolean }) sortByVotes = false
+  @property({ type: Number }) votesUsed = 0
+  @property({ type: Object }) maxVotes: number | null = null
 
   @state() private newCardText = ''
   @state() private isAdding = false
@@ -309,6 +311,11 @@ export class RetroColumn extends LitElement {
       border-color: var(--col-accent);
       color: var(--col-accent);
       background: color-mix(in srgb, var(--col-accent) 8%, transparent);
+    }
+    .vote-indicator {
+      font-size: 0.75rem;
+      color: var(--retro-text-muted);
+      white-space: nowrap;
     }
 
     /* ── Card group stack ── */
@@ -686,6 +693,9 @@ export class RetroColumn extends LitElement {
               : ''}
             ${this.isFacilitator && this.phase === 'collecting'
               ? html`<button class="delete-col-btn" @click=${this.onRemoveColumn} title="Remove column">×</button>`
+              : ''}
+            ${this.maxVotes !== null
+              ? html`<span class="vote-indicator">${this.votesUsed} / ${this.maxVotes} votes</span>`
               : ''}
             <span class="count-badge" style="background:${this.accent}">${this.visibleCards.length}</span>
           </div>

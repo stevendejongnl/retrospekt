@@ -616,6 +616,27 @@ test.describe('expanded stack', () => {
   })
 })
 
+// ── Vote limit message ────────────────────────────────────────────────────
+
+test.describe('vote limit message', () => {
+  test('clicking vote on stack tile when at vote limit shows limit message', async ({ page }) => {
+    const session = {
+      ...BASE,
+      max_votes_per_participant: 1,
+      cards: [
+        // Alice used her 1 vote on this solo card
+        makeCard({ id: 'c1', group_id: null, votes: [{ participant_name: 'Alice' }] }),
+        // Group she hasn't voted on yet
+        makeCard({ id: 'c2', group_id: 'g1', votes: [] }),
+        makeCard({ id: 'c3', group_id: 'g1', votes: [] }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.stack-tile .vote-btn').click()
+    await expect(page.locator('.vote-limit-msg')).toBeVisible()
+  })
+})
+
 // ── Drop onto collapsed stack tile ────────────────────────────────────────
 
 test.describe('card grouping — drop onto stack tile', () => {

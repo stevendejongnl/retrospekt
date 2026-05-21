@@ -979,6 +979,40 @@ test.describe('session-page settings button (participant)', () => {
   })
 })
 
+// ── Vote budget indicator ─────────────────────────────────────────────────────
+
+test('vote indicator shows used/max votes in column header when limit is set', async ({ page }) => {
+  const session = {
+    ...BASE,
+    phase: 'discussing' as const,
+    max_votes_per_participant: 5,
+    cards: [
+      {
+        id: 'c1', column: 'Went Well', text: 'Card 1', author_name: 'Bob',
+        published: true, votes: [{ participant_name: 'Alice' }],
+        reactions: [], assignee: null, group_id: null, created_at: '2026-01-01T00:00:00Z',
+      },
+    ],
+  }
+  await withName(page, 'Alice')
+  await mockApi(page, session as typeof BASE)
+  await page.goto(`/session/${SESSION_ID}`)
+  await expect(page.locator('.vote-indicator').first()).toContainText('1 / 5')
+})
+
+test('vote indicator is not shown when no limit is set', async ({ page }) => {
+  const session = {
+    ...BASE,
+    phase: 'discussing' as const,
+    max_votes_per_participant: null,
+    cards: [],
+  }
+  await withName(page, 'Alice')
+  await mockApi(page, session as typeof BASE)
+  await page.goto(`/session/${SESSION_ID}`)
+  await expect(page.locator('.vote-indicator')).toHaveCount(0)
+})
+
 // ── Add column deduplication ──────────────────────────────────────────────────
 
 test.describe('retro-board add column deduplication', () => {
