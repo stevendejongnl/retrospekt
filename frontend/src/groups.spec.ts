@@ -533,6 +533,52 @@ test.describe('stack tile voting', () => {
     const voteBtn = page.locator('.stack-tile .vote-btn')
     await expect(voteBtn).not.toHaveClass(/voted/)
   })
+
+  test('clicking vote on stack tile sends POST vote to representative card', async ({ page }) => {
+    let votedCardId = ''
+    const session = {
+      ...BASE,
+      max_votes_per_participant: null,
+      cards: [
+        makeCard({ id: 'c1', group_id: 'g1', votes: [] }),
+        makeCard({ id: 'c2', group_id: 'g1', votes: [] }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+
+    await page.route(`/api/v1/sessions/${SESSION_ID}/cards/*/votes`, (route) => {
+      if (route.request().method() === 'POST') {
+        votedCardId = route.request().url().split('/cards/')[1].split('/')[0]
+      }
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(session) })
+    })
+
+    await page.locator('.stack-tile .vote-btn').click()
+    await expect.poll(() => votedCardId).toBe('c1') // first card in session.cards order
+  })
+
+  test('clicking unvote on stack tile sends DELETE vote to all group cards with participant vote', async ({ page }) => {
+    const deletedCardIds: string[] = []
+    const session = {
+      ...BASE,
+      max_votes_per_participant: null,
+      cards: [
+        makeCard({ id: 'c1', group_id: 'g1', votes: [{ participant_name: 'Alice' }] }),
+        makeCard({ id: 'c2', group_id: 'g1', votes: [{ participant_name: 'Alice' }] }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+
+    await page.route(`/api/v1/sessions/${SESSION_ID}/cards/*/votes`, (route) => {
+      if (route.request().method() === 'DELETE') {
+        deletedCardIds.push(route.request().url().split('/cards/')[1].split('/')[0])
+      }
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(session) })
+    })
+
+    await page.locator('.stack-tile .vote-btn').click()
+    await expect.poll(() => deletedCardIds.sort()).toEqual(['c1', 'c2'])
+  })
 })
 
 // ── Drop onto collapsed stack tile ────────────────────────────────────────

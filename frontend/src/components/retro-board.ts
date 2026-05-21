@@ -4,7 +4,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Card, Session, SessionPhase } from '../types'
 import { buildParticipantColorMap } from '../types'
-import { api } from '../api'
+import { api, countParticipantVotes } from '../api'
 import { storage } from '../storage'
 import {
   faIconStyles,
@@ -669,6 +669,31 @@ export class RetroBoard extends LitElement {
     )
   }
 
+  private async onGroupVote(e: CustomEvent): Promise<void> {
+    const { groupCards } = e.detail as { groupCards: Card[] }
+    if (
+      this.session.max_votes_per_participant !== null &&
+      countParticipantVotes(this.session, this.participantName) >= this.session.max_votes_per_participant
+    ) {
+      // Vote limit message wired in Task 7 — for now just return
+      return
+    }
+    const groupIds = new Set(groupCards.map((c) => c.id))
+    const rep = this.session.cards.find((c) => groupIds.has(c.id))
+    if (rep) {
+      await api.addVote(this.session.id, rep.id, this.participantName)
+    }
+  }
+
+  private async onGroupUnvote(e: CustomEvent): Promise<void> {
+    const { groupCards } = e.detail as { groupCards: Card[] }
+    await Promise.all(
+      groupCards
+        .filter((c) => c.votes.some((v) => v.participant_name === this.participantName))
+        .map((c) => api.removeVote(this.session.id, c.id, this.participantName)),
+    )
+  }
+
   private async onDeleteCard(e: CustomEvent): Promise<void> {
     await api.deleteCard(
       this.session.id,
@@ -987,6 +1012,8 @@ export class RetroBoard extends LitElement {
         @unassign-card=${this.onUnassignCard}
         @group-cards=${this.onGroupCards}
         @ungroup-card=${this.onUngroupCard}
+        @group-vote=${this.onGroupVote}
+        @group-unvote=${this.onGroupUnvote}
         @rename-column=${this.onRenameColumn}
         @remove-column=${this.onRemoveColumn}
         @sort-column=${this.onSortColumn}
