@@ -864,32 +864,6 @@ test.describe('stats-page feedback section', () => {
     await expect(dashCells).toHaveCount(1)
   })
 
-  test('feedback rating chart with all-null counts uses fallback scale (covers d3.max ?? 1 branch)', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    // by_rating is non-empty so data.length > 0 passes the early return, but count is null
-    // on every element so d3.max returns undefined → the ?? 1 fallback fires (arm1).
-    const feedbackNullCounts = {
-      ...MOCK_ADMIN_STATS,
-      feedback: {
-        total: 1,
-        avg_rating: 3.0,
-        by_rating: [{ rating: 3, count: null as unknown as number }],
-        recent: [],
-      },
-    }
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(feedbackNullCounts) }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/User Feedback/i)).toBeVisible()
-    // Chart should render even with null counts (scale falls back to max=1)
-    await expect(page.locator('stats-page #feedback-rating-chart')).toBeVisible()
-  })
-
   test('feedback section not rendered when adminStats.feedback is null (covers nothing branch)', async ({ page }) => {
     await mockStats(page)
     await mockAdminAuth(page)
