@@ -206,3 +206,110 @@ async def test_edit_card_text_missing_participant_header_returns_400(client: Asy
         json={"text": "No header"},
     )
     assert response.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# Vote limit enforcement
+# ---------------------------------------------------------------------------
+
+
+async def _to_discussing(client: AsyncClient, session_id: str, token: str) -> None:
+    await client.post(
+        f"/api/v1/sessions/{session_id}/phase",
+        json={"phase": "discussing"},
+        headers={"X-Facilitator-Token": token},
+    )
+
+
+async def _publish(client: AsyncClient, session_id: str, card_id: str, author: str) -> None:
+    await client.post(
+        f"/api/v1/sessions/{session_id}/cards/{card_id}/publish",
+        headers={"X-Participant-Name": author},
+    )
+
+
+async def _vote(client: AsyncClient, session_id: str, card_id: str, voter: str) -> int:
+    r = await client.post(
+        f"/api/v1/sessions/{session_id}/cards/{card_id}/votes",
+        headers={"X-Participant-Name": voter},
+    )
+    return r.status_code
+
+
+async def _set_max_votes(client: AsyncClient, session_id: str, token: str, limit: int) -> None:
+    await client.patch(
+        f"/api/v1/sessions/{session_id}",
+        json={"max_votes_per_participant": limit},
+        headers={"X-Facilitator-Token": token},
+    )
+
+
+async def test_vote_succeeds_when_under_limit(client: AsyncClient):
+    session = await make_session(client)
+    card = await _add_card(client, session.id, author="Bob")
+    await _to_discussing(client, session.id, session.facilitator_token)
+    await _publish(client, session.id, card["id"], "Bob")
+    await _set_max_votes(client, session.id, session.facilitator_token, 2)
+
+    status = await _vote(client, session.id, card["id"], "Alice")
+    assert status == 200
+
+
+async def test_vote_blocked_when_at_limit(client: AsyncClient):
+    session = await make_session(client)
+    card1 = await _add_card(client, session.id, author="Bob")
+    card2_resp = await client.post(
+        f"/api/v1/sessions/{session.id}/cards",
+        json={"column": "Went Well", "text": "Second", "author_name": "Bob"},
+    )
+    card2 = card2_resp.json()
+    await _to_discussing(client, session.id, session.facilitator_token)
+    await _publish(client, session.id, card1["id"], "Bob")
+    await _publish(client, session.id, card2["id"], "Bob")
+    await _set_max_votes(client, session.id, session.facilitator_token, 1)
+
+    await _vote(client, session.id, card1["id"], "Alice")  # uses the 1 vote
+    status = await _vote(client, session.id, card2["id"], "Alice")  # should be blocked
+    assert status == 409
+
+
+async def test_vote_limit_counts_group_as_one(client: AsyncClient):
+    """Two cards in the same group that Alice voted on count as 1 used vote, not 2."""
+    session = await make_session(client)
+    card1 = await _add_card(client, session.id, author="Bob")
+    card2_resp = await client.post(
+        f"/api/v1/sessions/{session.id}/cards",
+        json={"column": "Went Well", "text": "Second", "author_name": "Bob"},
+    )
+    card2 = card2_resp.json()
+    card3_resp = await client.post(
+        f"/api/v1/sessions/{session.id}/cards",
+        json={"column": "Went Well", "text": "Third", "author_name": "Bob"},
+    )
+    card3 = card3_resp.json()
+
+    await _to_discussing(client, session.id, session.facilitator_token)
+    for cid in [card1["id"], card2["id"], card3["id"]]:
+        await _publish(client, session.id, cid, "Bob")
+
+    # Group card1 + card2
+    await client.post(
+        f"/api/v1/sessions/{session.id}/cards/{card1['id']}/group",
+        json={"target_card_id": card2["id"]},
+        headers={"X-Participant-Name": "Bob"},
+    )
+
+    await _set_max_votes(client, session.id, session.facilitator_token, 2)
+    # Vote on card1 (in a group) — uses 1 vote item (the group)
+    await _vote(client, session.id, card1["id"], "Alice")
+    # Vote on card3 (solo) — uses 1 more vote item. Total = 2, at limit
+    await _vote(client, session.id, card3["id"], "Alice")
+    # Add a 4th solo card - should be blocked (2 vote items already used)
+    card4_resp = await client.post(
+        f"/api/v1/sessions/{session.id}/cards",
+        json={"column": "Went Well", "text": "Fourth", "author_name": "Bob"},
+    )
+    card4 = card4_resp.json()
+    await _publish(client, session.id, card4["id"], "Bob")
+    status = await _vote(client, session.id, card4["id"], "Alice")
+    assert status == 409  # 2 vote items already used (group + card3)

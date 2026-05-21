@@ -15,6 +15,20 @@ from ..services.sse_manager import sse_manager
 router = APIRouter(prefix="/api/v1/sessions")
 
 
+def _count_participant_votes(session: Session, participant_name: str) -> int:
+    seen_groups: set[str] = set()
+    count = 0
+    for card in session.cards:
+        if any(v.participant_name == participant_name for v in card.votes):
+            if card.group_id:
+                if card.group_id not in seen_groups:
+                    seen_groups.add(card.group_id)
+                    count += 1
+            else:
+                count += 1
+    return count
+
+
 def _public(session: Session) -> dict:
     d = session.model_dump()
     d.pop("facilitator_token", None)
@@ -86,11 +100,19 @@ async def add_vote(
     if session.phase != "discussing":
         raise HTTPException(status_code=409, detail="Voting is only allowed during the discussion phase")
 
-    # Idempotent — ignore duplicate votes
-    if not any(v.participant_name == x_participant_name for v in card.votes):
-        card.votes.append(Vote(participant_name=x_participant_name))
-        session = await repo.update(session)
-        await sse_manager.broadcast(session_id, _public(session))
+    # Idempotent — re-vote is a no-op even at the limit
+    if any(v.participant_name == x_participant_name for v in card.votes):
+        updated_card = next(c for c in session.cards if c.id == card_id)
+        return updated_card.model_dump()
+
+    if session.max_votes_per_participant is not None:
+        used = _count_participant_votes(session, x_participant_name)
+        if used >= session.max_votes_per_participant:
+            raise HTTPException(status_code=409, detail="Vote limit reached")
+
+    card.votes.append(Vote(participant_name=x_participant_name))
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
 
     updated_card = next(c for c in session.cards if c.id == card_id)
     return updated_card.model_dump()
