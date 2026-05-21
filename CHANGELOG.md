@@ -1,3 +1,16 @@
+## [1.32.0](https://github.com/stevendejongnl/retrospekt/compare/v1.31.0...v1.32.0) (2026-05-21)
+
+### Features
+
+* **voting:** add max votes per participant to settings dialog ([9c3bc6b](https://github.com/stevendejongnl/retrospekt/commit/9c3bc6bb072437af5d25176d42d0accf5dc0e899))
+* **voting:** add max_votes_per_participant field to Session model ([642a38f](https://github.com/stevendejongnl/retrospekt/commit/642a38fe74610978bc13de843e953638d7d8fce2))
+* **voting:** add vote budget indicator and vote limit message ([7c02bb4](https://github.com/stevendejongnl/retrospekt/commit/7c02bb4a9a1923c94a47b15cf3215a492809059f))
+* **voting:** enforce max_votes_per_participant limit on add_vote ([2a8e562](https://github.com/stevendejongnl/retrospekt/commit/2a8e56284ab0d4628ea27a0568c4cac7bfc7707e))
+* **voting:** export countParticipantVotes and add max_votes_per_participant to Session type ([de1fe1f](https://github.com/stevendejongnl/retrospekt/commit/de1fe1f5c92ec3098a148f306e926f974478f590))
+* **voting:** hide vote buttons on individual cards inside expanded group ([73952b0](https://github.com/stevendejongnl/retrospekt/commit/73952b06c4cad6eff30f9e6c11f535c6d1568833))
+* **voting:** show combined vote count and voted state on stack tile ([d15abbd](https://github.com/stevendejongnl/retrospekt/commit/d15abbda7c04eb62ab9a12265dc980341bc3d2a0))
+* **voting:** wire group-vote and group-unvote handlers in retro-board ([9dd4804](https://github.com/stevendejongnl/retrospekt/commit/9dd480472ec011ce6128ad979b4abefc81c1f14b))
+
 ## [1.31.0](https://github.com/stevendejongnl/retrospekt/compare/v1.30.0...v1.31.0) (2026-05-20)
 
 ### Features
