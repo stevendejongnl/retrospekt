@@ -707,7 +707,21 @@ export class RetroColumn extends LitElement {
                       </div>
                       ${item.cards.map((card) => html`
                         <div class="stack-card-wrapper">
-                          ${renderSingleCard(card)}
+                          <retro-card
+                            .card=${card}
+                            .participantName=${this.participantName}
+                            .participantNames=${this.participantNames}
+                            ?canVote=${false}
+                            .showVote=${false}
+                            ?canDelete=${false}
+                            ?canEdit=${card.author_name === this.participantName && this.phase !== 'closed'}
+                            ?canPublish=${false}
+                            .reactionsEnabled=${this.reactionsEnabled}
+                            ?canReact=${(this.phase === 'discussing' || this.phase === 'closed') && card.published}
+                            ?canAssign=${false}
+                            ?canGroup=${false}
+                            style="--card-accent:${this.participantColorMap[card.author_name] ?? '#6b7280'}"
+                          ></retro-card>
                           <button
                             class="ungroup-btn"
                             @click=${() => this._dispatchUngroup(card.id)}

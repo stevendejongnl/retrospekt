@@ -19,6 +19,7 @@ export class RetroCard extends LitElement {
   @property({ type: Object }) card!: Card
   @property({ type: String }) participantName = ''
   @property({ type: Boolean }) canVote = false
+  @property({ type: Boolean }) showVote = true
   @property({ type: Boolean }) canDelete = false
   @property({ type: Boolean }) canPublish = false
   @property({ type: Boolean }) canReact = false
@@ -488,7 +489,8 @@ export class RetroCard extends LitElement {
                     Publish
                   </button>
                 `
-        : html`
+        : this.showVote
+          ? html`
                   <button
                     class="vote-btn ${this.hasVoted ? 'voted' : ''}"
                     ?disabled=${!canVote}
@@ -497,7 +499,8 @@ export class RetroCard extends LitElement {
                   >
                     ${iconThumbsUp()} ${card.votes.length}
                   </button>
-                `}
+                `
+          : ''}
             ${canDelete
         ? html`<button class="delete-btn" @click=${this.onDeleteClick} title="Delete card">
                   ×

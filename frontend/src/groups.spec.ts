@@ -581,6 +581,41 @@ test.describe('stack tile voting', () => {
   })
 })
 
+// ── Expanded stack voting ─────────────────────────────────────────────────
+
+test.describe('expanded stack', () => {
+  test('individual cards inside an expanded group have no vote button', async ({ page }) => {
+    const session = {
+      ...BASE,
+      max_votes_per_participant: null,
+      cards: [
+        makeCard({ id: 'c1', group_id: 'g1', votes: [] }),
+        makeCard({ id: 'c2', group_id: 'g1', votes: [] }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.stack-tile').click() // expand
+    await expect(page.locator('.stack-expanded')).toBeVisible()
+    // Expanded cards must not have any vote buttons
+    await expect(page.locator('.stack-expanded .vote-btn')).toHaveCount(0)
+  })
+
+  test('individual cards inside an expanded group have no vote button even with pre-existing votes', async ({ page }) => {
+    const session = {
+      ...BASE,
+      max_votes_per_participant: null,
+      cards: [
+        makeCard({ id: 'c1', group_id: 'g1', votes: [{ participant_name: 'Bob' }] }), // has a vote
+        makeCard({ id: 'c2', group_id: 'g1', votes: [] }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.stack-tile').click() // expand
+    await expect(page.locator('.stack-expanded')).toBeVisible()
+    await expect(page.locator('.stack-expanded .vote-btn')).toHaveCount(0)
+  })
+})
+
 // ── Drop onto collapsed stack tile ────────────────────────────────────────
 
 test.describe('card grouping — drop onto stack tile', () => {
