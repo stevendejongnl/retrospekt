@@ -52,6 +52,7 @@ export interface Session {
   timer: TimerState | null
   reactions_enabled: boolean
   open_facilitator: boolean
+  max_votes_per_participant: number | null
   created_at: string
   updated_at: string
 }

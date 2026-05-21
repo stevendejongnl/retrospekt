@@ -257,4 +257,22 @@ export function createApi(fetchFn: typeof fetch = fetch) {
   }
 }
 
+export function countParticipantVotes(session: Session, participantName: string): number {
+  const seenGroups = new Set<string>()
+  let count = 0
+  for (const card of session.cards) {
+    if (card.votes.some((v) => v.participant_name === participantName)) {
+      if (card.group_id) {
+        if (!seenGroups.has(card.group_id)) {
+          seenGroups.add(card.group_id)
+          count++
+        }
+      } else {
+        count++
+      }
+    }
+  }
+  return count
+}
+
 export const api = createApi()

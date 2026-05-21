@@ -485,3 +485,76 @@ describe('error handling', () => {
     expect(result).toBeUndefined()
   })
 })
+
+import { countParticipantVotes } from './api'
+import type { Session } from './types'
+
+// ── countParticipantVotes ──────────────────────────────────────────────────
+
+function makeVotedCard(id: string, groupId: string | null, voters: string[]) {
+  return {
+    id,
+    column: 'Went Well',
+    text: 'text',
+    author_name: 'Bob',
+    published: true,
+    votes: voters.map((p) => ({ participant_name: p })),
+    reactions: [],
+    assignee: null,
+    group_id: groupId,
+    created_at: '2026-01-01T00:00:00Z',
+  }
+}
+
+function makeTestSession(cards: object[]): Session {
+  return {
+    id: 's1',
+    name: 'Test',
+    columns: ['Went Well'],
+    phase: 'discussing',
+    participants: [],
+    cards: cards as Session['cards'],
+    notes: [],
+    timer: null,
+    column_sorts: {},
+    reactions_enabled: true,
+    open_facilitator: false,
+    max_votes_per_participant: null,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  }
+}
+
+describe('countParticipantVotes', () => {
+  it('returns 0 when participant has no votes', () => {
+    const session = makeTestSession([makeVotedCard('c1', null, [])])
+    expect(countParticipantVotes(session, 'Alice')).toBe(0)
+  })
+
+  it('counts a vote on a solo card as 1', () => {
+    const session = makeTestSession([makeVotedCard('c1', null, ['Alice'])])
+    expect(countParticipantVotes(session, 'Alice')).toBe(1)
+  })
+
+  it('counts all cards in a group as 1 even if voted on multiple', () => {
+    const session = makeTestSession([
+      makeVotedCard('c1', 'g1', ['Alice']),
+      makeVotedCard('c2', 'g1', ['Alice']),
+    ])
+    expect(countParticipantVotes(session, 'Alice')).toBe(1)
+  })
+
+  it('counts a group vote and a solo card vote separately', () => {
+    const session = makeTestSession([
+      makeVotedCard('c1', 'g1', ['Alice']),
+      makeVotedCard('c2', 'g1', []),
+      makeVotedCard('c3', null, ['Alice']),
+    ])
+    expect(countParticipantVotes(session, 'Alice')).toBe(2)
+  })
+
+  it('does not count another participant votes', () => {
+    const session = makeTestSession([makeVotedCard('c1', null, ['Bob'])])
+    expect(countParticipantVotes(session, 'Alice')).toBe(0)
+  })
+})
