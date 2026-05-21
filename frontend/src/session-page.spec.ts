@@ -979,6 +979,51 @@ test.describe('session-page settings button (participant)', () => {
   })
 })
 
+// ── Settings dialog: max votes ────────────────────────────────────────────────
+
+test('settings dialog has max votes input that saves via PATCH', async ({ page }) => {
+  const session = {
+    ...BASE,
+    phase: 'discussing' as const,
+    max_votes_per_participant: null,
+    cards: [],
+  }
+  await withName(page, 'Alice', FAC_TOKEN)
+  await mockApi(page, session as typeof BASE)
+  await page.goto(`/session/${SESSION_ID}`)
+  const patchReq = page.waitForRequest(
+    (r) => r.url().endsWith(`/sessions/${SESSION_ID}`) && r.method() === 'PATCH',
+  )
+  await page.locator('.settings-btn').click()
+  await page.locator('.settings-max-votes-input').fill('3')
+  await page.locator('.settings-save-btn').click()
+  const req = await patchReq
+  const body = JSON.parse(req.postData() ?? '{}') as Record<string, unknown>
+  expect(body['max_votes_per_participant']).toBe(3)
+})
+
+test('settings dialog clears max votes when input is empty', async ({ page }) => {
+  const session = {
+    ...BASE,
+    phase: 'discussing' as const,
+    max_votes_per_participant: 5,
+    cards: [],
+  }
+  await withName(page, 'Alice', FAC_TOKEN)
+  await mockApi(page, session as typeof BASE)
+  await page.goto(`/session/${SESSION_ID}`)
+  const patchReq = page.waitForRequest(
+    (r) => r.url().endsWith(`/sessions/${SESSION_ID}`) && r.method() === 'PATCH',
+  )
+  await page.locator('.settings-btn').click()
+  // Input should be pre-populated with '5'; clear it
+  await page.locator('.settings-max-votes-input').clear()
+  await page.locator('.settings-save-btn').click()
+  const req = await patchReq
+  const body = JSON.parse(req.postData() ?? '{}') as Record<string, unknown>
+  expect(body['max_votes_per_participant']).toBeNull()
+})
+
 // ── Vote budget indicator ─────────────────────────────────────────────────────
 
 test('vote indicator shows used/max votes in column header when limit is set', async ({ page }) => {

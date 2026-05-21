@@ -47,6 +47,7 @@ export class RetroBoard extends LitElement {
   @state() private settingName = ''
   @state() private settingReactions = true
   @state() private settingOpenFacilitator = false
+  @state() private settingMaxVotes = ''
   @state() private voteLimitMessage = ''
   private _voteLimitTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -803,6 +804,7 @@ export class RetroBoard extends LitElement {
     this.settingName = this.session.name
     this.settingReactions = this.session.reactions_enabled
     this.settingOpenFacilitator = this.session.open_facilitator
+    this.settingMaxVotes = this.session.max_votes_per_participant?.toString() ?? ''
     this.showSettings = true
   }
 
@@ -820,10 +822,15 @@ export class RetroBoard extends LitElement {
   }
 
   private async saveSettings(): Promise<void> {
-    const updates: { name?: string; reactions_enabled?: boolean; open_facilitator?: boolean } = {}
+    const updates: { name?: string; reactions_enabled?: boolean; open_facilitator?: boolean; max_votes_per_participant?: number | null } = {}
     if (this.settingName !== this.session.name) updates.name = this.settingName
     if (this.settingReactions !== this.session.reactions_enabled) updates.reactions_enabled = this.settingReactions
     if (this.settingOpenFacilitator !== this.session.open_facilitator) updates.open_facilitator = this.settingOpenFacilitator
+    const maxVotesRaw = this.settingMaxVotes.trim()
+    const newMaxVotes = maxVotesRaw === '' ? null : parseInt(maxVotesRaw, 10)
+    if (newMaxVotes !== this.session.max_votes_per_participant) {
+      updates.max_votes_per_participant = newMaxVotes
+    }
     if (Object.keys(updates).length > 0) {
       await api.updateSession(this.session.id, updates, this.facilitatorToken, this.participantName)
     }
@@ -903,6 +910,21 @@ export class RetroBoard extends LitElement {
                     @change=${(e: Event) => { this.settingOpenFacilitator = (e.target as HTMLInputElement).checked }}
                   />
                   <label for="settings-open-facilitator">Allow all participants to manage the board</label>
+                </div>
+                <div class="settings-field">
+                  <label class="settings-label">
+                    Max votes per participant
+                    <input
+                      class="settings-input settings-max-votes-input"
+                      type="number"
+                      min="1"
+                      placeholder="Unlimited"
+                      .value=${this.settingMaxVotes}
+                      @input=${(e: InputEvent) => {
+                        this.settingMaxVotes = (e.target as HTMLInputElement).value
+                      }}
+                    />
+                  </label>
                 </div>
                 <div class="settings-actions">
                   <button class="settings-cancel-btn" @click=${() => (this.showSettings = false)}>Cancel</button>
