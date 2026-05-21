@@ -613,6 +613,61 @@ test.describe('session-page whats-new dialog', () => {
     // Current app version > '0.0.2' → whats-new dialog should appear
     await expect(page.locator('whats-new-dialog .overlay')).toBeVisible()
   })
+
+  test('whats-new-dialog with no highlight.body and item without scope (covers render branches)', async ({ page }) => {
+    // Show dialog then inject entries to cover:
+    // 1) no highlight.body → headline falls back to "What's new in vX.X.X"
+    // 2) allItems with an item that has no scope (item.scope falsy → no scope span rendered)
+    await page.addInitScript((id) => {
+      const history = [
+        { id: 'other-sess', name: 'Old Retro', phase: 'closed', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '2026-01-01' },
+      ]
+      localStorage.setItem('retro_history', JSON.stringify(history))
+      localStorage.setItem(`retro_name_${id}`, 'Alice')
+    }, SESSION_ID)
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    // Wait for dialog, then inject a custom entry: no highlight.body + item without scope
+    await expect(page.locator('whats-new-dialog .overlay')).toBeVisible()
+    await page.evaluate(() => {
+      const sp = document.querySelector('session-page') as Element & { shadowRoot: ShadowRoot }
+      const dialog = sp.shadowRoot.querySelector('whats-new-dialog') as Element & { entry: unknown; requestUpdate: () => void }
+      // highlight has no .body → covers binary-expr arm 1
+      // group item has no scope → covers cond-expr arm 1 for item.scope
+      dialog.entry = {
+        version: '0.0.1',
+        date: '2026-01-01',
+        groups: [{ kind: 'Features', items: [{ text: 'No scope item' }] }],
+        highlight: { title: 'Custom highlight' },
+      }
+      dialog.requestUpdate()
+    })
+    await expect(page.locator('whats-new-dialog .version-badge')).toContainText('v0.0.1')
+    await expect(page.locator('whats-new-dialog .release-item')).toBeVisible()
+  })
+
+  test('whats-new-dialog with no items at all (covers empty allItems branch)', async ({ page }) => {
+    // Entry with empty groups → allItems.length = 0 → "Also in this release" section not rendered
+    await page.addInitScript((id) => {
+      const history = [
+        { id: 'other-sess', name: 'Old Retro', phase: 'closed', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '2026-01-01' },
+      ]
+      localStorage.setItem('retro_history', JSON.stringify(history))
+      localStorage.setItem(`retro_name_${id}`, 'Alice')
+    }, SESSION_ID)
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('whats-new-dialog .overlay')).toBeVisible()
+    await page.evaluate(() => {
+      const sp = document.querySelector('session-page') as Element & { shadowRoot: ShadowRoot }
+      const dialog = sp.shadowRoot.querySelector('whats-new-dialog') as Element & { entry: unknown; requestUpdate: () => void }
+      // Empty groups → allItems = [] → length 0 → no "Also in this release" section
+      dialog.entry = { version: '0.0.2', date: '2026-01-01', groups: [], highlight: { title: 'Empty release', body: 'Nothing to show' } }
+      dialog.requestUpdate()
+    })
+    await expect(page.locator('whats-new-dialog .version-badge')).toContainText('v0.0.2')
+    await expect(page.locator('whats-new-dialog .section-label')).not.toBeVisible()
+  })
 })
 
 // ── Export ────────────────────────────────────────────────────────────────────

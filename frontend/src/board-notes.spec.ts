@@ -195,6 +195,31 @@ test.describe('board-notes add note', () => {
     }).toPass({ timeout: 3000 })
   })
 
+  test('Ctrl+Enter with whitespace-only text is a no-op (covers !text early return guard)', async ({ page }) => {
+    await mockApi(page, makeSession())
+    let apiCalled = false
+    await page.route(`/api/v1/sessions/${SESSION_ID}/notes`, async route => {
+      apiCalled = true
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(NOTE_1) })
+    })
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button[title="Board notes"]').click()
+    await expect(page.locator('board-notes .add-note-textarea')).toBeVisible()
+    // Set newNoteText to whitespace then invoke addNote directly (traversing shadow DOM)
+    // so that trim() returns '' and the !text guard fires.
+    await page.evaluate(() => {
+      const sessionPage = document.querySelector('session-page')
+      const boardNotes = sessionPage?.shadowRoot?.querySelector('board-notes') as (Element & { newNoteText: string; addNote: () => Promise<void> }) | null
+      if (boardNotes) {
+        boardNotes.newNoteText = '   '
+        void boardNotes.addNote()
+      }
+    })
+    await page.waitForTimeout(200)
+    expect(apiCalled).toBe(false)
+  })
+
   test('Escape clears the textarea without submitting', async ({ page }) => {
     const session = makeSession()
     await mockApi(page, session)
