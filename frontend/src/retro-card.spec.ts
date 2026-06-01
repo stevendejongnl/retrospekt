@@ -419,7 +419,7 @@ test.describe('retro-card assign select empty option', () => {
     })
     await page.evaluate(() => {
       // Traverse shadow DOM chain to reach .assign-select inside retro-card
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const sp = document.querySelector('session-page') as any
       const rb = sp?.shadowRoot?.querySelector('retro-board') as any
       const col = rb?.shadowRoot?.querySelector('retro-column') as any

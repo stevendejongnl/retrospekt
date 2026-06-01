@@ -14,7 +14,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "types": ["mocha", "node"]
   },
   "include": ["src"],
   "exclude": ["src/**/*.spec.ts"]

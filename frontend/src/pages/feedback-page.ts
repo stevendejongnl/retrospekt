@@ -6,8 +6,6 @@ import { storage } from '../storage'
 import { faIconStyles } from '../icons'
 import '../components/background-blobs'
 
-declare const __APP_VERSION__: string
-
 const EMOJI_SCALE = ['😞', '😕', '😐', '🙂', '😍'] as const
 
 @customElement('feedback-page')

@@ -738,7 +738,7 @@ test.describe('session-page export', () => {
 test.describe('session-page SSE error handling', () => {
   test('SSE onmessage ignores invalid JSON without crashing (sse.ts line 26)', async ({ page }) => {
     await page.addInitScript(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const w = window as any
       w.__mockEventSources = []
       w.EventSource = function (url: string) {
@@ -759,7 +759,7 @@ test.describe('session-page SSE error handling', () => {
 
     // Send invalid JSON — hits the catch block (sse.ts line 26)
     await page.evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const es = (window as any).__mockEventSources?.[0] as {
         onmessage: null | ((e: { data: string }) => void)
       }
@@ -777,7 +777,7 @@ test.describe('session-page SSE callback', () => {
   test('SSE update triggers saveToHistory when participant name is set', async ({ page }) => {
     // Intercept EventSource before page loads so we can trigger messages manually
     await page.addInitScript(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const w = window as any
       w.__mockEventSources = []
       w.EventSource = function (url: string) {
@@ -799,7 +799,7 @@ test.describe('session-page SSE callback', () => {
     // Trigger the SSE onmessage callback — hits session-page.ts lines 483-485
     const updated = { ...BASE, name: 'SSE History Test' }
     await page.evaluate((data) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const w = window as any
       const es = w.__mockEventSources?.[0] as { onmessage: null | ((e: { data: string }) => void) }
       if (es?.onmessage) es.onmessage({ data: JSON.stringify(data) })

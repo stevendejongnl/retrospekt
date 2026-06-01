@@ -272,7 +272,7 @@ test.describe('home-page matchMedia change', () => {
   test('system theme change applies when no stored preference exists', async ({ page }) => {
     // Capture the change listener that initTheme registers before the page loads
     await page.addInitScript(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const w = window as any
       const origMatchMedia = window.matchMedia.bind(window)
       w.matchMedia = function (query: string) {
@@ -295,7 +295,7 @@ test.describe('home-page matchMedia change', () => {
     await page.goto('/')
     // Fire the captured listener directly with matches=true — hits lines 24-25
     await page.evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const w = window as any
       localStorage.removeItem('retro_theme')
       if (w.__darkListener)
@@ -320,7 +320,7 @@ test.describe('home-page matchMedia change', () => {
   test('system theme change applies light theme when system switches back to light', async ({ page }) => {
     // Covers the matches=false branch of e.matches ? 'dark' : 'light' (theme.ts line 25)
     await page.addInitScript(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const w = window as any
       const origMatchMedia = window.matchMedia.bind(window)
       w.matchMedia = function (query: string) {
@@ -343,7 +343,7 @@ test.describe('home-page matchMedia change', () => {
     await page.goto('/')
     // Fire listener with matches=false (system switched to light, no stored pref)
     await page.evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const w = window as any
       localStorage.removeItem('retro_theme')
       if (w.__darkListener) w.__darkListener({ matches: false, media: '(prefers-color-scheme: dark)' })
