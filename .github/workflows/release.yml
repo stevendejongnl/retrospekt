@@ -83,6 +83,7 @@ jobs:
           key: playwright-${{ hashFiles('frontend/package-lock.json') }}
 
       - name: Install Playwright browsers
+        timeout-minutes: 5
         run: cd frontend && npx playwright install chromium
 
       - name: Frontend E2E tests (Playwright)
