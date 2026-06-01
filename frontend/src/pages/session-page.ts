@@ -764,7 +764,10 @@ export class SessionPage extends LitElement {
       <whats-new-dialog
         .open=${this.showWhatsNew}
         .entry=${CHANGELOG[0] ?? null}
-        @whats-new-dismissed=${() => { this.showWhatsNew = false }}
+        @whats-new-dismissed=${() => {
+          storage.markChangelogSeen(this.sessionId, __APP_VERSION__)
+          this.showWhatsNew = false
+        }}
         @whats-new-acknowledged=${() => {
           storage.markChangelogSeen(this.sessionId, __APP_VERSION__)
           this.showWhatsNew = false
