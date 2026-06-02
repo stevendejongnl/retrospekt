@@ -91,15 +91,6 @@ async function loadSession(
   )
 }
 
-// Helper to traverse shadow DOM and get a column element
-async function getColumnEl(page: Page) {
-  return page.evaluate(() => {
-    return (document.querySelector('session-page') as any)
-      ?.shadowRoot?.querySelector('retro-board')
-      ?.shadowRoot?.querySelector('retro-column')
-  })
-}
-
 // ── Drag-drop attribute tests ──────────────────────────────────────────────
 
 test.describe('card grouping — draggable attribute', () => {

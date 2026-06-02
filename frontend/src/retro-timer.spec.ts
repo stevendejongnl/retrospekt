@@ -3,7 +3,7 @@ import { test, expect } from './playwright-fixtures'
 
 async function mockAudioContext(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const w = window as any
     w.__audioCtxCreated = false
     w.AudioContext = function MockAudioContext(this: Record<string, unknown>) {
@@ -489,7 +489,7 @@ test.describe('retro-timer ding sound', () => {
     // Wait for the countdown to show — confirms displaySeconds is set before advancing
     await expect(page.locator('retro-timer')).toContainText('0:0')
     await page.clock.fastForward(6000) // advance past expiry; triggers interval callbacks
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
     expect(created).toBe(true)
   })

@@ -543,7 +543,7 @@ test.describe('session-page whats-new dialog', () => {
     await expect(page.locator('whats-new-dialog .overlay')).toBeVisible()
   })
 
-  test('"Later" button dismisses the dialog without marking seen', async ({ page }) => {
+  test('"Later" button dismisses the dialog and marks changelog seen', async ({ page }) => {
     await page.addInitScript((id) => {
       const other = [{ id: 'other-sess', name: 'Old Retro', phase: 'closed', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '2026-01-01' }]
       localStorage.setItem('retro_history', JSON.stringify(other))
@@ -553,12 +553,12 @@ test.describe('session-page whats-new dialog', () => {
     await page.goto(`/session/${SESSION_ID}`)
     await page.locator('whats-new-dialog .later-btn').click()
     await expect(page.locator('whats-new-dialog .overlay')).not.toBeVisible()
-    // seenChangelogVersion should NOT be set
+    // seenChangelogVersion should be set — dismiss prevents popup from repeating
     const seen = await page.evaluate(() => {
       const h = JSON.parse(localStorage.getItem('retro_history') ?? '[]') as { seenChangelogVersion?: string }[]
       return h[0]?.seenChangelogVersion
     })
-    expect(seen).toBeUndefined()
+    expect(seen).toBeDefined()
   })
 
   test('"Got it" button marks changelog seen and dismisses', async ({ page }) => {
@@ -738,7 +738,7 @@ test.describe('session-page export', () => {
 test.describe('session-page SSE error handling', () => {
   test('SSE onmessage ignores invalid JSON without crashing (sse.ts line 26)', async ({ page }) => {
     await page.addInitScript(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const w = window as any
       w.__mockEventSources = []
       w.EventSource = function (url: string) {
@@ -759,7 +759,7 @@ test.describe('session-page SSE error handling', () => {
 
     // Send invalid JSON — hits the catch block (sse.ts line 26)
     await page.evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const es = (window as any).__mockEventSources?.[0] as {
         onmessage: null | ((e: { data: string }) => void)
       }
@@ -777,7 +777,7 @@ test.describe('session-page SSE callback', () => {
   test('SSE update triggers saveToHistory when participant name is set', async ({ page }) => {
     // Intercept EventSource before page loads so we can trigger messages manually
     await page.addInitScript(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const w = window as any
       w.__mockEventSources = []
       w.EventSource = function (url: string) {
@@ -799,7 +799,7 @@ test.describe('session-page SSE callback', () => {
     // Trigger the SSE onmessage callback — hits session-page.ts lines 483-485
     const updated = { ...BASE, name: 'SSE History Test' }
     await page.evaluate((data) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const w = window as any
       const es = w.__mockEventSources?.[0] as { onmessage: null | ((e: { data: string }) => void) }
       if (es?.onmessage) es.onmessage({ data: JSON.stringify(data) })
