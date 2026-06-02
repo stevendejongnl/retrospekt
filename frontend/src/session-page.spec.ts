@@ -543,7 +543,7 @@ test.describe('session-page whats-new dialog', () => {
     await expect(page.locator('whats-new-dialog .overlay')).toBeVisible()
   })
 
-  test('"Later" button dismisses the dialog without marking seen', async ({ page }) => {
+  test('"Later" button dismisses the dialog and marks changelog seen', async ({ page }) => {
     await page.addInitScript((id) => {
       const other = [{ id: 'other-sess', name: 'Old Retro', phase: 'closed', created_at: '', participantName: 'Alice', isFacilitator: false, joinedAt: '2026-01-01' }]
       localStorage.setItem('retro_history', JSON.stringify(other))
@@ -553,12 +553,12 @@ test.describe('session-page whats-new dialog', () => {
     await page.goto(`/session/${SESSION_ID}`)
     await page.locator('whats-new-dialog .later-btn').click()
     await expect(page.locator('whats-new-dialog .overlay')).not.toBeVisible()
-    // seenChangelogVersion should NOT be set
+    // seenChangelogVersion should be set — dismiss prevents popup from repeating
     const seen = await page.evaluate(() => {
       const h = JSON.parse(localStorage.getItem('retro_history') ?? '[]') as { seenChangelogVersion?: string }[]
       return h[0]?.seenChangelogVersion
     })
-    expect(seen).toBeUndefined()
+    expect(seen).toBeDefined()
   })
 
   test('"Got it" button marks changelog seen and dismisses', async ({ page }) => {
