@@ -1,3 +1,10 @@
+## [1.32.3](https://github.com/stevendejongnl/retrospekt/compare/v1.32.2...v1.32.3) (2026-06-02)
+
+### Bug Fixes
+
+* **ci:** upgrade playwright to 1.60.0 to fix install hang on Node 24.16+ ([4ad4a57](https://github.com/stevendejongnl/retrospekt/commit/4ad4a570033e6341a42ff736445ab14c4233894f))
+* **whats-new:** mark changelog seen on dismiss to prevent repeat popup ([ea777d5](https://github.com/stevendejongnl/retrospekt/commit/ea777d57d20ef8a1e9076acbd955912f10877d12))
+
 ## [1.32.2](https://github.com/stevendejongnl/retrospekt/compare/v1.32.1...v1.32.2) (2026-05-21)
 
 ### Bug Fixes
