@@ -1,3 +1,9 @@
+## [1.33.0](https://github.com/stevendejongnl/retrospekt/compare/v1.32.3...v1.33.0) (2026-06-22)
+
+### Features
+
+* **board:** max votes per participant + card edit fix + ponytail refactor ([f4f6a94](https://github.com/stevendejongnl/retrospekt/commit/f4f6a94651e180f2d30247d260b3cc9288321ebd))
+
 ## [1.32.3](https://github.com/stevendejongnl/retrospekt/compare/v1.32.2...v1.32.3) (2026-06-02)
 
 ### Bug Fixes
