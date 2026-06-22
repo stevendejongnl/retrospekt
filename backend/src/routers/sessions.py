@@ -19,16 +19,9 @@ from ..models.requests import (
 from ..models.session import Participant, Session, SessionPhase, TimerState
 from ..repositories.session_repo import SessionRepository
 from ..services.sse_manager import sse_manager
+from ._shared import _public
 
 router = APIRouter(prefix="/api/v1/sessions")
-
-
-def _public(session: Session) -> dict:
-    """Strip internal fields before sending to clients."""
-    d = session.model_dump()
-    d.pop("facilitator_token", None)
-    d.pop("last_accessed_at", None)
-    return d
 
 
 def _check_facilitator_auth(
@@ -56,9 +49,8 @@ async def create_session(
         reactions_enabled=body.reactions_enabled,
         open_facilitator=body.open_facilitator,
         max_votes_per_participant=body.max_votes_per_participant,
+        columns=body.columns or Session.model_fields["columns"].default,
     )
-    if body.columns:
-        session.columns = body.columns
     # Seed the creator as first participant
     session.participants.append(Participant(name=body.participant_name))
     session = await repo.create(session)

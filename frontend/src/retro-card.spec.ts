@@ -387,13 +387,13 @@ test.describe('retro-card reactions_enabled', () => {
   })
 })
 
-// ── Reactions null field ──────────────────────────────────────────────────────
+// ── Reactions empty array ──────────────────────────────────────────────────────
 
-test.describe('retro-card reactions null handling', () => {
-  test('renders reactions row when card.reactions is null (treats as empty)', async ({ page }) => {
+test.describe('retro-card reactions empty handling', () => {
+  test('renders reactions row when card.reactions is empty', async ({ page }) => {
     const session = {
       ...BASE,
-      cards: [makeCard({ author_name: 'Bob', published: true, reactions: null })],
+      cards: [makeCard({ author_name: 'Bob', published: true, reactions: [] })],
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     // canReact=true (discussing, published, not own card) — all 7 buttons shown with count=0
@@ -534,6 +534,19 @@ test.describe('retro-card inline editing', () => {
     const req = page.waitForRequest(r => r.url().includes('/text') && r.method() === 'PATCH')
     await page.locator('.card-edit-input').press('Enter')
     await req
+  })
+
+  test('card text shows new value immediately after saving (optimistic update)', async ({ page }) => {
+    const session = {
+      ...BASE,
+      phase: 'collecting',
+      cards: [makeCard({ author_name: 'Alice', published: false, text: 'Old text' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.card-text').click()
+    await page.locator('.card-edit-input').fill('New text')
+    await page.locator('.card-edit-input').press('Enter')
+    await expect(page.locator('.card-text')).toHaveText('New text')
   })
 
   test('pressing Escape cancels and restores original text without API call', async ({ page }) => {

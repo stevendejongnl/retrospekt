@@ -506,6 +506,43 @@ test.describe('home-page open facilitator option', () => {
   })
 })
 
+// ── max votes per participant option ─────────────────────────────────────────
+
+test.describe('home-page max votes option', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+  })
+
+  test('max votes input is visible in Options', async ({ page }) => {
+    await expect(page.getByLabel(/Max votes per participant/i)).toBeVisible()
+  })
+
+  test('max votes input is empty by default (no limit)', async ({ page }) => {
+    await expect(page.getByLabel(/Max votes per participant/i)).toHaveValue('')
+  })
+
+  test('sends max_votes_per_participant=null when left empty', async ({ page }) => {
+    const createReq = page.waitForRequest(
+      r => r.url().includes('/sessions') && r.method() === 'POST',
+    )
+    await page.getByLabel('Session name').fill('Sprint Retro')
+    await page.locator('.create-btn').click()
+    const req = await createReq
+    expect(req.postDataJSON().max_votes_per_participant).toBeNull()
+  })
+
+  test('sends max_votes_per_participant when a value is set', async ({ page }) => {
+    const createReq = page.waitForRequest(
+      r => r.url().includes('/sessions') && r.method() === 'POST',
+    )
+    await page.getByLabel(/Max votes per participant/i).fill('5')
+    await page.getByLabel('Session name').fill('Sprint Retro')
+    await page.locator('.create-btn').click()
+    const req = await createReq
+    expect(req.postDataJSON().max_votes_per_participant).toBe(5)
+  })
+})
+
 // ── session-not-found banner ──────────────────────────────────────────────────
 
 test.describe('home-page session-not-found banner', () => {

@@ -506,13 +506,11 @@ class StatsRepository:
 
     async def _get_feedback_stats(self) -> FeedbackStats:
         feedback_col = self.collection.database["feedback"]
-        total = await feedback_col.count_documents({})
-        if total == 0:
-            return FeedbackStats(total=0, avg_rating=None, by_rating=[], recent=[])
 
         pipeline: list[dict] = [
             {
                 "$facet": {
+                    "total": [{"$count": "n"}],
                     "avg": [{"$group": {"_id": None, "avg": {"$avg": "$rating"}}}],
                     "by_rating": [
                         {"$group": {"_id": "$rating", "count": {"$sum": 1}}},
@@ -527,9 +525,10 @@ class StatsRepository:
         ]
         result = await feedback_col.aggregate(pipeline).to_list(length=1)
         if not result:
-            return FeedbackStats(total=total, avg_rating=None, by_rating=[], recent=[])
+            return FeedbackStats(total=0, avg_rating=None, by_rating=[], recent=[])
 
         facets = result[0]
+        total = facets["total"][0]["n"] if facets["total"] else 0
         avg_raw = facets["avg"][0]["avg"] if facets["avg"] else None
         avg_rating = round(float(avg_raw), 2) if avg_raw is not None else None
         by_rating = [

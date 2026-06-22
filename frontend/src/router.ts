@@ -1,4 +1,4 @@
-export interface Route {
+interface Route {
   path: string
   component: string
   title: string

@@ -10,7 +10,6 @@ import { storage } from '../storage'
 import { getEffectiveTheme, toggleTheme, getBrand, clearBrand } from '../theme'
 import {
   faIconStyles,
-  iconPencil,
   iconCommentDots,
   iconLock,
   iconSun,
@@ -21,9 +20,6 @@ import {
   iconFileArrowDown,
   iconNoteSticky,
   iconRotateLeft,
-  iconThumbsUp,
-  iconLayerGroup,
-  iconUsers,
   csLogo,
 } from '../icons'
 import '../components/retro-board'
@@ -32,6 +28,7 @@ import '../components/board-notes'
 import '../components/feedback-dialog'
 import '../components/whats-new-dialog'
 import '../components/background-blobs'
+import '../components/retro-help'
 import { CHANGELOG } from '../generated/changelog'
 import { semverGt } from '../storage'
 
@@ -235,130 +232,6 @@ export class SessionPage extends LitElement {
       .cs-collab {
         display: none;
       }
-    }
-
-    .help-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(2px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      padding: 24px;
-    }
-    .help-card {
-      background: var(--retro-bg-surface);
-      border-radius: 20px;
-      padding: 32px;
-      max-width: 480px;
-      max-height: 90vh;
-      overflow-y: auto;
-      width: 100%;
-      box-shadow: 0 16px 64px rgba(0, 0, 0, 0.16);
-    }
-    .help-card h3 {
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--retro-text-primary);
-      margin: 0 0 6px;
-      letter-spacing: -0.4px;
-    }
-    .help-card .subtitle {
-      font-size: 13px;
-      color: var(--retro-text-muted);
-      margin-bottom: 24px;
-    }
-    .help-phase {
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-      padding: 14px 0;
-      border-top: 1px solid var(--retro-border-subtle);
-    }
-    .help-phase-icon {
-      font-size: 24px;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-    .help-phase-body h4 {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--retro-text-primary);
-      margin: 0 0 4px;
-    }
-    .help-phase-body p {
-      font-size: 13px;
-      color: var(--retro-text-secondary);
-      margin: 0;
-      line-height: 1.5;
-    }
-    .help-close-btn {
-      margin-top: 24px;
-      width: 100%;
-      padding: 11px;
-      background: var(--retro-accent);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.12s;
-    }
-    .help-close-btn:hover {
-      background: var(--retro-accent-hover);
-    }
-    .help-footer {
-      margin-top: 16px;
-      font-size: 11px;
-      color: var(--retro-text-muted);
-      text-align: center;
-    }
-    .help-footer a {
-      color: var(--retro-accent);
-      text-decoration: none;
-    }
-    .help-footer a:hover {
-      text-decoration: underline;
-    }
-    .help-features {
-      margin-top: 20px;
-      border-top: 1px solid var(--retro-border-subtle);
-      padding-top: 16px;
-    }
-    .help-features-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--retro-text-muted);
-      margin: 0 0 10px;
-    }
-    .help-feature-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .help-feature {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      font-size: 12px;
-      color: var(--retro-text-secondary);
-      line-height: 1.4;
-    }
-    .help-feature-icon {
-      flex-shrink: 0;
-      color: var(--retro-accent);
-      font-size: 14px;
-      margin-top: 1px;
-    }
-    .help-feature strong {
-      color: var(--retro-text-primary);
-      font-weight: 600;
     }
 
     /* ── Main ── */
@@ -730,13 +603,6 @@ export class SessionPage extends LitElement {
     URL.revokeObjectURL(url)
   }
 
-  private onThemeToggle(): void {
-    toggleTheme()
-  }
-
-  private onBrandReset(): void {
-    clearBrand()
-  }
 
   render() {
     if (this.loading) {
@@ -775,86 +641,13 @@ export class SessionPage extends LitElement {
       ></whats-new-dialog>
       <board-notes
         .open=${this.showNotes}
-        .notes=${session.notes ?? []}
+        .notes=${session.notes}
         .participantName=${this.participantName}
         .sessionId=${this.sessionId}
         @close=${() => { this.showNotes = false }}
       ></board-notes>
 
-      ${this.showHelp
-        ? html`
-            <div class="help-overlay" @click=${() => (this.showHelp = false)}>
-              <div class="help-card" @click=${(e: Event) => e.stopPropagation()}>
-                <h3>How Retrospekt works</h3>
-                <p class="subtitle">
-                  A session moves through three phases, guided by the facilitator.
-                </p>
-                <div class="help-phase">
-                  <span class="help-phase-icon">${iconPencil()}</span>
-                  <div class="help-phase-body">
-                    <h4>Collecting</h4>
-                    <p>
-                      Add cards to the columns privately. Your cards are only visible to you until
-                      you publish them — be honest!
-                    </p>
-                  </div>
-                </div>
-                <div class="help-phase">
-                  <span class="help-phase-icon">${iconCommentDots()}</span>
-                  <div class="help-phase-body">
-                    <h4>Discussing</h4>
-                    <p>
-                      Publish your cards to share them with the team. Once visible, others can
-                      vote on them. You can still add new cards as drafts during this phase.
-                    </p>
-                  </div>
-                </div>
-                <div class="help-phase">
-                  <span class="help-phase-icon">${iconLock()}</span>
-                  <div class="help-phase-body">
-                    <h4>Closed</h4>
-                    <p>
-                      The session is read-only. The facilitator has wrapped up — results are
-                      available to review.
-                    </p>
-                  </div>
-                </div>
-                <div class="help-features">
-                  <p class="help-features-title">Features</p>
-                  <div class="help-feature-list">
-                    <div class="help-feature">
-                      <span class="help-feature-icon">${iconThumbsUp()}</span>
-                      <span><strong>Voting</strong> — tap the vote button on any published card during discussing to upvote it. One vote per card.</span>
-                    </div>
-                    <div class="help-feature">
-                      <span class="help-feature-icon">${iconLayerGroup()}</span>
-                      <span><strong>Card grouping</strong> — drag a published card onto another to stack related cards together. Click the stack to expand it.</span>
-                    </div>
-                    <div class="help-feature">
-                      <span class="help-feature-icon">${iconCommentDots()}</span>
-                      <span><strong>Reactions</strong> — react to any published card with an emoji. Enabled or disabled by the facilitator.</span>
-                    </div>
-                    <div class="help-feature">
-                      <span class="help-feature-icon">${iconNoteSticky()}</span>
-                      <span><strong>Notes</strong> — shared session notes are available via the notes panel, visible to everyone.</span>
-                    </div>
-                    <div class="help-feature">
-                      <span class="help-feature-icon">${iconUsers()}</span>
-                      <span><strong>History</strong> — access your previous sessions from the history sidebar on the home page.</span>
-                    </div>
-                  </div>
-                </div>
-                <button class="help-close-btn" @click=${() => (this.showHelp = false)}>
-                  Got it
-                </button>
-                <p class="help-footer">
-                  Open source &middot;
-                  <a href="https://github.com/stevendejongnl/retrospekt" target="_blank" rel="noopener noreferrer">github.com/stevendejongnl/retrospekt</a>
-                </p>
-              </div>
-            </div>
-          `
-        : ''}
+      <retro-help .open=${this.showHelp} variant="participant" @close=${() => { this.showHelp = false }}></retro-help>
 
       ${this.showNamePrompt
         ? html`
@@ -892,8 +685,8 @@ export class SessionPage extends LitElement {
         <button class="icon-btn" @click=${() => { this.showNotes = true }} title="Board notes">${iconNoteSticky()}</button>
         <button class="icon-btn feedback-btn" @click=${() => { this.showFeedback = true }} title="Give feedback">💬</button>
         ${this.brand === 'cs'
-          ? html`<button class="icon-btn brand-reset" @click=${this.onBrandReset} title="Reset to default theme">${iconRotateLeft()}</button>`
-          : html`<button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>`}
+          ? html`<button class="icon-btn brand-reset" @click=${clearBrand} title="Reset to default theme">${iconRotateLeft()}</button>`
+          : html`<button class="theme-toggle" @click=${toggleTheme}>${this.isDark ? iconSun() : iconMoon()}</button>`}
         ${this.participantName
           ? html`
               <div class="user-chip">

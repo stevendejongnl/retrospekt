@@ -3,25 +3,20 @@
 import redis.asyncio as aioredis
 from fastapi import Request
 
-from .config import settings
-from .database import database
+from . import database as _database
 from .repositories.feedback_repo import FeedbackRepository
 from .repositories.session_repo import SessionRepository
 
 
 def get_repo() -> SessionRepository:
-    assert database.db is not None, "Database not connected"
-    return SessionRepository(database.db)
+    assert _database.db is not None, "Database not connected"
+    return SessionRepository(_database.db)
 
 
 def get_feedback_repo() -> FeedbackRepository:
-    assert database.db is not None, "Database not connected"
-    return FeedbackRepository(database.db)
+    assert _database.db is not None, "Database not connected"
+    return FeedbackRepository(_database.db)
 
 
 def get_redis(request: Request) -> aioredis.Redis:
     return request.app.state.redis  # type: ignore[no-any-return]
-
-
-def get_expiry_days() -> int:
-    return settings.session_expiry_days

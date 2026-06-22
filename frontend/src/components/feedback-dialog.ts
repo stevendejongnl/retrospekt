@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 
-const EMOJI_SCALE = ['😞', '😕', '😐', '🙂', '😍'] as const
+export const EMOJI_SCALE = ['😞', '😕', '😐', '🙂', '😍'] as const
 
 // Exported for unit tests
 export function isValidRating(rating: number): boolean {

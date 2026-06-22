@@ -2,17 +2,12 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 
 from ..dependencies import get_repo
 from ..models.requests import AddNoteRequest, UpdateNoteRequest
-from ..models.session import Note, Session
+from ..models.session import Note
 from ..repositories.session_repo import SessionRepository
 from ..services.sse_manager import sse_manager
+from ._shared import _public
 
 router = APIRouter(prefix="/api/v1/sessions")
-
-
-def _public(session: Session) -> dict:
-    d = session.model_dump()
-    d.pop("facilitator_token", None)
-    return d
 
 
 @router.post("/{session_id}/notes", status_code=201)

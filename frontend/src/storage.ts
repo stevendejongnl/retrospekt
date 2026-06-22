@@ -19,7 +19,7 @@ export interface SessionHistoryEntry {
   seenChangelogVersion?: string
 }
 
-function semverGt(a: string, b: string): boolean {
+export function semverGt(a: string, b: string): boolean {
   const pa = a.split('.').map(Number)
   const pb = b.split('.').map(Number)
   for (let i = 0; i < 3; i++) {
@@ -28,8 +28,6 @@ function semverGt(a: string, b: string): boolean {
   }
   return false
 }
-
-export { semverGt }
 
 class RetroStorage {
   getName(sessionId: string): string | null {

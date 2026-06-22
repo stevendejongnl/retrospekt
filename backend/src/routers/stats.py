@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
 from ..config import settings
-from ..dependencies import get_expiry_days, get_redis, get_repo
+from ..dependencies import get_redis, get_repo
 from ..repositories.session_repo import SessionRepository
 from ..repositories.stats_repo import AdminStats, PublicStats, SentryHealth, StatsRepository
 from ..services.sentry_service import SentryService
@@ -53,7 +53,7 @@ async def admin_auth(
 async def get_admin_stats(
     stats: Annotated[StatsRepository, Depends(_stats_repo)],
     redis: Annotated[aioredis.Redis, Depends(get_redis)],
-    expiry_days: Annotated[int, Depends(get_expiry_days)],
+    expiry_days: Annotated[int, Depends(lambda: settings.session_expiry_days)],
     x_admin_token: Annotated[str, Header()] = "",
 ) -> AdminStats:
     if not x_admin_token:

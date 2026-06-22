@@ -15,7 +15,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from mongomock_motor import AsyncMongoMockClient
 
-from src.dependencies import get_expiry_days, get_feedback_repo, get_redis, get_repo
+from src.dependencies import get_feedback_repo, get_redis, get_repo
 from src.main import create_app
 from src.repositories.feedback_repo import FeedbackRepository
 from src.repositories.session_repo import SessionRepository
@@ -46,7 +46,6 @@ async def client(db, fake_redis):
     app.dependency_overrides[get_repo] = lambda: SessionRepository(db)
     app.dependency_overrides[get_feedback_repo] = lambda: FeedbackRepository(db)
     app.dependency_overrides[get_redis] = lambda: fake_redis
-    app.dependency_overrides[get_expiry_days] = lambda: 30
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
     app.dependency_overrides.clear()

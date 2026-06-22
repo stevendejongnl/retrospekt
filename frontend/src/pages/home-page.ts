@@ -27,6 +27,7 @@ export class HomePage extends LitElement {
   @state() private showHistory = false
   @state() private reactionsEnabled = true
   @state() private openFacilitator = false
+  @state() private maxVotesPerParticipant: number | null = null
   @state() private sessionNotFound = false
 
   private _themeListener!: EventListener
@@ -368,7 +369,7 @@ export class HomePage extends LitElement {
 
     try {
       const columns = COLUMN_TEMPLATES[this.selectedTemplate].columns
-      const session = await api.createSession(name, yourName, columns, this.reactionsEnabled, this.openFacilitator)
+      const session = await api.createSession(name, yourName, columns, this.reactionsEnabled, this.openFacilitator, this.maxVotesPerParticipant)
       storage.setFacilitatorToken(session.id, session.facilitator_token)
       storage.setName(session.id, yourName)
       storage.addOrUpdateHistory({
@@ -499,6 +500,24 @@ export class HomePage extends LitElement {
                 Open facilitator mode
                 <small>All participants can control the session (phase, timer, columns)</small>
               </span>
+            </label>
+            <label class="option-row" style="margin-top:8px">
+              <span class="option-label" style="flex:1">
+                Max votes per participant
+                <small>Leave empty for no limit</small>
+              </span>
+              <input
+                type="number"
+                aria-label="Max votes per participant"
+                min="1"
+                style="width:64px;text-align:center"
+                .value=${this.maxVotesPerParticipant !== null ? String(this.maxVotesPerParticipant) : ''}
+                @input=${(e: Event) => {
+                  const v = (e.target as HTMLInputElement).value
+                  this.maxVotesPerParticipant = v ? Math.max(1, parseInt(v, 10)) : null
+                }}
+                ?disabled=${this.loading}
+              />
             </label>
           </div>
 

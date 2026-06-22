@@ -11,28 +11,19 @@ from ..models.requests import (
 from ..models.session import REACTION_EMOJI, Card, Reaction, Session, Vote
 from ..repositories.session_repo import SessionRepository
 from ..services.sse_manager import sse_manager
+from ._shared import _public
 
 router = APIRouter(prefix="/api/v1/sessions")
 
 
 def _count_participant_votes(session: Session, participant_name: str) -> int:
-    seen_groups: set[str] = set()
-    count = 0
-    for card in session.cards:
-        if any(v.participant_name == participant_name for v in card.votes):
-            if card.group_id:
-                if card.group_id not in seen_groups:
-                    seen_groups.add(card.group_id)
-                    count += 1
-            else:
-                count += 1
-    return count
-
-
-def _public(session: Session) -> dict:
-    d = session.model_dump()
-    d.pop("facilitator_token", None)
-    return d
+    return len(
+        {
+            c.group_id or c.id
+            for c in session.cards
+            if any(v.participant_name == participant_name for v in c.votes)
+        }
+    )
 
 
 @router.post("/{session_id}/cards", status_code=201)
@@ -102,8 +93,7 @@ async def add_vote(
 
     # Idempotent — re-vote is a no-op even at the limit
     if any(v.participant_name == x_participant_name for v in card.votes):
-        updated_card = next(c for c in session.cards if c.id == card_id)
-        return updated_card.model_dump()
+        return card.model_dump()
 
     if session.max_votes_per_participant is not None:
         used = _count_participant_votes(session, x_participant_name)
@@ -114,8 +104,7 @@ async def add_vote(
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
 
-    updated_card = next(c for c in session.cards if c.id == card_id)
-    return updated_card.model_dump()
+    return card.model_dump()
 
 
 @router.delete("/{session_id}/cards/{card_id}/votes")
@@ -140,8 +129,7 @@ async def remove_vote(
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
 
-    updated_card = next(c for c in session.cards if c.id == card_id)
-    return updated_card.model_dump()
+    return card.model_dump()
 
 
 @router.post("/{session_id}/cards/publish-all")
@@ -199,8 +187,7 @@ async def publish_card(
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
 
-    updated_card = next(c for c in session.cards if c.id == card_id)
-    return updated_card.model_dump()
+    return card.model_dump()
 
 
 @router.post("/{session_id}/cards/{card_id}/reactions")
@@ -236,8 +223,7 @@ async def add_reaction(
         session = await repo.update(session)
         await sse_manager.broadcast(session_id, _public(session))
 
-    updated_card = next(c for c in session.cards if c.id == card_id)
-    return updated_card.model_dump()
+    return card.model_dump()
 
 
 @router.delete("/{session_id}/cards/{card_id}/reactions", status_code=204)
@@ -296,8 +282,7 @@ async def assign_card(
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
 
-    updated_card = next(c for c in session.cards if c.id == card_id)
-    return updated_card.model_dump()
+    return card.model_dump()
 
 
 @router.patch("/{session_id}/cards/{card_id}/text")
@@ -327,5 +312,4 @@ async def update_card_text(
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
 
-    updated_card = next(c for c in session.cards if c.id == card_id)
-    return updated_card.model_dump()
+    return card.model_dump()

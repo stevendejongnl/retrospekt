@@ -1,4 +1,5 @@
 import { LitElement, css, html } from 'lit'
+import type { TemplateResult } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Card, SessionPhase } from '../types'
@@ -10,7 +11,7 @@ type CardItem =
   | { kind: 'single'; card: Card }
   | { kind: 'group'; groupId: string; cards: Card[] }
 
-const isMac = navigator.platform.startsWith('Mac') || navigator.userAgent.includes('Mac')
+const isMac = navigator.userAgent.includes('Mac')
 /* istanbul ignore next -- Mac keyboard shortcut: '⌘' branch unreachable on Linux/Chromium CI */
 const modKey = isMac ? '⌘' : 'Ctrl'
 
@@ -624,6 +625,24 @@ export class RetroColumn extends LitElement {
     )
   }
 
+  private _renderStackVote(item: CardItem): TemplateResult {
+    if (item.kind !== 'group') return html``
+    const groupVoters = new Set(item.cards.flatMap((c) => c.votes.map((v) => v.participant_name)))
+    const hasVotedOnGroup = item.cards.some((c) =>
+      c.votes.some((v) => v.participant_name === this.participantName)
+    )
+    return html`
+      <button
+        class="vote-btn ${hasVotedOnGroup ? 'voted' : ''}"
+        ?disabled=${this.phase !== 'discussing' || !this.participantName}
+        title="${hasVotedOnGroup ? 'Remove vote from group' : 'Vote for group'}"
+        @click=${() => this._onStackVote(item)}
+      >
+        ${iconThumbsUp()} ${groupVoters.size}
+      </button>
+    `
+  }
+
   render() {
     const canAdd = this.phase !== 'closed' && !!this.participantName
     const accentStyle = `--col-accent: ${this.accent};`
@@ -772,22 +791,7 @@ export class RetroColumn extends LitElement {
                       </div>
                       <p class="stack-hint">+${item.cards.length - 1} more · click to expand</p>
                       <div class="stack-vote-row" @click=${(e: Event) => e.stopPropagation()}>
-                        ${(() => {
-                          const groupVoters = new Set(item.cards.flatMap((c) => c.votes.map((v) => v.participant_name)))
-                          const hasVotedOnGroup = item.cards.some((c) =>
-                            c.votes.some((v) => v.participant_name === this.participantName)
-                          )
-                          return html`
-                            <button
-                              class="vote-btn ${hasVotedOnGroup ? 'voted' : ''}"
-                              ?disabled=${this.phase !== 'discussing' || !this.participantName}
-                              title="${hasVotedOnGroup ? 'Remove vote from group' : 'Vote for group'}"
-                              @click=${() => this._onStackVote(item)}
-                            >
-                              ${iconThumbsUp()} ${groupVoters.size}
-                            </button>
-                          `
-                        })()}
+                        ${this._renderStackVote(item)}
                       </div>
                     </div>
                   `,

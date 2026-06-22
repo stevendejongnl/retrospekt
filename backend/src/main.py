@@ -8,14 +8,14 @@ from datetime import UTC, datetime, timedelta
 
 import redis.asyncio as aioredis
 import sentry_sdk
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 
+from . import database as _database
 from .config import settings
-from .database import database
+from .database import connect_db, disconnect_db
 from .repositories.session_repo import SessionRepository
 from .routers import cards, feedback, groups, health, notes, sessions, stats
 from .services.sse_manager import sse_manager
@@ -40,9 +40,9 @@ async def _cleanup_loop(repo: SessionRepository) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # type: ignore[type-arg]
-    await database.connect()
-    assert database.db is not None
-    repo = SessionRepository(database.db)
+    await connect_db()
+    assert _database.db is not None
+    repo = SessionRepository(_database.db)
     await repo.ensure_indexes()
     redis_client = aioredis.from_url(settings.redis_url, decode_responses=False)
     sse_manager.set_client(redis_client)
@@ -57,7 +57,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # type: ignore[
         except asyncio.CancelledError:
             pass
         await redis_client.aclose()
-        await database.disconnect()
+        await disconnect_db()
 
 
 def create_app() -> FastAPI:
@@ -94,7 +94,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
-
-def main() -> None:
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)

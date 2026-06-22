@@ -17,10 +17,10 @@ export function createApi(fetchFn: typeof fetch = fetch) {
   }
 
   return {
-    createSession: (name: string, participantName: string, columns?: string[], reactionsEnabled = true, openFacilitator = false) =>
+    createSession: (name: string, participantName: string, columns?: string[], reactionsEnabled = true, openFacilitator = false, maxVotesPerParticipant: number | null = null) =>
       request<CreateSessionResponse>('/sessions', {
         method: 'POST',
-        body: JSON.stringify({ name, participant_name: participantName, columns, reactions_enabled: reactionsEnabled, open_facilitator: openFacilitator }),
+        body: JSON.stringify({ name, participant_name: participantName, columns, reactions_enabled: reactionsEnabled, open_facilitator: openFacilitator, max_votes_per_participant: maxVotesPerParticipant }),
       }),
 
     getSession: (id: string) => request<Session>(`/sessions/${id}`),

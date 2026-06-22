@@ -1,5 +1,4 @@
 import { LitElement, css, html } from 'lit'
-import type { TemplateResult } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Card, Session, SessionPhase } from '../types'
@@ -14,26 +13,15 @@ import {
   iconUsers,
   iconCircleCheck,
   iconGear,
-  iconThumbsUp,
-  iconLayerGroup,
-  iconNoteSticky,
-  iconFileArrowDown,
-  iconClock,
-  iconClockRotateLeft,
 } from '../icons'
 import './retro-column'
 import './retro-timer'
+import './retro-help'
 
 const COLUMN_ACCENTS: Record<string, string> = {
   'Went Well': '#22c55e',
   'To Improve': '#f97316',
   'Action Items': '#3b82f6',
-}
-
-const PHASE_LABELS: Record<SessionPhase, () => TemplateResult> = {
-  collecting: () => html`${iconPencil()} Collecting`,
-  discussing: () => html`${iconCommentDots()} Discussing`,
-  closed: () => html`${iconLock()} Closed`,
 }
 
 @customElement('retro-board')
@@ -178,121 +166,6 @@ export class RetroBoard extends LitElement {
     }
     .settings-btn:hover {
       background: var(--retro-bg-hover);
-    }
-
-    /* ── Help overlay ── */
-    .help-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--retro-overlay-bg);
-      backdrop-filter: blur(2px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      padding: 24px;
-    }
-    .help-card {
-      background: var(--retro-glass-bg-strong);
-      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      border: 1px solid var(--retro-glass-border);
-      border-radius: 18px;
-      padding: 28px 32px;
-      max-width: 480px;
-      max-height: 90vh;
-      overflow-y: auto;
-      width: 100%;
-      box-shadow: var(--retro-glass-shadow);
-    }
-    .help-card h3 {
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--retro-text-primary);
-      margin: 0 0 6px;
-      letter-spacing: -0.4px;
-    }
-    .help-card .subtitle {
-      font-size: 13px;
-      color: var(--retro-text-muted);
-      margin-bottom: 24px;
-    }
-    .help-phase {
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-      padding: 14px 0;
-      border-top: 1px solid var(--retro-border-subtle);
-    }
-    .help-phase-icon {
-      font-size: 24px;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-    .help-phase-body h4 {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--retro-text-primary);
-      margin: 0 0 4px;
-    }
-    .help-phase-body p {
-      font-size: 13px;
-      color: var(--retro-text-secondary);
-      margin: 0;
-      line-height: 1.5;
-    }
-    .help-close-btn {
-      margin-top: 24px;
-      width: 100%;
-      padding: 11px;
-      background: var(--retro-accent);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.12s;
-    }
-    .help-close-btn:hover {
-      background: var(--retro-accent-hover);
-    }
-    .help-features {
-      margin-top: 20px;
-      border-top: 1px solid var(--retro-border-subtle);
-      padding-top: 16px;
-    }
-    .help-features-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--retro-text-muted);
-      margin: 0 0 10px;
-    }
-    .help-feature-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .help-feature {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      font-size: 12px;
-      color: var(--retro-text-secondary);
-      line-height: 1.4;
-    }
-    .help-feature-icon {
-      flex-shrink: 0;
-      color: var(--retro-accent);
-      font-size: 14px;
-      margin-top: 1px;
-    }
-    .help-feature strong {
-      color: var(--retro-text-primary);
-      font-weight: 600;
     }
 
     /* ── Participant count button ── */
@@ -724,6 +597,8 @@ export class RetroBoard extends LitElement {
 
   private async onEditCard(e: CustomEvent): Promise<void> {
     const { cardId, text } = e.detail as { cardId: string; text: string }
+    const cards = this.session.cards.map(c => c.id === cardId ? { ...c, text } : c)
+    this.session = { ...this.session, cards }
     await api.updateCardText(this.session.id, cardId, text, this.participantName)
   }
 
@@ -936,78 +811,18 @@ export class RetroBoard extends LitElement {
           `
         : ''}
 
-      ${this.showHelp
-        ? html`
-            <div class="help-overlay" @click=${() => (this.showHelp = false)}>
-              <div class="help-card" @click=${(e: Event) => e.stopPropagation()}>
-                <h3>How Retrospekt works</h3>
-                <p class="subtitle">You control the session. Use the phase buttons to move forward or back at any time.</p>
-                <div class="help-phase">
-                  <span class="help-phase-icon">${iconPencil()}</span>
-                  <div class="help-phase-body">
-                    <h4>Collecting</h4>
-                    <p>Everyone writes cards privately. Cards are invisible to others until published. Add, rename, or remove columns here. Move to discussing when everyone is ready.</p>
-                  </div>
-                </div>
-                <div class="help-phase">
-                  <span class="help-phase-icon">${iconCommentDots()}</span>
-                  <div class="help-phase-body">
-                    <h4>Discussing</h4>
-                    <p>Participants publish and vote on cards. Use "Publish all" to reveal your own cards per column. Sort columns by votes, group related cards, and assign action items.</p>
-                  </div>
-                </div>
-                <div class="help-phase">
-                  <span class="help-phase-icon">${iconLock()}</span>
-                  <div class="help-phase-body">
-                    <h4>Closed</h4>
-                    <p>Session is read-only. Export results as Markdown or share the link. Cards are sorted by vote count for easy review.</p>
-                  </div>
-                </div>
-                <div class="help-features">
-                  <p class="help-features-title">Facilitator tools</p>
-                  <div class="help-feature-list">
-                    <div class="help-feature">
-                      <span class="help-feature-icon">${iconClock()}</span>
-                      <span><strong>Timer</strong> — start a countdown to timebox discussions. Visible to all participants in real time.</span>
-                    </div>
-                    <div class="help-feature">
-                      <span class="help-feature-icon">${iconThumbsUp()}</span>
-                      <span><strong>Vote sorting</strong> — click ↕ Votes on any column during discussing to sort all participants' views by vote count.</span>
-                    </div>
-                    <div class="help-feature">
-                      <span class="help-feature-icon">${iconLayerGroup()}</span>
-                      <span><strong>Card grouping</strong> — drag published cards onto each other to stack related items. Click a stack to expand it.</span>
-                    </div>
-                    <div class="help-feature">
-                      <span class="help-feature-icon">${iconUsers()}</span>
-                      <span><strong>Open facilitator</strong> — enable in settings to let all participants manage phase, columns, and timer.</span>
-                    </div>
-                    <div class="help-feature">
-                      <span class="help-feature-icon">${iconNoteSticky()}</span>
-                      <span><strong>Notes</strong> — shared session notes panel for capturing decisions or follow-ups visible to everyone.</span>
-                    </div>
-                    <div class="help-feature">
-                      <span class="help-feature-icon">${iconFileArrowDown()}</span>
-                      <span><strong>Export</strong> — download the session as a Markdown file from the header once the session is closed.</span>
-                    </div>
-                    <div class="help-feature">
-                      <span class="help-feature-icon">${iconClockRotateLeft()}</span>
-                      <span><strong>History</strong> — previous sessions are saved locally and accessible from the home page sidebar.</span>
-                    </div>
-                  </div>
-                </div>
-                <button class="help-close-btn" @click=${() => (this.showHelp = false)}>Got it</button>
-              </div>
-            </div>
-          `
-        : ''}
+      <retro-help .open=${this.showHelp} variant="facilitator" @close=${() => { this.showHelp = false }}></retro-help>
 
       ${this.isFacilitator
         ? html`
             <div class="facilitator-bar">
               <span class="bar-label">Phase</span>
               <span class="phase-badge badge-${session.phase}">
-                ${PHASE_LABELS[session.phase]()}
+                ${session.phase === 'collecting'
+                  ? html`${iconPencil()} Collecting`
+                  : session.phase === 'discussing'
+                    ? html`${iconCommentDots()} Discussing`
+                    : html`${iconLock()} Closed`}
               </span>
               ${session.phase !== 'collecting'
                 ? html`

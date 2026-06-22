@@ -4,9 +4,8 @@ import { customElement, state } from 'lit/decorators.js'
 import { api } from '../api'
 import { storage } from '../storage'
 import { faIconStyles } from '../icons'
+import { EMOJI_SCALE } from '../components/feedback-dialog'
 import '../components/background-blobs'
-
-const EMOJI_SCALE = ['😞', '😕', '😐', '🙂', '😍'] as const
 
 @customElement('feedback-page')
 export class FeedbackPage extends LitElement {
