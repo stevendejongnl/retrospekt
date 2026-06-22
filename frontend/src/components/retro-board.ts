@@ -597,9 +597,15 @@ export class RetroBoard extends LitElement {
 
   private async onEditCard(e: CustomEvent): Promise<void> {
     const { cardId, text } = e.detail as { cardId: string; text: string }
-    const cards = this.session.cards.map(c => c.id === cardId ? { ...c, text } : c)
-    this.session = { ...this.session, cards }
-    await api.updateCardText(this.session.id, cardId, text, this.participantName)
+    const sessionId = this.session.id
+    const originalCards = this.session.cards
+    this.session = { ...this.session, cards: originalCards.map(c => c.id === cardId ? { ...c, text } : c) }
+    try {
+      await api.updateCardText(sessionId, cardId, text, this.participantName)
+    } catch (err) {
+      this.session = { ...this.session, cards: originalCards }
+      throw err
+    }
   }
 
   private async onPublishCard(e: CustomEvent): Promise<void> {

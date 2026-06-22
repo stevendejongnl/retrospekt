@@ -10,7 +10,8 @@ export function createApi(fetchFn: typeof fetch = fetch) {
     })
     if (!response.ok) {
       const text = await response.text()
-      throw new Error(`API ${response.status}: ${text}`)
+      const body = text.length > 200 ? text.slice(0, 200) + '…' : text
+      throw new Error(`API ${response.status}: ${body}`)
     }
     if (response.status === 204) return undefined as T
     return response.json() as Promise<T>

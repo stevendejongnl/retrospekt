@@ -484,6 +484,14 @@ describe('error handling', () => {
     const result = await api.deleteCard('sess-1', 'card-1', 'Alice')
     expect(result).toBeUndefined()
   })
+
+  it('truncates HTML error body to 200 chars', async () => {
+    const html = '<!DOCTYPE html>' + 'x'.repeat(300)
+    mockError(502, html)
+    await expect(api.getSession('sess-1')).rejects.toThrow(/^API 502: .{1,210}$/)
+    const err = await api.getSession('sess-1').catch((e: Error) => e)
+    expect((err as Error).message.length).toBeLessThanOrEqual(210)
+  })
 })
 
 import { countParticipantVotes } from './api'
