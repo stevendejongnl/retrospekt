@@ -1,3 +1,9 @@
+## [1.33.1](https://github.com/stevendejongnl/retrospekt/compare/v1.33.0...v1.33.1) (2026-06-22)
+
+### Bug Fixes
+
+* **api:** truncate HTML error bodies + rollback card edit on 403 ([c724074](https://github.com/stevendejongnl/retrospekt/commit/c72407452c991dcc86c8129874574c7ffa1e026b))
+
 ## [1.33.0](https://github.com/stevendejongnl/retrospekt/compare/v1.32.3...v1.33.0) (2026-06-22)
 
 ### Features
