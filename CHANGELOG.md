@@ -1,3 +1,9 @@
+## [1.33.2](https://github.com/stevendejongnl/retrospekt/compare/v1.33.1...v1.33.2) (2026-07-15)
+
+### Bug Fixes
+
+* **docker:** pin nginx base image to 1.27-alpine ([3eafe05](https://github.com/stevendejongnl/retrospekt/commit/3eafe05481aabe0af2fadac12cd2c98db9697ab2))
+
 ## [1.33.1](https://github.com/stevendejongnl/retrospekt/compare/v1.33.0...v1.33.1) (2026-06-22)
 
 ### Bug Fixes
