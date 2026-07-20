@@ -5,11 +5,8 @@ import { customElement, state } from 'lit/decorators.js'
 import { api } from '../api'
 import '../components/background-blobs'
 import { faIconStyles } from '../icons'
-import type { AdminStats, FeedbackStats, LifetimeBucket, PublicStats, RatingCount, SentryDataPoint, SentryHealth } from '../types'
+import type { LifetimeBucket, PublicStats, RatingCount } from '../types'
 
-type AdminPhase = 'locked' | 'loading' | 'unlocked' | 'error'
-
-const ADMIN_TOKEN_KEY = 'retro_admin_token'
 const PHASE_COLORS: Record<string, string> = {
   collecting: '#6366f1',
   discussing: '#059669',
@@ -19,21 +16,11 @@ const PHASE_COLORS: Record<string, string> = {
 @customElement('stats-page')
 export class StatsPage extends LitElement {
   @state() private stats: PublicStats | null = null
-  @state() private adminStats: AdminStats | null = null
-  @state() private adminPhase: AdminPhase = 'locked'
-  @state() private password = ''
   @state() private loadingPublic = true
   @state() private loadError = ''
-  @state() private adminToken = ''
-  @state() private feedbackTab: 'new' | 'resolved' = 'new'
 
   connectedCallback(): void {
     super.connectedCallback()
-    const saved = sessionStorage.getItem(ADMIN_TOKEN_KEY)
-    if (saved) {
-      this.adminToken = saved
-      this.adminPhase = 'loading'
-    }
     this._loadPublicStats()
   }
 
@@ -47,51 +34,6 @@ export class StatsPage extends LitElement {
     } finally {
       this.loadingPublic = false
     }
-    // If a saved token exists, kick off admin stats fetch once public stats are done
-    if (this.adminToken && this.adminPhase === 'loading') {
-      await this._loadAdminStats()
-    }
-  }
-
-  private async _loadAdminStats(): Promise<void> {
-    try {
-      this.adminStats = await api.getAdminStats(this.adminToken)
-      this.adminPhase = 'unlocked'
-    } catch (e) {
-      if (e instanceof Error && e.message.includes('401')) {
-        sessionStorage.removeItem(ADMIN_TOKEN_KEY)
-        this.adminToken = ''
-        this.adminPhase = 'locked'
-      } else {
-        this.adminPhase = 'error'
-      }
-    }
-  }
-
-  private async _handleIgnoreFeedback(id: string): Promise<void> {
-    if (!this.adminStats) return
-    await api.patchFeedback(id, 'ignored', this.adminToken)
-    this.adminStats = {
-      ...this.adminStats,
-      feedback: {
-        ...this.adminStats.feedback,
-        recent: this.adminStats.feedback.recent.map((entry) =>
-          entry.id === id ? { ...entry, status: 'ignored' } : entry,
-        ),
-      },
-    }
-  }
-
-  private async _handleAuth(): Promise<void> {
-    this.adminPhase = 'loading'
-    try {
-      const result = await api.adminAuth(this.password)
-      sessionStorage.setItem(ADMIN_TOKEN_KEY, result.token)
-      this.adminToken = result.token
-      await this._loadAdminStats()
-    } catch {
-      this.adminPhase = 'error'
-    }
   }
 
   protected override updated(changedProps: PropertyValues): void {
@@ -99,9 +41,9 @@ export class StatsPage extends LitElement {
     if (changedProps.has('stats') && this.stats) {
       this._renderDonutChart()
       this._renderBarChart()
-    }
-    if (changedProps.has('adminStats') && this.adminStats) {
-      this._renderAdminCharts()
+      this._renderReactionChart()
+      this._renderLifetimeChart()
+      this._renderFeedbackChart()
     }
   }
 
@@ -207,22 +149,8 @@ export class StatsPage extends LitElement {
       .remove()
   }
 
-  private _renderAdminCharts(): void {
-    this._renderReactionChart()
-    this._renderLifetimeChart()
-    this._renderFeedbackChart()
-    if (this.adminStats?.sentry) {
-      this._renderSentryBarChart('#sentry-backend-error-chart', this.adminStats.sentry.error_rate_7d, 'danger')
-      this._renderSentryBarChart('#sentry-backend-p95-chart', this.adminStats.sentry.p95_latency_7d, 'accent')
-    }
-    if (this.adminStats?.sentry_frontend) {
-      this._renderSentryBarChart('#sentry-frontend-error-chart', this.adminStats.sentry_frontend.error_rate_7d, 'danger')
-      this._renderSentryBarChart('#sentry-frontend-p95-chart', this.adminStats.sentry_frontend.p95_latency_7d, 'accent')
-    }
-  }
-
   private _renderFeedbackChart(): void {
-    const data = this.adminStats?.feedback?.by_rating ?? []
+    const data = this.stats?.feedback_by_rating ?? []
     const el = this.shadowRoot!.querySelector<SVGSVGElement>('#feedback-rating-chart')
     if (!el || data.length === 0) return
 
@@ -271,64 +199,8 @@ export class StatsPage extends LitElement {
       .text((label) => label)
   }
 
-  private _renderSentryBarChart(id: string, data: SentryDataPoint[], colorVar: 'danger' | 'accent'): void {
-    const el = this.shadowRoot!.querySelector<SVGSVGElement>(id)
-    if (!el) return
-
-    const svg = d3.select(el)
-    svg.selectAll('*').remove()
-
-    const filtered = data.filter((d) => d.value !== null)
-    if (filtered.length === 0) return
-
-    const margin = { top: 6, right: 10, bottom: 20, left: 36 }
-    const svgW = 280
-    const svgH = 100
-    const width = svgW - margin.left - margin.right
-    const height = svgH - margin.top - margin.bottom
-
-    svg.attr('width', svgW).attr('height', svgH)
-
-    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
-
-    const x = d3.scaleBand().domain(data.map((d) => d.date)).range([0, width]).padding(0.15)
-    const maxVal = d3.max(filtered, (d) => d.value as number) ?? 1
-    const y = d3.scaleLinear().domain([0, maxVal]).nice().range([height, 0])
-
-    const color =
-      colorVar === 'danger'
-        ? getComputedStyle(this).getPropertyValue('--retro-danger').trim() || '#ef4444'
-        : getComputedStyle(this).getPropertyValue('--retro-accent').trim()
-
-    g.selectAll('rect')
-      .data(data)
-      .enter()
-      .append('rect')
-      .attr('x', (d) => x(d.date) as number)
-      .attr('y', (d) => (d.value !== null ? y(d.value) : height))
-      .attr('width', x.bandwidth())
-      .attr('height', (d) => (d.value !== null ? height - y(d.value) : 0))
-      .attr('fill', color)
-      .attr('rx', 2)
-
-    g.append('g')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x).tickValues([data[0]?.date, data[data.length - 1]?.date].filter(Boolean)))
-      .attr('color', 'var(--retro-text-muted)')
-      .attr('font-size', '9px')
-      .select('.domain')
-      .remove()
-
-    g.append('g')
-      .call(d3.axisLeft(y).ticks(3).tickSize(-width))
-      .attr('color', 'var(--retro-border-default)')
-      .attr('font-size', '9px')
-      .select('.domain')
-      .remove()
-  }
-
   private _renderReactionChart(): void {
-    const data = this.adminStats!.reaction_breakdown
+    const data = this.stats!.reaction_breakdown
     const el = this.shadowRoot!.querySelector<SVGSVGElement>('#reaction-chart')!
     const svg = d3.select(el)
     svg.selectAll('*').remove()
@@ -377,7 +249,7 @@ export class StatsPage extends LitElement {
   }
 
   private _renderLifetimeChart(): void {
-    const data = this.adminStats!.session_lifetime.lifetime_distribution
+    const data = this.stats!.session_lifetime.lifetime_distribution
     const el = this.shadowRoot!.querySelector<SVGSVGElement>('#lifetime-chart')
     if (!el) return
 
@@ -440,48 +312,8 @@ export class StatsPage extends LitElement {
     `
   }
 
-  private _renderAdminLockSection() {
-    if (this.adminPhase === 'unlocked') return nothing
-
-    return html`
-      <section class="admin-unlock">
-        <h2 class="section-title">Admin</h2>
-        ${this.adminPhase === 'loading'
-          ? html`<p class="muted">Loading…</p>`
-          : html`
-              <p class="muted">Enter your admin password to unlock deeper analytics.</p>
-              <div class="unlock-form">
-                <input
-                  type="password"
-                  class="password-input"
-                  placeholder="Admin password"
-                  .value=${this.password}
-                  @input=${(e: Event) => {
-                    this.password = (e.target as HTMLInputElement).value
-                  }}
-                  @keydown=${(e: KeyboardEvent) => {
-                    if (e.key === 'Enter') this._handleAuth()
-                  }}
-                />
-                <button
-                  class="unlock-btn"
-                  ?disabled=${!this.password}
-                  @click=${this._handleAuth}
-                >
-                  Unlock${this.stats && this.stats.feedback_total > 0 ? html` <span class="feedback-badge">${this.stats.feedback_total}</span>` : nothing}
-                </button>
-              </div>
-              ${this.adminPhase === 'error'
-                ? html`<p class="error-msg">Invalid password. Please try again.</p>`
-                : nothing}
-            `}
-      </section>
-    `
-  }
-
   private _renderLifetimeStats() {
-    if (!this.adminStats) return nothing
-    const lt = this.adminStats.session_lifetime
+    const lt = this.stats!.session_lifetime
     const fmtHours = (h: number | null) => (h === null ? '–' : String(h))
 
     return html`
@@ -505,108 +337,23 @@ export class StatsPage extends LitElement {
     `
   }
 
-  private _renderSentryHealth(label: string, health: SentryHealth | null | undefined, idPrefix: string) {
-    if (!health) return nothing
-
-    return html`
-      <div class="sentry-block chart-block">
-        <h3 class="chart-title">Sentry Health — ${label}</h3>
-
-        ${health.error
-          ? html`<p class="sentry-error-banner">${health.error}</p>`
-          : html`
-              <div class="stat-grid sentry-stat-grid">
-                ${this._renderStatCard('Unresolved Issues', health.unresolved_count)}
-              </div>
-
-              ${health.top_issues.length > 0
-                ? html`
-                    <h4 class="chart-title" style="margin-top: 12px;">Top Issues</h4>
-                    <ul class="sentry-issue-list">
-                      ${health.top_issues.map(
-                        (issue) => html`
-                          <li class="sentry-issue-item">
-                            <span class="sentry-issue-title">${issue.title}</span>
-                            <span class="sentry-issue-meta">${issue.count} events</span>
-                          </li>
-                        `,
-                      )}
-                    </ul>
-                  `
-                : nothing}
-
-              <div class="sentry-charts-row">
-                <div>
-                  <h4 class="chart-title" style="margin-top: 12px;">Error Rate (7d)</h4>
-                  <svg id="${idPrefix}-error-chart" width="280" height="100" class="chart-svg"></svg>
-                </div>
-                <div>
-                  <h4 class="chart-title" style="margin-top: 12px;">p95 Latency (7d, ms)</h4>
-                  <svg id="${idPrefix}-p95-chart" width="280" height="100" class="chart-svg"></svg>
-                </div>
-              </div>
-            `}
-      </div>
-    `
-  }
-
-  private _renderFeedbackSection(feedback: FeedbackStats) {
-    const avgStars = feedback.avg_rating !== null
-      ? '⭐'.repeat(Math.round(feedback.avg_rating))
+  private _renderFeedbackRatings() {
+    const avgStars = this.stats!.feedback_avg_rating !== null
+      ? '⭐'.repeat(Math.round(this.stats!.feedback_avg_rating))
       : '–'
-
-    const newEntries = feedback.recent.filter((e) => e.status === 'new')
-    const resolvedEntries = feedback.recent.filter((e) => e.status !== 'new')
-    const visibleEntries = this.feedbackTab === 'new' ? newEntries : resolvedEntries
 
     return html`
       <div class="feedback-block chart-block">
         <h3 class="chart-title">User Feedback</h3>
 
         <div class="stat-grid">
-          ${this._renderStatCard('Submissions', feedback.total)}
-          ${this._renderStatCard('Avg Rating', feedback.avg_rating !== null ? feedback.avg_rating.toFixed(1) : '–')}
+          ${this._renderStatCard('Submissions', this.stats!.feedback_total)}
+          ${this._renderStatCard('Avg Rating', this.stats!.feedback_avg_rating !== null ? this.stats!.feedback_avg_rating.toFixed(1) : '–')}
         </div>
 
-        ${feedback.total > 0 ? html`
+        ${this.stats!.feedback_total > 0 ? html`
           <h4 class="chart-title" style="margin-top: 12px;">Rating Distribution</h4>
           <svg id="feedback-rating-chart" width="240" height="40" class="chart-svg"></svg>
-
-          ${feedback.recent.length > 0 ? html`
-            <div class="feedback-tabs" style="margin-top: 12px;">
-              <button
-                class="feedback-tab-btn ${this.feedbackTab === 'new' ? 'active' : ''}"
-                @click=${() => { this.feedbackTab = 'new' }}
-              >New (${newEntries.length})</button>
-              <button
-                class="feedback-tab-btn ${this.feedbackTab === 'resolved' ? 'active' : ''}"
-                @click=${() => { this.feedbackTab = 'resolved' }}
-              >Resolved (${resolvedEntries.length})</button>
-            </div>
-
-            ${visibleEntries.length > 0 ? html`
-              <div class="feedback-list">
-                ${visibleEntries.map((entry) => html`
-                  <div class="feedback-entry">
-                    <div class="feedback-entry-meta">
-                      <span class="feedback-stars">${'★'.repeat(entry.rating)}${'☆'.repeat(5 - entry.rating)}</span>
-                      ${entry.participant_name ? html`<span class="feedback-participant">${entry.participant_name}</span>` : nothing}
-                      <span class="feedback-entry-date">${new Date(entry.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
-                      ${entry.app_version ? html`<span class="feedback-version">${entry.app_version}</span>` : nothing}
-                      ${entry.status === 'fixed' && entry.fixed_in_version ? html`<span class="feedback-fixed-badge">✓ fixed in ${entry.fixed_in_version}</span>` : nothing}
-                      ${entry.status === 'ignored' ? html`<span class="feedback-ignored-badge">ignored</span>` : nothing}
-                    </div>
-                    <p class="feedback-entry-comment">
-                      ${entry.comment || html`<span class="muted">—</span>`}
-                    </p>
-                    ${entry.status === 'new' ? html`
-                      <button class="feedback-ignore-btn" @click=${() => this._handleIgnoreFeedback(entry.id)}>Ignore</button>
-                    ` : nothing}
-                  </div>
-                `)}
-              </div>
-            ` : html`<p class="muted" style="margin-top: 8px;">Nothing here.</p>`}
-          ` : nothing}
         ` : html`<p class="muted" style="margin-top: 8px;">No feedback submitted yet.</p>`}
 
         <p class="feedback-avg-stars" style="margin-top: 8px; font-size: 20px;">${avgStars}</p>
@@ -614,14 +361,13 @@ export class StatsPage extends LitElement {
     `
   }
 
-  private _renderAdminStats() {
-    if (this.adminPhase !== 'unlocked' || !this.adminStats) return nothing
-
-    const { engagement_funnel: f, reaction_breakdown, cards_per_column } = this.adminStats
+  private _renderAnalytics() {
+    if (!this.stats) return nothing
+    const { engagement_funnel: f, reaction_breakdown, cards_per_column } = this.stats
 
     return html`
       <section class="admin-section">
-        <h2 class="section-title">Admin Analytics</h2>
+        <h2 class="section-title">Analytics</h2>
 
         <div class="admin-charts">
           <div class="chart-block">
@@ -667,9 +413,7 @@ export class StatsPage extends LitElement {
         </div>
 
         ${this._renderLifetimeStats()}
-        ${this._renderSentryHealth('Backend', this.adminStats?.sentry, 'sentry-backend')}
-        ${this._renderSentryHealth('Frontend', this.adminStats?.sentry_frontend, 'sentry-frontend')}
-        ${this.adminStats.feedback ? this._renderFeedbackSection(this.adminStats.feedback) : nothing}
+        ${this._renderFeedbackRatings()}
       </section>
     `
   }
@@ -715,7 +459,7 @@ export class StatsPage extends LitElement {
                   </div>
                 </section>
 
-                ${this._renderAdminLockSection()} ${this._renderAdminStats()}
+                ${this._renderAnalytics()}
               `}
       </div>
     `
@@ -856,7 +600,6 @@ export class StatsPage extends LitElement {
         width: 100%;
       }
 
-      /* --- Admin unlock --- */
       .section-title {
         font-size: 18px;
         font-weight: 700;
@@ -864,71 +607,10 @@ export class StatsPage extends LitElement {
         margin: 0 0 12px;
       }
 
-      .admin-unlock {
-        background: var(--retro-glass-bg-medium);
-        backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-        -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-        border: 1px solid var(--retro-glass-border);
-        border-radius: 14px;
-        padding: 20px 24px;
-        margin-bottom: 24px;
-        box-shadow: var(--retro-glass-shadow);
-      }
-
       .muted {
         color: var(--retro-text-muted);
         font-size: 14px;
         margin: 0 0 16px;
-      }
-
-      .unlock-form {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .password-input {
-        flex: 1;
-        min-width: 180px;
-        padding: 8px 12px;
-        border: 1.5px solid var(--retro-border-default);
-        border-radius: 8px;
-        background: var(--retro-bg-page);
-        color: var(--retro-text-primary);
-        font-size: 14px;
-        outline: none;
-      }
-      .password-input:focus {
-        border-color: var(--retro-accent);
-      }
-
-      .unlock-btn {
-        padding: 8px 20px;
-        background: var(--retro-accent);
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.12s;
-        box-shadow: 0 4px 12px rgba(217, 116, 38, 0.25);
-      }
-      .unlock-btn:hover {
-        background: var(--retro-accent-hover);
-      }
-      .unlock-btn:hover:not(:disabled) {
-        opacity: 0.85;
-      }
-      .unlock-btn:disabled {
-        opacity: 0.4;
-        cursor: default;
-      }
-
-      .error-msg {
-        margin: 8px 0 0;
-        font-size: 13px;
-        color: var(--retro-danger, #ef4444);
       }
 
       /* --- Admin section --- */
@@ -1056,193 +738,14 @@ export class StatsPage extends LitElement {
         color: var(--retro-text-muted);
       }
 
-      /* --- Sentry Health --- */
-      .sentry-block {
-        margin-top: 16px;
-      }
-
-      .sentry-stat-grid {
-        grid-template-columns: auto;
-        display: inline-grid;
-        margin-bottom: 12px;
-      }
-
-      .sentry-issue-list {
-        list-style: none;
-        margin: 0 0 12px;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .sentry-issue-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        padding: 4px 8px;
-        background: var(--retro-bg-page);
-        border-radius: 6px;
-      }
-
-      .sentry-issue-title {
-        color: var(--retro-text-primary);
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .sentry-issue-meta {
-        color: var(--retro-text-muted);
-        white-space: nowrap;
-        font-size: 11px;
-      }
-
-      .sentry-charts-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        margin-top: 4px;
-      }
-
-      @media (max-width: 640px) {
-        .sentry-charts-row {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      .sentry-error-banner {
-        font-size: 13px;
-        color: var(--retro-danger, #ef4444);
-        background: color-mix(in srgb, var(--retro-danger, #ef4444) 10%, transparent);
-        border: 1px solid color-mix(in srgb, var(--retro-danger, #ef4444) 30%, transparent);
-        border-radius: 8px;
-        padding: 8px 12px;
-        margin: 0;
-      }
-
       /* --- Feedback --- */
       .feedback-block {
         margin-top: 16px;
       }
 
-      .feedback-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--retro-danger, #ef4444);
-        color: #fff;
-        font-size: 11px;
-        font-weight: 700;
-        border-radius: 10px;
-        padding: 1px 6px;
-        margin-left: 6px;
-        vertical-align: middle;
-      }
-
-      .feedback-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-top: 8px;
-      }
-
-      .feedback-entry {
-        border: 1px solid var(--retro-border-subtle);
-        border-radius: 8px;
-        padding: 10px 12px;
-        background: var(--retro-bg-subtle);
-      }
-
-      .feedback-entry-meta {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 4px;
-      }
-
-      .feedback-stars {
-        color: var(--retro-accent);
-        white-space: nowrap;
-        font-size: 13px;
-      }
-
-      .feedback-entry-date {
-        color: var(--retro-text-muted);
-        font-size: 11px;
-      }
-
-      .feedback-participant {
-        color: var(--retro-text-primary);
-        font-size: 11px;
-        font-weight: 600;
-      }
-
-      .feedback-version {
-        color: var(--retro-text-disabled);
-        font-size: 11px;
-      }
-
-      .feedback-entry-comment {
-        margin: 0;
-        font-size: 13px;
-        color: var(--retro-text-secondary);
-        line-height: 1.4;
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
-
       .feedback-avg-stars {
         margin: 0;
         color: var(--retro-accent);
-      }
-
-      .feedback-tabs {
-        display: flex;
-        gap: 6px;
-        margin-bottom: 10px;
-      }
-
-      .feedback-tab-btn {
-        border: 1px solid var(--retro-border-subtle);
-        border-radius: 6px;
-        background: transparent;
-        color: var(--retro-text-secondary);
-        font-size: 12px;
-        padding: 4px 10px;
-        cursor: pointer;
-      }
-
-      .feedback-tab-btn.active {
-        background: var(--retro-accent);
-        color: white;
-        border-color: var(--retro-accent);
-      }
-
-      .feedback-fixed-badge {
-        color: #059669;
-        font-size: 11px;
-        font-weight: 600;
-      }
-
-      .feedback-ignored-badge {
-        color: var(--retro-text-disabled);
-        font-size: 11px;
-        font-style: italic;
-      }
-
-      .feedback-ignore-btn {
-        margin-top: 6px;
-        border: 1px solid var(--retro-border-subtle);
-        border-radius: 6px;
-        background: transparent;
-        color: var(--retro-text-secondary);
-        font-size: 11px;
-        padding: 3px 8px;
-        cursor: pointer;
       }
     `,
   ]

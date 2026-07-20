@@ -85,12 +85,6 @@ export interface ColumnCount {
   count: number
 }
 
-export interface HeatmapCell {
-  day_of_week: number
-  hour_bucket: number
-  count: number
-}
-
 export interface FunnelStats {
   created: number
   has_cards: number
@@ -108,6 +102,12 @@ export interface PublicStats {
   total_votes: number
   total_reactions: number
   feedback_total: number
+  reaction_breakdown: ReactionCount[]
+  cards_per_column: ColumnCount[]
+  engagement_funnel: FunnelStats
+  session_lifetime: SessionLifetimeStats
+  feedback_avg_rating: number | null
+  feedback_by_rating: RatingCount[]
 }
 
 export interface LifetimeBucket {
@@ -190,11 +190,6 @@ export interface FeedbackStats {
 }
 
 export interface AdminStats {
-  reaction_breakdown: ReactionCount[]
-  cards_per_column: ColumnCount[]
-  activity_heatmap: HeatmapCell[]
-  engagement_funnel: FunnelStats
-  session_lifetime: SessionLifetimeStats
   sentry: SentryHealth | null
   sentry_frontend: SentryHealth | null
   feedback: FeedbackStats
