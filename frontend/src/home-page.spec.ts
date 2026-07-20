@@ -543,6 +543,16 @@ test.describe('home-page max votes option', () => {
   })
 })
 
+// ── stats link ──────────────────────────────────────────────────────────────
+
+test.describe('home-page stats link', () => {
+  test('stats link navigates to /stats', async ({ page }) => {
+    await page.goto('/')
+    await page.locator('home-page .stats-link').click()
+    await expect(page).toHaveURL('/stats')
+  })
+})
+
 // ── session-not-found banner ──────────────────────────────────────────────────
 
 test.describe('home-page session-not-found banner', () => {

@@ -1146,6 +1146,19 @@ test('clicking vote limit twice rapidly re-arms the timer (covers _showVoteLimit
   await expect(page.locator('.vote-limit-msg')).toBeVisible()
 })
 
+// ── Stats link ────────────────────────────────────────────────────────────────
+
+test.describe('session-page stats link', () => {
+  test('stats link navigates to /stats', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('session-page').getByTitle('Stats').click()
+    await expect(page).toHaveURL('/stats')
+  })
+})
+
 // ── Add column deduplication ──────────────────────────────────────────────────
 
 test.describe('retro-board add column deduplication', () => {

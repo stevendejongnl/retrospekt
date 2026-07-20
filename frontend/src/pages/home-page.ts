@@ -4,7 +4,7 @@ import { customElement, state } from 'lit/decorators.js'
 import { api } from '../api'
 import { storage } from '../storage'
 import { getEffectiveTheme, toggleTheme, getBrand, clearBrand } from '../theme'
-import { faIconStyles, iconSun, iconMoon, iconClockRotateLeft, iconRotateLeft } from '../icons'
+import { faIconStyles, iconSun, iconMoon, iconClockRotateLeft, iconRotateLeft, iconChartBar } from '../icons'
 import '../components/session-history'
 import '../components/background-blobs'
 
@@ -88,6 +88,30 @@ export class HomePage extends LitElement {
       color: var(--retro-text-secondary);
     }
     .history-toggle:hover {
+      border-color: var(--retro-accent);
+      color: var(--retro-accent);
+    }
+    .stats-link {
+      position: absolute;
+      top: 16px;
+      left: 60px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--retro-glass-bg-medium);
+      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s, border-color 0.12s;
+      z-index: 2;
+      color: var(--retro-text-secondary);
+    }
+    .stats-link:hover {
       border-color: var(--retro-accent);
       color: var(--retro-accent);
     }
@@ -414,6 +438,14 @@ export class HomePage extends LitElement {
       ` : ''}
       <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
       <button class="history-toggle" @click=${() => { this.showHistory = true }} title="Your sessions">${iconClockRotateLeft()}</button>
+      <button
+        class="stats-link"
+        @click=${(e: Event) => {
+          e.preventDefault()
+          window.router.navigate('/stats')
+        }}
+        title="Stats"
+      >${iconChartBar()}</button>
       ${this.brand === 'cs'
         ? html`<button class="brand-reset" @click=${this.onBrandReset} title="Reset to default theme">${iconRotateLeft()}</button>`
         : html`<button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>`}

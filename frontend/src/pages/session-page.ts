@@ -17,6 +17,7 @@ import {
   iconLink,
   iconCheck,
   iconClockRotateLeft,
+  iconChartBar,
   iconFileArrowDown,
   iconNoteSticky,
   iconRotateLeft,
@@ -682,6 +683,14 @@ export class SessionPage extends LitElement {
           ${session.name}<span class="session-date">· ${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
         </span>
         <button class="icon-btn" @click=${() => { this.showHistory = true }} title="Your sessions">${iconClockRotateLeft()}</button>
+        <button
+          class="icon-btn"
+          @click=${(e: Event) => {
+            e.preventDefault()
+            window.router.navigate('/stats')
+          }}
+          title="Stats"
+        >${iconChartBar()}</button>
         <button class="icon-btn" @click=${() => { this.showNotes = true }} title="Board notes">${iconNoteSticky()}</button>
         <button class="icon-btn feedback-btn" @click=${() => { this.showFeedback = true }} title="Give feedback">💬</button>
         ${this.brand === 'cs'
