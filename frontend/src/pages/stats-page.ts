@@ -25,6 +25,7 @@ export class StatsPage extends LitElement {
   @state() private loadingPublic = true
   @state() private loadError = ''
   @state() private adminToken = ''
+  @state() private feedbackTab: 'new' | 'resolved' = 'new'
 
   connectedCallback(): void {
     super.connectedCallback()
@@ -64,6 +65,20 @@ export class StatsPage extends LitElement {
       } else {
         this.adminPhase = 'error'
       }
+    }
+  }
+
+  private async _handleIgnoreFeedback(id: string): Promise<void> {
+    if (!this.adminStats) return
+    await api.patchFeedback(id, 'ignored', this.adminToken)
+    this.adminStats = {
+      ...this.adminStats,
+      feedback: {
+        ...this.adminStats.feedback,
+        recent: this.adminStats.feedback.recent.map((entry) =>
+          entry.id === id ? { ...entry, status: 'ignored' } : entry,
+        ),
+      },
     }
   }
 
@@ -540,6 +555,10 @@ export class StatsPage extends LitElement {
       ? '⭐'.repeat(Math.round(feedback.avg_rating))
       : '–'
 
+    const newEntries = feedback.recent.filter((e) => e.status === 'new')
+    const resolvedEntries = feedback.recent.filter((e) => e.status !== 'new')
+    const visibleEntries = this.feedbackTab === 'new' ? newEntries : resolvedEntries
+
     return html`
       <div class="feedback-block chart-block">
         <h3 class="chart-title">User Feedback</h3>
@@ -554,22 +573,39 @@ export class StatsPage extends LitElement {
           <svg id="feedback-rating-chart" width="240" height="40" class="chart-svg"></svg>
 
           ${feedback.recent.length > 0 ? html`
-            <h4 class="chart-title" style="margin-top: 12px;">Recent Feedback</h4>
-            <div class="feedback-list">
-              ${feedback.recent.map((entry) => html`
-                <div class="feedback-entry">
-                  <div class="feedback-entry-meta">
-                    <span class="feedback-stars">${'★'.repeat(entry.rating)}${'☆'.repeat(5 - entry.rating)}</span>
-                    ${entry.participant_name ? html`<span class="feedback-participant">${entry.participant_name}</span>` : nothing}
-                    <span class="feedback-entry-date">${new Date(entry.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
-                    ${entry.app_version ? html`<span class="feedback-version">${entry.app_version}</span>` : nothing}
-                  </div>
-                  <p class="feedback-entry-comment">
-                    ${entry.comment || html`<span class="muted">—</span>`}
-                  </p>
-                </div>
-              `)}
+            <div class="feedback-tabs" style="margin-top: 12px;">
+              <button
+                class="feedback-tab-btn ${this.feedbackTab === 'new' ? 'active' : ''}"
+                @click=${() => { this.feedbackTab = 'new' }}
+              >New (${newEntries.length})</button>
+              <button
+                class="feedback-tab-btn ${this.feedbackTab === 'resolved' ? 'active' : ''}"
+                @click=${() => { this.feedbackTab = 'resolved' }}
+              >Resolved (${resolvedEntries.length})</button>
             </div>
+
+            ${visibleEntries.length > 0 ? html`
+              <div class="feedback-list">
+                ${visibleEntries.map((entry) => html`
+                  <div class="feedback-entry">
+                    <div class="feedback-entry-meta">
+                      <span class="feedback-stars">${'★'.repeat(entry.rating)}${'☆'.repeat(5 - entry.rating)}</span>
+                      ${entry.participant_name ? html`<span class="feedback-participant">${entry.participant_name}</span>` : nothing}
+                      <span class="feedback-entry-date">${new Date(entry.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
+                      ${entry.app_version ? html`<span class="feedback-version">${entry.app_version}</span>` : nothing}
+                      ${entry.status === 'fixed' && entry.fixed_in_version ? html`<span class="feedback-fixed-badge">✓ fixed in ${entry.fixed_in_version}</span>` : nothing}
+                      ${entry.status === 'ignored' ? html`<span class="feedback-ignored-badge">ignored</span>` : nothing}
+                    </div>
+                    <p class="feedback-entry-comment">
+                      ${entry.comment || html`<span class="muted">—</span>`}
+                    </p>
+                    ${entry.status === 'new' ? html`
+                      <button class="feedback-ignore-btn" @click=${() => this._handleIgnoreFeedback(entry.id)}>Ignore</button>
+                    ` : nothing}
+                  </div>
+                `)}
+              </div>
+            ` : html`<p class="muted" style="margin-top: 8px;">Nothing here.</p>`}
           ` : nothing}
         ` : html`<p class="muted" style="margin-top: 8px;">No feedback submitted yet.</p>`}
 
@@ -1162,6 +1198,51 @@ export class StatsPage extends LitElement {
       .feedback-avg-stars {
         margin: 0;
         color: var(--retro-accent);
+      }
+
+      .feedback-tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+
+      .feedback-tab-btn {
+        border: 1px solid var(--retro-border-subtle);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--retro-text-secondary);
+        font-size: 12px;
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+
+      .feedback-tab-btn.active {
+        background: var(--retro-accent);
+        color: white;
+        border-color: var(--retro-accent);
+      }
+
+      .feedback-fixed-badge {
+        color: #059669;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .feedback-ignored-badge {
+        color: var(--retro-text-disabled);
+        font-size: 11px;
+        font-style: italic;
+      }
+
+      .feedback-ignore-btn {
+        margin-top: 6px;
+        border: 1px solid var(--retro-border-subtle);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--retro-text-secondary);
+        font-size: 11px;
+        padding: 3px 8px;
+        cursor: pointer;
       }
     `,
   ]

@@ -896,25 +896,28 @@ test.describe('stats-page feedback tabs', () => {
     },
   }
 
-  async function mockMixedFeedback(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+  async function unlockAdminWithMixedFeedback(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
     await mockStats(page)
     await mockAdminAuth(page)
     await page.route('/api/v1/stats/admin', (route) =>
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mixedFeedbackStats) }),
     )
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
+    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
   }
 
   test('New tab shows only status=new entries by default', async ({ page }) => {
-    await mockMixedFeedback(page)
-    await unlockAdmin(page)
+    await unlockAdminWithMixedFeedback(page)
     await expect(page.locator('stats-page').getByText('still broken')).toBeVisible()
     await expect(page.locator('stats-page').getByText('wants bundling')).not.toBeVisible()
     await expect(page.locator('stats-page').getByText('no issue')).not.toBeVisible()
   })
 
   test('Resolved tab shows ignored and fixed entries', async ({ page }) => {
-    await mockMixedFeedback(page)
-    await unlockAdmin(page)
+    await unlockAdminWithMixedFeedback(page)
     await page.locator('stats-page').getByRole('button', { name: /Resolved/i }).click()
     await expect(page.locator('stats-page').getByText('wants bundling')).toBeVisible()
     await expect(page.locator('stats-page').getByText('no issue')).toBeVisible()
@@ -922,15 +925,13 @@ test.describe('stats-page feedback tabs', () => {
   })
 
   test('fixed entry shows fixed_in_version badge on Resolved tab', async ({ page }) => {
-    await mockMixedFeedback(page)
-    await unlockAdmin(page)
+    await unlockAdminWithMixedFeedback(page)
     await page.locator('stats-page').getByRole('button', { name: /Resolved/i }).click()
     await expect(page.locator('stats-page').getByText('1.32.0')).toBeVisible()
   })
 
   test('New tab entry has an Ignore button that PATCHes status=ignored', async ({ page }) => {
-    await mockMixedFeedback(page)
-    await unlockAdmin(page)
+    await unlockAdminWithMixedFeedback(page)
 
     let patchBody: unknown = null
     await page.route('/api/v1/feedback/new-1', (route) => {
@@ -947,8 +948,7 @@ test.describe('stats-page feedback tabs', () => {
   })
 
   test('ignored entry moves off New tab after Ignore click', async ({ page }) => {
-    await mockMixedFeedback(page)
-    await unlockAdmin(page)
+    await unlockAdminWithMixedFeedback(page)
 
     await page.route('/api/v1/feedback/new-1', (route) =>
       route.fulfill({
