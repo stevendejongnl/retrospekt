@@ -84,7 +84,7 @@ const MOCK_ADMIN_STATS = {
       { rating: 5, count: 1 },
     ],
     recent: [
-      { id: '1', rating: 5, comment: 'Great tool!', app_version: '1.25.0', participant_name: 'Alice', created_at: '2026-03-18T12:00:00Z' },
+      { id: '1', rating: 5, comment: 'Great tool!', app_version: '1.25.0', participant_name: 'Alice', status: 'new', fixed_in_version: null, created_at: '2026-03-18T12:00:00Z' },
     ],
   },
 }
@@ -848,7 +848,7 @@ test.describe('stats-page feedback section', () => {
         total: 1,
         avg_rating: null,
         by_rating: [{ rating: 3, count: 1 }],
-        recent: [{ id: '2', rating: 3, comment: '', app_version: '', created_at: '2026-03-18T12:00:00Z' }],
+        recent: [{ id: '2', rating: 3, comment: '', app_version: '', status: 'new', fixed_in_version: null, created_at: '2026-03-18T12:00:00Z' }],
       },
     }
     await page.route('/api/v1/stats/admin', (route) =>
@@ -878,5 +878,87 @@ test.describe('stats-page feedback section', () => {
     await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
     // User Feedback section should NOT be rendered
     await expect(page.locator('stats-page .feedback-block')).not.toBeVisible()
+  })
+})
+
+test.describe('stats-page feedback tabs', () => {
+  const mixedFeedbackStats = {
+    ...MOCK_ADMIN_STATS,
+    feedback: {
+      total: 3,
+      avg_rating: 3.33,
+      by_rating: [{ rating: 1, count: 1 }, { rating: 4, count: 1 }, { rating: 5, count: 1 }],
+      recent: [
+        { id: 'new-1', rating: 1, comment: 'still broken', app_version: '1.33.2', participant_name: 'Imre', status: 'new', fixed_in_version: null, created_at: '2026-07-20T06:42:00Z' },
+        { id: 'fixed-1', rating: 3, comment: 'wants bundling', app_version: '1.31.0', participant_name: 'Imre', status: 'fixed', fixed_in_version: '1.32.0', created_at: '2026-05-21T07:18:00Z' },
+        { id: 'ignored-1', rating: 5, comment: 'no issue', app_version: '1.27.0', participant_name: null, status: 'ignored', fixed_in_version: null, created_at: '2026-03-20T09:37:00Z' },
+      ],
+    },
+  }
+
+  async function mockMixedFeedback(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+    await mockStats(page)
+    await mockAdminAuth(page)
+    await page.route('/api/v1/stats/admin', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mixedFeedbackStats) }),
+    )
+  }
+
+  test('New tab shows only status=new entries by default', async ({ page }) => {
+    await mockMixedFeedback(page)
+    await unlockAdmin(page)
+    await expect(page.locator('stats-page').getByText('still broken')).toBeVisible()
+    await expect(page.locator('stats-page').getByText('wants bundling')).not.toBeVisible()
+    await expect(page.locator('stats-page').getByText('no issue')).not.toBeVisible()
+  })
+
+  test('Resolved tab shows ignored and fixed entries', async ({ page }) => {
+    await mockMixedFeedback(page)
+    await unlockAdmin(page)
+    await page.locator('stats-page').getByRole('button', { name: /Resolved/i }).click()
+    await expect(page.locator('stats-page').getByText('wants bundling')).toBeVisible()
+    await expect(page.locator('stats-page').getByText('no issue')).toBeVisible()
+    await expect(page.locator('stats-page').getByText('still broken')).not.toBeVisible()
+  })
+
+  test('fixed entry shows fixed_in_version badge on Resolved tab', async ({ page }) => {
+    await mockMixedFeedback(page)
+    await unlockAdmin(page)
+    await page.locator('stats-page').getByRole('button', { name: /Resolved/i }).click()
+    await expect(page.locator('stats-page').getByText('1.32.0')).toBeVisible()
+  })
+
+  test('New tab entry has an Ignore button that PATCHes status=ignored', async ({ page }) => {
+    await mockMixedFeedback(page)
+    await unlockAdmin(page)
+
+    let patchBody: unknown = null
+    await page.route('/api/v1/feedback/new-1', (route) => {
+      patchBody = route.request().postDataJSON()
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ...mixedFeedbackStats.feedback.recent[0], status: 'ignored' }),
+      })
+    })
+
+    await page.locator('stats-page .feedback-entry', { hasText: 'still broken' }).getByRole('button', { name: /Ignore/i }).click()
+    await expect.poll(() => patchBody).toEqual({ status: 'ignored', fixed_in_version: null })
+  })
+
+  test('ignored entry moves off New tab after Ignore click', async ({ page }) => {
+    await mockMixedFeedback(page)
+    await unlockAdmin(page)
+
+    await page.route('/api/v1/feedback/new-1', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ...mixedFeedbackStats.feedback.recent[0], status: 'ignored' }),
+      }),
+    )
+
+    await page.locator('stats-page .feedback-entry', { hasText: 'still broken' }).getByRole('button', { name: /Ignore/i }).click()
+    await expect(page.locator('stats-page').getByText('still broken')).not.toBeVisible()
   })
 })

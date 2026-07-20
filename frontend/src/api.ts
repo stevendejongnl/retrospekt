@@ -219,6 +219,13 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         headers: { 'X-Admin-Token': token },
       }),
 
+    patchFeedback: (feedbackId: string, status: 'new' | 'ignored' | 'fixed', token: string, fixedInVersion?: string) =>
+      request<Feedback>(`/feedback/${feedbackId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, fixed_in_version: fixedInVersion ?? null }),
+        headers: { 'X-Admin-Token': token },
+      }),
+
     setTimerDuration: (sessionId: string, durationSeconds: number, facilitatorToken: string, participantName?: string) =>
       request<Session>(`/sessions/${sessionId}/timer`, {
         method: 'PATCH',

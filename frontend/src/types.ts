@@ -159,6 +159,8 @@ export interface Feedback {
   session_id: string | null
   participant_name: string | null
   app_version: string
+  status: FeedbackStatus
+  fixed_in_version: string | null
   created_at: string
 }
 
@@ -167,12 +169,16 @@ export interface RatingCount {
   count: number
 }
 
+export type FeedbackStatus = 'new' | 'ignored' | 'fixed'
+
 export interface RecentFeedbackEntry {
   id: string
   rating: number
   comment: string
   participant_name: string | null
   app_version: string
+  status: FeedbackStatus
+  fixed_in_version: string | null
   created_at: string
 }
 
