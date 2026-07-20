@@ -1,3 +1,16 @@
+## [1.34.0](https://github.com/stevendejongnl/retrospekt/compare/v1.33.2...v1.34.0) (2026-07-20)
+
+### Features
+
+* **ci:** auto-mark feedback fixed via Fixes-Feedback commit trailers on release ([f6a81cc](https://github.com/stevendejongnl/retrospekt/commit/f6a81ccea81523b9fe51a1335b198bc9130bb10a))
+* **feedback:** add fixed_in_version field, admin PATCH endpoint, uncap recent feedback list ([a94a6a9](https://github.com/stevendejongnl/retrospekt/commit/a94a6a9d48c3ac24cdfb4f2949220965f033ead1))
+* **feedback:** status field (new/ignored/fixed) replaces bare fixed_in_version PATCH ([8436ec0](https://github.com/stevendejongnl/retrospekt/commit/8436ec0a5caad7ac5ebf03b469c3cdb1c6de83bd))
+* **stats:** split admin feedback into New/Resolved tabs with Ignore action ([10fc09d](https://github.com/stevendejongnl/retrospekt/commit/10fc09d0193f2da6b7b1c78d452ff23fc15232fa))
+
+### Documentation
+
+* document feedback status field, PATCH endpoint, and admin tabs ([a3529b7](https://github.com/stevendejongnl/retrospekt/commit/a3529b7b6deba10bca2a6b59ce84868c330a3bf4))
+
 ## [1.33.2](https://github.com/stevendejongnl/retrospekt/compare/v1.33.1...v1.33.2) (2026-07-15)
 
 ### Bug Fixes
