@@ -2,6 +2,9 @@
  * stats-page component tests — written RED-first per TDD convention.
  *
  * All API calls are mocked via page.route() so tests run without a real server.
+ *
+ * stats-page now renders public analytics only (no admin auth/unlock flow —
+ * that lives in admin-page.spec.ts).
  */
 import { test, expect } from './playwright-fixtures'
 
@@ -23,36 +26,6 @@ const MOCK_PUBLIC_STATS = {
   total_votes: 89,
   total_reactions: 45,
   feedback_total: 3,
-}
-
-const MOCK_SENTRY_HEALTH = {
-  unresolved_count: 5,
-  top_issues: [
-    { id: '123', title: 'ZeroDivisionError: division by zero', count: 15, last_seen: '2026-02-28T10:00:00Z' },
-    { id: '456', title: 'KeyError: user_id', count: 7, last_seen: '2026-02-27T09:00:00Z' },
-  ],
-  error_rate_7d: [
-    { date: '2026-02-22', value: 10 },
-    { date: '2026-02-23', value: 25 },
-    { date: '2026-02-24', value: 0 },
-    { date: '2026-02-25', value: 5 },
-    { date: '2026-02-26', value: 8 },
-    { date: '2026-02-27', value: 3 },
-    { date: '2026-02-28', value: 12 },
-  ],
-  p95_latency_7d: [
-    { date: '2026-02-22', value: 120.5 },
-    { date: '2026-02-23', value: 98.3 },
-    { date: '2026-02-24', value: 0 },
-    { date: '2026-02-25', value: 145.0 },
-    { date: '2026-02-26', value: 110.0 },
-    { date: '2026-02-27', value: 88.5 },
-    { date: '2026-02-28', value: 133.2 },
-  ],
-  error: null,
-}
-
-const MOCK_ADMIN_STATS = {
   reaction_breakdown: [
     { emoji: '❤️', count: 20 },
     { emoji: '😂', count: 15 },
@@ -61,7 +34,6 @@ const MOCK_ADMIN_STATS = {
     { column: 'Went Well', count: 50 },
     { column: 'To Improve', count: 40 },
   ],
-  activity_heatmap: [{ day_of_week: 2, hour_bucket: 14, count: 5 }],
   engagement_funnel: { created: 42, has_cards: 35, has_votes: 20, closed: 27 },
   session_lifetime: {
     expiry_countdown: { expiring_within_7_days: 3, expiring_within_30_days: 12 },
@@ -74,19 +46,11 @@ const MOCK_ADMIN_STATS = {
     avg_duration: { open_avg_hours: 14.5, closed_avg_hours: 48.25 },
     avg_time_to_close_hours: 36.0,
   },
-  sentry: null,
-  sentry_frontend: null,
-  feedback: {
-    total: 3,
-    avg_rating: 4.0,
-    by_rating: [
-      { rating: 4, count: 2 },
-      { rating: 5, count: 1 },
-    ],
-    recent: [
-      { id: '1', rating: 5, comment: 'Great tool!', app_version: '1.25.0', participant_name: 'Alice', status: 'new', fixed_in_version: null, created_at: '2026-03-18T12:00:00Z' },
-    ],
-  },
+  feedback_avg_rating: 4.0,
+  feedback_by_rating: [
+    { rating: 4, count: 2 },
+    { rating: 5, count: 1 },
+  ],
 }
 
 async function mockStats(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
@@ -95,36 +59,6 @@ async function mockStats(page: Parameters<Parameters<typeof test>[1]>[0]['page']
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(MOCK_PUBLIC_STATS),
-    }),
-  )
-}
-
-async function mockAdminAuth(
-  page: Parameters<Parameters<typeof test>[1]>[0]['page'],
-  { fail = false } = {},
-) {
-  await page.route('/api/v1/stats/auth', (route) => {
-    if (fail) {
-      return route.fulfill({
-        status: 401,
-        contentType: 'application/json',
-        body: JSON.stringify({ detail: 'Invalid password' }),
-      })
-    }
-    return route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ token: 'test-admin-token-xyz' }),
-    })
-  })
-}
-
-async function mockAdminStats(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
-  await page.route('/api/v1/stats/admin', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_ADMIN_STATS),
     }),
   )
 }
@@ -168,15 +102,15 @@ test.describe('stats-page stat cards', () => {
   test.beforeEach(async ({ page }) => {
     await mockStats(page)
     await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await expect(page.locator('stats-page .stat-value').first()).toBeVisible()
   })
 
   test('renders total sessions', async ({ page }) => {
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await expect(page.locator('stats-page').getByText('42').first()).toBeVisible()
   })
 
   test('renders active sessions', async ({ page }) => {
-    await expect(page.locator('stats-page').getByText('15')).toBeVisible()
+    await expect(page.locator('stats-page').getByText('15', { exact: true })).toBeVisible()
   })
 
   test('renders total cards', async ({ page }) => {
@@ -193,7 +127,7 @@ test.describe('stats-page charts', () => {
     await mockStats(page)
     await page.goto('/stats')
     // Wait for charts to render after data loads
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
+    await expect(page.locator('stats-page .stat-value').first()).toBeVisible()
   })
 
   test('shows donut chart svg element', async ({ page }) => {
@@ -214,88 +148,6 @@ test.describe('stats-page load error', () => {
     )
     await page.goto('/stats')
     await expect(page.locator('stats-page').getByText(/Failed to load statistics/)).toBeVisible()
-  })
-})
-
-test.describe('stats-page saved admin token', () => {
-  test('pre-seeded sessionStorage token auto-unlocks admin section', async ({ page }) => {
-    await page.addInitScript(() => {
-      sessionStorage.setItem('retro_admin_token', 'pre-seeded-token')
-    })
-    await mockStats(page)
-    await mockAdminStats(page)
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('Reaction Breakdown', { exact: false })).toBeVisible()
-  })
-
-  test('shows loading spinner while fetching admin stats from saved token', async ({ page }) => {
-    await page.addInitScript(() => {
-      sessionStorage.setItem('retro_admin_token', 'token-slow')
-    })
-    await mockStats(page)
-
-    let resolveAdmin!: () => void
-    const adminReady = new Promise<void>((r) => {
-      resolveAdmin = r
-    })
-    await page.route('/api/v1/stats/admin', async (route) => {
-      await adminReady
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(MOCK_ADMIN_STATS),
-      })
-    })
-
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    // Admin spinner should be visible since we haven't resolved yet
-    await expect(page.locator('stats-page').getByText('Loading…')).toBeVisible()
-    resolveAdmin()
-    await expect(page.locator('stats-page').getByText('Reaction Breakdown', { exact: false })).toBeVisible()
-  })
-
-  test('clears expired token on 401 and shows password form', async ({ page }) => {
-    await page.addInitScript(() => {
-      sessionStorage.setItem('retro_admin_token', 'expired-token')
-    })
-    await mockStats(page)
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({ status: 401, contentType: 'application/json', body: '{"detail":"Unauthorized"}' }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    // Token should be cleared, password form should be visible
-    await expect(page.locator('stats-page').getByPlaceholder('Admin password')).toBeVisible()
-  })
-
-  test('non-401 error from auto-load keeps error state visible', async ({ page }) => {
-    await page.addInitScript(() => {
-      sessionStorage.setItem('retro_admin_token', 'bad-token')
-    })
-    await mockStats(page)
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({ status: 500, contentType: 'application/json', body: '{"detail":"Server error"}' }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    // Error state: form shown (password input visible)
-    await expect(page.locator('stats-page').getByPlaceholder('Admin password')).toBeVisible()
-  })
-})
-
-test.describe('stats-page keyboard interaction', () => {
-  test('pressing Enter in password field submits the form', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    await mockAdminStats(page)
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-
-    const input = page.locator('stats-page').getByPlaceholder('Admin password')
-    await input.fill('mypassword')
-    await input.press('Enter')
-    await expect(page.locator('stats-page').getByText('Reaction Breakdown', { exact: false })).toBeVisible()
   })
 })
 
@@ -325,640 +177,96 @@ test.describe('stats-page charts with empty data', () => {
     const path = page.locator('stats-page').locator('#donut-chart path')
     await expect(path).toHaveAttribute('fill', '#9ca3af')
   })
-
-  test('renders admin reaction chart gracefully with empty reaction data', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    const emptyAdmin = { ...MOCK_ADMIN_STATS, reaction_breakdown: [] }
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(emptyAdmin),
-      }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText('Engagement Funnel', { exact: false })).toBeVisible()
-  })
 })
 
-test.describe('stats-page admin unlock', () => {
-  test('shows admin unlock section when locked', async ({ page }) => {
+// ---------------------------------------------------------------------------
+// Public analytics sections (no unlock step — everything here is public)
+// ---------------------------------------------------------------------------
+
+test.describe('stats-page public analytics', () => {
+  test('shows Analytics section without any unlock step', async ({ page }) => {
     await mockStats(page)
     await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await expect(page.locator('stats-page').getByText(/Admin/)).toBeVisible()
-  })
-
-  test('wrong password shows error message', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page, { fail: true })
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('wrongpass')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/Invalid/i)).toBeVisible()
-  })
-
-  test('correct token unlocks admin section', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    await mockAdminStats(page)
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('correctpass')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page .stat-value').first()).toBeVisible()
     await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
-  })
-
-  test('admin section shows reaction breakdown emojis', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    await mockAdminStats(page)
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
+    await expect(page.locator('stats-page').getByText(/Cards per Column/i)).toBeVisible()
     await expect(page.locator('stats-page').getByText(/Engagement Funnel/i)).toBeVisible()
-  })
-})
-
-// ---------------------------------------------------------------------------
-// Session Lifetime section
-// ---------------------------------------------------------------------------
-
-async function unlockAdmin(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
-  await mockStats(page)
-  await mockAdminAuth(page)
-  await mockAdminStats(page)
-  await page.goto('/stats')
-  await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-  await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-  await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-  // wait for admin section to be visible
-  await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
-}
-
-test.describe('stats-page session lifetime section', () => {
-  test('shows section heading Session Lifetime', async ({ page }) => {
-    await unlockAdmin(page)
-    await expect(page.locator('stats-page').getByText('Session Lifetime', { exact: false })).toBeVisible()
+    await expect(page.locator('stats-page').getByText(/Session Lifetime/i)).toBeVisible()
   })
 
-  test('shows expiring within 7 days count', async ({ page }) => {
-    await unlockAdmin(page)
-    // expiring_within_7_days = 3 — check the label to disambiguate from other numbers
-    await expect(page.locator('stats-page').getByText('Expiring in 7d', { exact: true })).toBeVisible()
-    await expect(page.locator('stats-page').getByText('3', { exact: true }).first()).toBeVisible()
+  test('no password field is rendered anywhere', async ({ page }) => {
+    await mockStats(page)
+    await page.goto('/stats')
+    await expect(page.locator('stats-page .stat-value').first()).toBeVisible()
+    await expect(page.locator('stats-page').getByPlaceholder('Admin password')).toHaveCount(0)
   })
 
-  test('shows expiring within 30 days count', async ({ page }) => {
-    await unlockAdmin(page)
-    // expiring_within_30_days = 12 — exact match avoids matching '126'
-    await expect(page.locator('stats-page').getByText('12', { exact: true })).toBeVisible()
+  test('shows reaction breakdown chart and raw chips', async ({ page }) => {
+    await mockStats(page)
+    await page.goto('/stats')
+    await expect(page.locator('stats-page').locator('#reaction-chart')).toBeVisible()
+    await expect(page.locator('stats-page').getByText('❤️ 20')).toBeVisible()
+    await expect(page.locator('stats-page').getByText('😂 15')).toBeVisible()
   })
 
-  test('shows avg time to close', async ({ page }) => {
-    await unlockAdmin(page)
-    // avg_time_to_close_hours = 36.0 → displayed as "36"
-    await expect(page.locator('stats-page').getByText(/Avg time to close/i)).toBeVisible()
+  test('shows cards per column list', async ({ page }) => {
+    await mockStats(page)
+    await page.goto('/stats')
+    await expect(page.locator('stats-page .column-item', { hasText: 'Went Well' })).toBeVisible()
+    await expect(page.locator('stats-page .column-item', { hasText: 'To Improve' })).toBeVisible()
+  })
+
+  test('shows engagement funnel steps', async ({ page }) => {
+    await mockStats(page)
+    await page.goto('/stats')
+    await expect(page.locator('stats-page .funnel-label', { hasText: 'Created' })).toBeVisible()
+    await expect(page.locator('stats-page .funnel-label', { hasText: 'Has cards' })).toBeVisible()
+    await expect(page.locator('stats-page .funnel-label', { hasText: 'Has votes' })).toBeVisible()
+    await expect(page.locator('stats-page .funnel-label', { hasText: 'Closed' })).toBeVisible()
+  })
+
+  test('shows session lifetime distribution chart with 4 bars', async ({ page }) => {
+    await mockStats(page)
+    await page.goto('/stats')
+    const svg = page.locator('stats-page').locator('#lifetime-chart')
+    await expect(svg).toBeVisible()
+    const rects = page.locator('stats-page').locator('#lifetime-chart rect')
+    await expect(rects).toHaveCount(4)
   })
 
   test('shows em dash for null avg time to close', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
     const nullStats = {
-      ...MOCK_ADMIN_STATS,
+      ...MOCK_PUBLIC_STATS,
       session_lifetime: {
-        ...MOCK_ADMIN_STATS.session_lifetime,
+        ...MOCK_PUBLIC_STATS.session_lifetime,
         avg_time_to_close_hours: null,
       },
     }
-    await page.route('/api/v1/stats/admin', (route) =>
+    await page.route('/api/v1/stats', (route) =>
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(nullStats) }),
     )
     await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
+    await expect(page.locator('stats-page .stat-value').first()).toBeVisible()
     // null → rendered as em dash "–" (exact to avoid matching "1–7 days" chart labels)
     await expect(page.locator('stats-page').getByText('–', { exact: true })).toBeVisible()
   })
 
-  test('shows avg open session duration', async ({ page }) => {
-    await unlockAdmin(page)
-    // open_avg_hours = 14.5
-    await expect(page.locator('stats-page').getByText(/Open sessions/i)).toBeVisible()
-  })
-
-  test('shows avg closed session duration', async ({ page }) => {
-    await unlockAdmin(page)
-    // closed_avg_hours = 48.25
-    await expect(page.locator('stats-page').getByText(/Closed sessions/i)).toBeVisible()
-  })
-
-  test('shows lifetime distribution chart svg', async ({ page }) => {
-    await unlockAdmin(page)
-    const svg = page.locator('stats-page').locator('#lifetime-chart')
-    await expect(svg).toBeVisible()
-  })
-
-  test('lifetime chart renders 4 bars for 4 buckets', async ({ page }) => {
-    await unlockAdmin(page)
-    const rects = page.locator('stats-page').locator('#lifetime-chart rect')
-    await expect(rects).toHaveCount(4)
-  })
-})
-
-// ---------------------------------------------------------------------------
-// Sentry Health section
-// ---------------------------------------------------------------------------
-
-async function unlockAdminWithSentry(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
-  await mockStats(page)
-  await mockAdminAuth(page)
-  const adminWithSentry = { ...MOCK_ADMIN_STATS, sentry: MOCK_SENTRY_HEALTH }
-  await page.route('/api/v1/stats/admin', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(adminWithSentry),
-    }),
-  )
-  await page.goto('/stats')
-  await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-  await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-  await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-  await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
-}
-
-test.describe('stats-page sentry health section', () => {
-  test('sentry section hidden when sentry is null', async ({ page }) => {
-    await unlockAdmin(page)
-    await expect(page.locator('stats-page').getByText('Sentry Health', { exact: false })).not.toBeVisible()
-  })
-
-  test('sentry section shown when sentry data present', async ({ page }) => {
-    await unlockAdminWithSentry(page)
-    await expect(page.locator('stats-page').getByText('Sentry Health', { exact: false })).toBeVisible()
-  })
-
-  test('shows unresolved issues count', async ({ page }) => {
-    await unlockAdminWithSentry(page)
-    await expect(page.locator('stats-page').getByText('Unresolved Issues', { exact: false })).toBeVisible()
-    // unresolved_count = 5
-    await expect(page.locator('stats-page').getByText('5', { exact: true }).first()).toBeVisible()
-  })
-
-  test('shows top issues list with titles', async ({ page }) => {
-    await unlockAdminWithSentry(page)
-    await expect(page.locator('stats-page').getByText('ZeroDivisionError: division by zero', { exact: false })).toBeVisible()
-    await expect(page.locator('stats-page').getByText('KeyError: user_id', { exact: false })).toBeVisible()
-  })
-
-  test('shows error rate chart svg', async ({ page }) => {
-    await unlockAdminWithSentry(page)
-    const svg = page.locator('stats-page').locator('#sentry-backend-error-chart')
-    await expect(svg).toBeVisible()
-  })
-
-  test('shows p95 latency chart svg', async ({ page }) => {
-    await unlockAdminWithSentry(page)
-    const svg = page.locator('stats-page').locator('#sentry-backend-p95-chart')
-    await expect(svg).toBeVisible()
-  })
-
-  test('error rate chart renders bars', async ({ page }) => {
-    await unlockAdminWithSentry(page)
-    const rects = page.locator('stats-page').locator('#sentry-backend-error-chart rect')
-    await expect(rects).toHaveCount(7)
-  })
-
-  test('p95 chart renders bars', async ({ page }) => {
-    await unlockAdminWithSentry(page)
-    const rects = page.locator('stats-page').locator('#sentry-backend-p95-chart rect')
-    await expect(rects).toHaveCount(7)
-  })
-
-  test('error rate chart handles null value data points', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    const sentryWithNulls = {
-      ...MOCK_SENTRY_HEALTH,
-      error_rate_7d: [
-        { date: '2026-02-22', value: null },
-        { date: '2026-02-23', value: 5 },
-        { date: '2026-02-24', value: null },
-        { date: '2026-02-25', value: 8 },
-        { date: '2026-02-26', value: null },
-        { date: '2026-02-27', value: 3 },
-        { date: '2026-02-28', value: null },
-      ],
-    }
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ ...MOCK_ADMIN_STATS, sentry: sentryWithNulls }),
-      }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/Sentry Health/i)).toBeVisible()
-    await expect(page.locator('stats-page').locator('#sentry-backend-error-chart')).toBeVisible()
-  })
-
-  test('sentry charts handle all-null data gracefully (empty filtered list)', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    const sentryAllNulls = {
-      ...MOCK_SENTRY_HEALTH,
-      error_rate_7d: [
-        { date: '2026-02-22', value: null },
-        { date: '2026-02-23', value: null },
-      ],
-      p95_latency_7d: [
-        { date: '2026-02-22', value: null },
-        { date: '2026-02-23', value: null },
-      ],
-    }
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ ...MOCK_ADMIN_STATS, sentry: sentryAllNulls }),
-      }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/Sentry Health/i)).toBeVisible()
-    const rects = page.locator('stats-page').locator('#sentry-backend-error-chart rect')
-    await expect(rects).toHaveCount(0)
-  })
-
-  test('shows error banner when sentry.error is set', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    const adminWithError = {
-      ...MOCK_ADMIN_STATS,
-      sentry: { ...MOCK_SENTRY_HEALTH, error: 'Connection refused to sentry.io' },
-    }
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(adminWithError),
-      }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
-    await expect(page.locator('stats-page').getByText(/Connection refused to sentry.io/, { exact: false })).toBeVisible()
-  })
-
-  test('sentry section with empty top_issues shows no issue list', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    const sentryNoIssues = { ...MOCK_SENTRY_HEALTH, top_issues: [] }
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ ...MOCK_ADMIN_STATS, sentry: sentryNoIssues }),
-      }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/Sentry Health/i)).toBeVisible()
-    // Empty top_issues → no issue list rendered
-    await expect(page.locator('stats-page .sentry-issue-list')).not.toBeVisible()
-  })
-})
-
-// ---------------------------------------------------------------------------
-// Frontend Sentry Health section
-// ---------------------------------------------------------------------------
-
-const MOCK_FRONTEND_SENTRY_HEALTH = {
-  unresolved_count: 1,
-  top_issues: [
-    { id: 'FE-1', title: 'TypeError: Cannot read properties of undefined', count: 3, last_seen: '2026-02-28T11:00:00Z' },
-  ],
-  error_rate_7d: [
-    { date: '2026-02-22', value: 2 },
-    { date: '2026-02-23', value: 0 },
-    { date: '2026-02-24', value: 1 },
-    { date: '2026-02-25', value: 0 },
-    { date: '2026-02-26', value: 3 },
-    { date: '2026-02-27', value: 0 },
-    { date: '2026-02-28', value: 1 },
-  ],
-  p95_latency_7d: [
-    { date: '2026-02-22', value: null },
-    { date: '2026-02-23', value: null },
-    { date: '2026-02-24', value: null },
-    { date: '2026-02-25', value: null },
-    { date: '2026-02-26', value: null },
-    { date: '2026-02-27', value: null },
-    { date: '2026-02-28', value: null },
-  ],
-  error: null,
-}
-
-async function unlockAdminWithFrontendSentry(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
-  await mockStats(page)
-  await mockAdminAuth(page)
-  const adminWithBoth = {
-    ...MOCK_ADMIN_STATS,
-    sentry: MOCK_SENTRY_HEALTH,
-    sentry_frontend: MOCK_FRONTEND_SENTRY_HEALTH,
-  }
-  await page.route('/api/v1/stats/admin', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(adminWithBoth),
-    }),
-  )
-  await page.goto('/stats')
-  await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-  await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-  await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-  await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
-}
-
-test.describe('stats-page frontend sentry health section', () => {
-  test('frontend sentry section hidden when sentry_frontend is null', async ({ page }) => {
-    await unlockAdmin(page)
-    const headings = page.locator('stats-page').getByText('Sentry Health', { exact: false })
-    // Only backend block (or none) — frontend block should not appear when null
-    await expect(headings).toHaveCount(0)
-  })
-
-  test('frontend sentry section shown when sentry_frontend data present', async ({ page }) => {
-    await unlockAdminWithFrontendSentry(page)
-    // Should see both Backend and Frontend headings
-    await expect(page.locator('stats-page').getByText(/Backend/i)).toBeVisible()
-    await expect(page.locator('stats-page').getByText(/Frontend/i)).toBeVisible()
-  })
-
-  test('frontend sentry shows issue title', async ({ page }) => {
-    await unlockAdminWithFrontendSentry(page)
-    await expect(
-      page.locator('stats-page').getByText(/TypeError: Cannot read properties of undefined/, { exact: false }),
-    ).toBeVisible()
-  })
-
-  test('frontend sentry error rate chart renders', async ({ page }) => {
-    await unlockAdminWithFrontendSentry(page)
-    const svg = page.locator('stats-page').locator('#sentry-frontend-error-chart')
-    await expect(svg).toBeVisible()
-  })
-
-  test('frontend sentry p95 chart renders', async ({ page }) => {
-    await unlockAdminWithFrontendSentry(page)
-    const svg = page.locator('stats-page').locator('#sentry-frontend-p95-chart')
-    await expect(svg).toBeVisible()
-  })
-
-  test('frontend sentry error rate chart renders bars', async ({ page }) => {
-    await unlockAdminWithFrontendSentry(page)
-    const rects = page.locator('stats-page').locator('#sentry-frontend-error-chart rect')
-    await expect(rects).toHaveCount(7)
-  })
-
-  test('shows error banner when sentry_frontend.error is set', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    const adminWithFrontendError = {
-      ...MOCK_ADMIN_STATS,
-      sentry_frontend: { ...MOCK_FRONTEND_SENTRY_HEALTH, error: 'Frontend Sentry unreachable' },
-    }
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(adminWithFrontendError),
-      }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
-    await expect(page.locator('stats-page').getByText(/Frontend Sentry unreachable/, { exact: false })).toBeVisible()
-  })
-})
-
-// ---------------------------------------------------------------------------
-// Feedback section
-// ---------------------------------------------------------------------------
-
-test.describe('stats-page feedback section', () => {
-  test('feedback badge shows submission count on unlock button', async ({ page }) => {
+  test('shows feedback ratings without comment list', async ({ page }) => {
     await mockStats(page)
     await page.goto('/stats')
-    await expect(page.locator('stats-page .feedback-badge')).toHaveText('3')
-  })
-
-  test('feedback section visible after admin unlock', async ({ page }) => {
-    await unlockAdmin(page)
-    await expect(page.locator('stats-page').getByText('User Feedback', { exact: false })).toBeVisible()
-  })
-
-  test('feedback section shows submission count and avg rating', async ({ page }) => {
-    await unlockAdmin(page)
-    await expect(page.locator('stats-page').getByText('Submissions', { exact: true })).toBeVisible()
-    await expect(page.locator('stats-page').getByText('Avg Rating', { exact: true })).toBeVisible()
-  })
-
-  test('feedback rating chart rendered when feedback.total > 0', async ({ page }) => {
-    await unlockAdmin(page)
+    await expect(page.locator('stats-page').getByText(/User Feedback/i)).toBeVisible()
+    await expect(page.locator('stats-page').getByText('4.0')).toBeVisible()
     await expect(page.locator('stats-page #feedback-rating-chart')).toBeVisible()
+    await expect(page.locator('stats-page .feedback-entry')).toHaveCount(0)
   })
 
-  test('feedback recent entries shown as cards when recent list is non-empty', async ({ page }) => {
-    await unlockAdmin(page)
-    await expect(page.locator('stats-page .feedback-entry')).toHaveCount(1)
-    await expect(page.locator('stats-page').getByText('Great tool!')).toBeVisible()
-  })
-
-  test('feedback section hidden when feedback.total is 0', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    const noFeedbackStats = {
-      ...MOCK_ADMIN_STATS,
-      feedback: { total: 0, avg_rating: null, by_rating: [], recent: [] },
-    }
-    await page.route('/api/v1/stats/admin', (route) =>
+  test('feedback section shows "No feedback submitted yet" when total is 0', async ({ page }) => {
+    const noFeedbackStats = { ...MOCK_PUBLIC_STATS, feedback_total: 0, feedback_avg_rating: null, feedback_by_rating: [] }
+    await page.route('/api/v1/stats', (route) =>
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(noFeedbackStats) }),
     )
     await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
-    // Chart not rendered when total is 0
+    await expect(page.locator('stats-page').getByText(/No feedback submitted yet/i)).toBeVisible()
     await expect(page.locator('stats-page #feedback-rating-chart')).not.toBeVisible()
-  })
-
-  test('feedback section shows no recent table when recent list is empty', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    const feedbackNoRecent = {
-      ...MOCK_ADMIN_STATS,
-      feedback: { total: 2, avg_rating: 3.5, by_rating: [{ rating: 3, count: 1 }, { rating: 4, count: 1 }], recent: [] },
-    }
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(feedbackNoRecent) }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/User Feedback/i)).toBeVisible()
-    // Rating chart shown (total > 0)
-    await expect(page.locator('stats-page #feedback-rating-chart')).toBeVisible()
-    // But no recent cards (recent is empty)
-    await expect(page.locator('stats-page .feedback-entry')).not.toBeVisible()
-  })
-
-  test('feedback entry with null comment shows dash placeholder', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    const feedbackNullComment = {
-      ...MOCK_ADMIN_STATS,
-      feedback: {
-        total: 1,
-        avg_rating: null,
-        by_rating: [{ rating: 3, count: 1 }],
-        recent: [{ id: '2', rating: 3, comment: '', app_version: '', status: 'new', fixed_in_version: null, created_at: '2026-03-18T12:00:00Z' }],
-      },
-    }
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(feedbackNullComment) }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/User Feedback/i)).toBeVisible()
-    // Empty comment triggers the fallback "—" span inside the card
-    const dashCells = page.locator('stats-page .feedback-entry .muted')
-    await expect(dashCells).toHaveCount(1)
-  })
-
-  test('feedback section not rendered when adminStats.feedback is null (covers nothing branch)', async ({ page }) => {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    const nullFeedbackStats = { ...MOCK_ADMIN_STATS, feedback: null }
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(nullFeedbackStats) }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
-    // User Feedback section should NOT be rendered
-    await expect(page.locator('stats-page .feedback-block')).not.toBeVisible()
-  })
-})
-
-test.describe('stats-page feedback tabs', () => {
-  const mixedFeedbackStats = {
-    ...MOCK_ADMIN_STATS,
-    feedback: {
-      total: 3,
-      avg_rating: 3.33,
-      by_rating: [{ rating: 1, count: 1 }, { rating: 4, count: 1 }, { rating: 5, count: 1 }],
-      recent: [
-        { id: 'new-1', rating: 1, comment: 'still broken', app_version: '1.33.2', participant_name: 'Imre', status: 'new', fixed_in_version: null, created_at: '2026-07-20T06:42:00Z' },
-        { id: 'fixed-1', rating: 3, comment: 'wants bundling', app_version: '1.31.0', participant_name: 'Imre', status: 'fixed', fixed_in_version: '1.32.0', created_at: '2026-05-21T07:18:00Z' },
-        { id: 'ignored-1', rating: 5, comment: 'no issue', app_version: '1.27.0', participant_name: null, status: 'ignored', fixed_in_version: null, created_at: '2026-03-20T09:37:00Z' },
-      ],
-    },
-  }
-
-  async function unlockAdminWithMixedFeedback(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
-    await mockStats(page)
-    await mockAdminAuth(page)
-    await page.route('/api/v1/stats/admin', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mixedFeedbackStats) }),
-    )
-    await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText('42')).toBeVisible()
-    await page.locator('stats-page').getByPlaceholder('Admin password').fill('pw')
-    await page.locator('stats-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
-  }
-
-  test('New tab shows only status=new entries by default', async ({ page }) => {
-    await unlockAdminWithMixedFeedback(page)
-    await expect(page.locator('stats-page').getByText('still broken')).toBeVisible()
-    await expect(page.locator('stats-page').getByText('wants bundling')).not.toBeVisible()
-    await expect(page.locator('stats-page').getByText('no issue')).not.toBeVisible()
-  })
-
-  test('Resolved tab shows ignored and fixed entries', async ({ page }) => {
-    await unlockAdminWithMixedFeedback(page)
-    await page.locator('stats-page').getByRole('button', { name: /Resolved/i }).click()
-    await expect(page.locator('stats-page').getByText('wants bundling')).toBeVisible()
-    await expect(page.locator('stats-page').getByText('no issue')).toBeVisible()
-    await expect(page.locator('stats-page').getByText('still broken')).not.toBeVisible()
-  })
-
-  test('fixed entry shows fixed_in_version badge on Resolved tab', async ({ page }) => {
-    await unlockAdminWithMixedFeedback(page)
-    await page.locator('stats-page').getByRole('button', { name: /Resolved/i }).click()
-    await expect(page.locator('stats-page').getByText('1.32.0')).toBeVisible()
-  })
-
-  test('New tab entry has an Ignore button that PATCHes status=ignored', async ({ page }) => {
-    await unlockAdminWithMixedFeedback(page)
-
-    let patchBody: unknown = null
-    await page.route('/api/v1/feedback/new-1', (route) => {
-      patchBody = route.request().postDataJSON()
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ ...mixedFeedbackStats.feedback.recent[0], status: 'ignored' }),
-      })
-    })
-
-    await page.locator('stats-page .feedback-entry', { hasText: 'still broken' }).getByRole('button', { name: /Ignore/i }).click()
-    await expect.poll(() => patchBody).toEqual({ status: 'ignored', fixed_in_version: null })
-  })
-
-  test('ignored entry moves off New tab after Ignore click', async ({ page }) => {
-    await unlockAdminWithMixedFeedback(page)
-
-    await page.route('/api/v1/feedback/new-1', (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ ...mixedFeedbackStats.feedback.recent[0], status: 'ignored' }),
-      }),
-    )
-
-    await page.locator('stats-page .feedback-entry', { hasText: 'still broken' }).getByRole('button', { name: /Ignore/i }).click()
-    await expect(page.locator('stats-page').getByText('still broken')).not.toBeVisible()
   })
 })
