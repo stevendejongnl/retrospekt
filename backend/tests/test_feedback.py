@@ -176,7 +176,7 @@ async def test_patch_feedback_without_token_returns_401(client: AsyncClient):
     assert response.status_code == 401
 
 
-async def test_patch_feedback_sets_fixed_in_version(client: AsyncClient, fake_redis):
+async def test_patch_feedback_sets_status_fixed_with_version(client: AsyncClient, fake_redis):
     token = "admin-token"
     await fake_redis.set(f"admin_token:{token}", "1")
 
@@ -185,14 +185,38 @@ async def test_patch_feedback_sets_fixed_in_version(client: AsyncClient, fake_re
 
     response = await client.patch(
         f"/api/v1/feedback/{fb_id}",
-        json={"fixed_in_version": "1.32.0"},
+        json={"status": "fixed", "fixed_in_version": "1.32.0"},
         headers={"X-Admin-Token": token},
     )
     assert response.status_code == 200
+    assert response.json()["status"] == "fixed"
     assert response.json()["fixed_in_version"] == "1.32.0"
 
     listed = await client.get("/api/v1/feedback", headers={"X-Admin-Token": token})
+    assert listed.json()[0]["status"] == "fixed"
     assert listed.json()[0]["fixed_in_version"] == "1.32.0"
+
+
+async def test_patch_feedback_sets_status_ignored(client: AsyncClient, fake_redis):
+    token = "admin-token"
+    await fake_redis.set(f"admin_token:{token}", "1")
+
+    submitted = await client.post("/api/v1/feedback", json={"rating": 1})
+    fb_id = submitted.json()["id"]
+
+    response = await client.patch(
+        f"/api/v1/feedback/{fb_id}",
+        json={"status": "ignored"},
+        headers={"X-Admin-Token": token},
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "ignored"
+    assert response.json()["fixed_in_version"] is None
+
+
+async def test_new_feedback_defaults_to_status_new(client: AsyncClient):
+    response = await client.post("/api/v1/feedback", json={"rating": 3})
+    assert response.json()["status"] == "new"
 
 
 async def test_patch_feedback_unknown_id_returns_404(client: AsyncClient, fake_redis):
@@ -201,7 +225,7 @@ async def test_patch_feedback_unknown_id_returns_404(client: AsyncClient, fake_r
 
     response = await client.patch(
         "/api/v1/feedback/does-not-exist",
-        json={"fixed_in_version": "1.32.0"},
+        json={"status": "ignored"},
         headers={"X-Admin-Token": token},
     )
     assert response.status_code == 404
@@ -232,10 +256,11 @@ async def test_admin_stats_recent_feedback_includes_fixed_in_version(client: Asy
     fb_id = submitted.json()["id"]
     await client.patch(
         f"/api/v1/feedback/{fb_id}",
-        json={"fixed_in_version": "1.32.0"},
+        json={"status": "fixed", "fixed_in_version": "1.32.0"},
         headers={"X-Admin-Token": token},
     )
 
     response = await client.get("/api/v1/stats/admin", headers={"X-Admin-Token": token})
     recent = response.json()["feedback"]["recent"]
+    assert recent[0]["status"] == "fixed"
     assert recent[0]["fixed_in_version"] == "1.32.0"
