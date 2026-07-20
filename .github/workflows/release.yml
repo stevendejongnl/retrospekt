@@ -105,6 +105,12 @@ jobs:
       - name: Install root dependencies
         run: npm install
 
+      - name: Record previous tag
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "PREV_TAG=$PREV_TAG" >> $GITHUB_ENV
+          echo "Previous tag: $PREV_TAG"
+
       - name: Dry-run to detect next version
         env:
           GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
@@ -128,6 +134,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
         run: npx semantic-release
+
+      - name: Mark fixed feedback (Fixes-Feedback commit trailers)
+        if: env.SHOULD_RELEASE == 'true'
+        env:
+          MONGO_PRODUCTION_USERNAME: ${{ secrets.MONGO_PRODUCTION_USERNAME }}
+          MONGO_PRODUCTION_PASSWORD: ${{ secrets.MONGO_PRODUCTION_PASSWORD }}
+          MONGO_PRODUCTION_URL: ${{ secrets.MONGO_PRODUCTION_URL }}
+        run: |
+          cd backend
+          uv run python scripts/mark_feedback_fixed.py "$PREV_TAG" "$NEXT_VERSION"
 
       - name: Trigger Docker build & deploy
         if: env.SHOULD_RELEASE == 'true'
