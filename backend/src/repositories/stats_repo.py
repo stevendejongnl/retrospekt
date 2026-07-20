@@ -96,6 +96,17 @@ class PublicStats(BaseModel):
     total_votes: int
     total_reactions: int
     feedback_total: int = 0
+    reaction_breakdown: list[ReactionCount] = []
+    cards_per_column: list[ColumnCount] = []
+    engagement_funnel: FunnelStats = FunnelStats(created=0, has_cards=0, has_votes=0, closed=0)
+    session_lifetime: SessionLifetimeStats = SessionLifetimeStats(
+        expiry_countdown=ExpiryCountdown(expiring_within_7_days=0, expiring_within_30_days=0),
+        lifetime_distribution=[LifetimeBucket(label=label, count=0) for label in BUCKET_ORDER],
+        avg_duration=AvgDurationByPhase(open_avg_hours=None, closed_avg_hours=None),
+        avg_time_to_close_hours=None,
+    )
+    feedback_avg_rating: float | None = None
+    feedback_by_rating: list[RatingCount] = []
 
 
 class SentryIssue(BaseModel):
@@ -133,8 +144,10 @@ class StatsRepository:
     def __init__(self, db: AsyncIOMotorDatabase) -> None:
         self.collection = db["sessions"]
 
-    async def get_public_stats(self) -> PublicStats:
+    async def get_public_stats(self, expiry_days: int = 30) -> PublicStats:
         thirty_days_ago = datetime.now(UTC) - timedelta(days=30)
+        now = datetime.now(UTC).replace(tzinfo=None)
+        expiry_delta = timedelta(days=expiry_days)
 
         pipeline: list[dict] = [
             {
@@ -164,43 +177,129 @@ class StatsRepository:
                         {"$sort": {"_id": 1}},
                     ],
                     "card_counts": [
-                        {
-                            "$unwind": {
-                                "path": "$cards",
-                                "preserveNullAndEmptyArrays": False,
-                            }
-                        },
+                        {"$unwind": {"path": "$cards", "preserveNullAndEmptyArrays": False}},
                         {"$count": "total"},
                     ],
                     "vote_counts": [
-                        {
-                            "$unwind": {
-                                "path": "$cards",
-                                "preserveNullAndEmptyArrays": False,
-                            }
-                        },
-                        {
-                            "$unwind": {
-                                "path": "$cards.votes",
-                                "preserveNullAndEmptyArrays": False,
-                            }
-                        },
+                        {"$unwind": {"path": "$cards", "preserveNullAndEmptyArrays": False}},
+                        {"$unwind": {"path": "$cards.votes", "preserveNullAndEmptyArrays": False}},
                         {"$count": "total"},
                     ],
                     "reaction_counts": [
-                        {
-                            "$unwind": {
-                                "path": "$cards",
-                                "preserveNullAndEmptyArrays": False,
-                            }
-                        },
-                        {
-                            "$unwind": {
-                                "path": "$cards.reactions",
-                                "preserveNullAndEmptyArrays": False,
-                            }
-                        },
+                        {"$unwind": {"path": "$cards", "preserveNullAndEmptyArrays": False}},
+                        {"$unwind": {"path": "$cards.reactions", "preserveNullAndEmptyArrays": False}},
                         {"$count": "total"},
+                    ],
+                    "reaction_breakdown": [
+                        {"$unwind": {"path": "$cards", "preserveNullAndEmptyArrays": False}},
+                        {"$unwind": {"path": "$cards.reactions", "preserveNullAndEmptyArrays": False}},
+                        {"$group": {"_id": "$cards.reactions.emoji", "count": {"$sum": 1}}},
+                        {"$sort": {"count": -1}},
+                    ],
+                    "cards_per_column": [
+                        {"$unwind": {"path": "$cards", "preserveNullAndEmptyArrays": False}},
+                        {"$group": {"_id": "$cards.column", "count": {"$sum": 1}}},
+                        {"$sort": {"count": -1}},
+                    ],
+                    "funnel_created": [{"$count": "n"}],
+                    "funnel_has_cards": [
+                        {"$match": {"cards.0": {"$exists": True}}},
+                        {"$count": "n"},
+                    ],
+                    "funnel_has_votes": [
+                        {"$match": {"cards": {"$elemMatch": {"votes.0": {"$exists": True}}}}},
+                        {"$count": "n"},
+                    ],
+                    "funnel_closed": [
+                        {"$match": {"phase": "closed"}},
+                        {"$count": "n"},
+                    ],
+                    "expiry_7": [
+                        {
+                            "$match": {
+                                "phase": {"$ne": "closed"},
+                                "created_at": {
+                                    "$gt": now - expiry_delta,
+                                    "$lte": now - expiry_delta + timedelta(days=7),
+                                },
+                            }
+                        },
+                        {"$count": "n"},
+                    ],
+                    "expiry_30": [
+                        {
+                            "$match": {
+                                "phase": {"$ne": "closed"},
+                                "created_at": {"$gt": now - expiry_delta},
+                            }
+                        },
+                        {"$count": "n"},
+                    ],
+                    "lifetime_dist": [
+                        {
+                            "$addFields": {
+                                "age_hours": {
+                                    "$divide": [{"$subtract": [now, "$created_at"]}, 3_600_000]
+                                }
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": {
+                                    "$switch": {
+                                        "branches": [
+                                            {"case": {"$lt": ["$age_hours", 24]}, "then": "<1 day"},
+                                            {"case": {"$lt": ["$age_hours", 168]}, "then": "1–7 days"},
+                                            {"case": {"$lt": ["$age_hours", 720]}, "then": "7–30 days"},
+                                        ],
+                                        "default": "30+ days",
+                                    }
+                                },
+                                "count": {"$sum": 1},
+                            }
+                        },
+                    ],
+                    "avg_duration_open": [
+                        {"$match": {"phase": {"$ne": "closed"}}},
+                        {
+                            "$addFields": {
+                                "h": {
+                                    "$divide": [
+                                        {"$subtract": ["$last_accessed_at", "$created_at"]},
+                                        3_600_000,
+                                    ]
+                                }
+                            }
+                        },
+                        {"$group": {"_id": None, "avg": {"$avg": "$h"}}},
+                    ],
+                    "avg_duration_closed": [
+                        {"$match": {"phase": "closed"}},
+                        {
+                            "$addFields": {
+                                "h": {
+                                    "$divide": [
+                                        {"$subtract": ["$last_accessed_at", "$created_at"]},
+                                        3_600_000,
+                                    ]
+                                }
+                            }
+                        },
+                        {"$group": {"_id": None, "avg": {"$avg": "$h"}}},
+                    ],
+                    "time_to_close": [
+                        {"$match": {"phase": "closed"}},
+                        {
+                            "$addFields": {
+                                "h": {
+                                    "$divide": [
+                                        {"$subtract": ["$updated_at", "$created_at"]},
+                                        3_600_000,
+                                    ]
+                                }
+                            }
+                        },
+                        {"$group": {"_id": None, "avg": {"$avg": "$h"}}},
                     ],
                 }
             }
@@ -208,25 +307,59 @@ class StatsRepository:
 
         result = await self.collection.aggregate(pipeline).to_list(length=1)
         if not result:
-            return _empty_public_stats()
+            feedback_total = await self.collection.database["feedback"].count_documents({})
+            return _empty_public_stats(feedback_total)
 
         facets = result[0]
         total = facets["total"][0]["n"] if facets["total"] else 0
         active = facets["active"][0]["n"] if facets["active"] else 0
-        by_phase = [
-            PhaseCount(phase=d["_id"], count=d["count"]) for d in facets["by_phase"]
-        ]
-        per_day = [
-            DailyCount(date=d["_id"], count=d["count"]) for d in facets["per_day"]
-        ]
+        by_phase = [PhaseCount(phase=d["_id"], count=d["count"]) for d in facets["by_phase"]]
+        per_day = [DailyCount(date=d["_id"], count=d["count"]) for d in facets["per_day"]]
         total_cards = facets["card_counts"][0]["total"] if facets["card_counts"] else 0
         total_votes = facets["vote_counts"][0]["total"] if facets["vote_counts"] else 0
-        total_reactions = (
-            facets["reaction_counts"][0]["total"] if facets["reaction_counts"] else 0
-        )
+        total_reactions = facets["reaction_counts"][0]["total"] if facets["reaction_counts"] else 0
         avg = round(total_cards / total, 2) if total > 0 else 0.0
 
+        reaction_breakdown = [
+            ReactionCount(emoji=d["_id"], count=d["count"]) for d in facets["reaction_breakdown"]
+        ]
+        cards_per_column = [
+            ColumnCount(column=d["_id"], count=d["count"]) for d in facets["cards_per_column"]
+        ]
+        funnel = FunnelStats(
+            created=facets["funnel_created"][0]["n"] if facets["funnel_created"] else 0,
+            has_cards=facets["funnel_has_cards"][0]["n"] if facets["funnel_has_cards"] else 0,
+            has_votes=facets["funnel_has_votes"][0]["n"] if facets["funnel_has_votes"] else 0,
+            closed=facets["funnel_closed"][0]["n"] if facets["funnel_closed"] else 0,
+        )
+
+        dist_map = {d["_id"]: d["count"] for d in facets["lifetime_dist"]}
+        lifetime_distribution = [
+            LifetimeBucket(label=label, count=dist_map.get(label, 0)) for label in BUCKET_ORDER
+        ]
+
+        open_raw = facets["avg_duration_open"][0]["avg"] if facets["avg_duration_open"] else None
+        closed_raw = facets["avg_duration_closed"][0]["avg"] if facets["avg_duration_closed"] else None
+        avg_duration = AvgDurationByPhase(
+            open_avg_hours=round(open_raw, 2) if open_raw is not None else None,
+            closed_avg_hours=round(closed_raw, 2) if closed_raw is not None else None,
+        )
+
+        ttc_raw = facets["time_to_close"][0]["avg"] if facets["time_to_close"] else None
+        avg_time_to_close = round(ttc_raw, 2) if ttc_raw is not None else None
+
+        session_lifetime = SessionLifetimeStats(
+            expiry_countdown=ExpiryCountdown(
+                expiring_within_7_days=facets["expiry_7"][0]["n"] if facets["expiry_7"] else 0,
+                expiring_within_30_days=facets["expiry_30"][0]["n"] if facets["expiry_30"] else 0,
+            ),
+            lifetime_distribution=lifetime_distribution,
+            avg_duration=avg_duration,
+            avg_time_to_close_hours=avg_time_to_close,
+        )
+
         feedback_total = await self.collection.database["feedback"].count_documents({})
+        feedback_stats = await self._get_feedback_stats()
 
         return PublicStats(
             total_sessions=total,
@@ -238,6 +371,12 @@ class StatsRepository:
             total_votes=total_votes,
             total_reactions=total_reactions,
             feedback_total=feedback_total,
+            reaction_breakdown=reaction_breakdown,
+            cards_per_column=cards_per_column,
+            engagement_funnel=funnel,
+            session_lifetime=session_lifetime,
+            feedback_avg_rating=feedback_stats.avg_rating,
+            feedback_by_rating=feedback_stats.by_rating,
         )
 
     async def get_admin_stats(self, expiry_days: int = 30) -> AdminStats:
@@ -555,7 +694,7 @@ class StatsRepository:
         return FeedbackStats(total=total, avg_rating=avg_rating, by_rating=by_rating, recent=recent)
 
 
-def _empty_public_stats() -> PublicStats:
+def _empty_public_stats(feedback_total: int = 0) -> PublicStats:
     return PublicStats(
         total_sessions=0,
         active_sessions=0,
@@ -565,6 +704,7 @@ def _empty_public_stats() -> PublicStats:
         avg_cards_per_session=0.0,
         total_votes=0,
         total_reactions=0,
+        feedback_total=feedback_total,
     )
 
 
