@@ -36,7 +36,7 @@ A simple, self-hosted retrospective board.
 - Session history sidebar: up to 50 past sessions persisted in localStorage
 - Dark mode with persisted preference (CSS custom properties)
 - Session auto-expiry: sessions deleted after 30 days of inactivity
-- Stats dashboard at `/stats`: public session counts + admin analytics (engagement funnel, reaction breakdown, session lifetime, Sentry health)
+- Stats dashboard: `/stats` is fully public (session/card/vote/reaction counts, engagement funnel, reaction breakdown, session lifetime, feedback ratings); `/admin` is token-gated (Sentry health + feedback comments)
 - Brand theming: visit `/?theme=cs` to activate an alternate visual theme (stored in localStorage)
 
 ## Stack
