@@ -1,3 +1,26 @@
+## [1.35.0](https://github.com/stevendejongnl/retrospekt/compare/v1.34.0...v1.35.0) (2026-07-20)
+
+### Features
+
+* **admin:** add /admin page with Sentry health and feedback panel ([4006d3a](https://github.com/stevendejongnl/retrospekt/commit/4006d3ac7f4be705713c09e53a2e7814118f591b))
+* **feedback:** extract feedback comment panel into reusable component ([7ff81e5](https://github.com/stevendejongnl/retrospekt/commit/7ff81e524b3b1e30dce8d8859406b63f2161520f))
+* **nav:** add public Stats link to home and session page headers ([4441828](https://github.com/stevendejongnl/retrospekt/commit/444182858596f43b8909a982ac36d4d7ffa98990))
+* **router:** register /admin route ([926a432](https://github.com/stevendejongnl/retrospekt/commit/926a43293e856780c10fffb0ef20432e76b003f1))
+* **stats:** add reaction/cards/funnel/lifetime/feedback-ratings to PublicStats ([5664b2e](https://github.com/stevendejongnl/retrospekt/commit/5664b2e484a2bf6f06b0f9b038d1901dfcdb8093))
+
+### Bug Fixes
+
+* **changelog:** scroll version card into view on hash navigation (Shadow DOM workaround) ([0c5bea9](https://github.com/stevendejongnl/retrospekt/commit/0c5bea992a2cf4cde04d0d9d18fbb9e460caa4a8))
+
+### Code Refactoring
+
+* **stats:** remove promoted fields and dead activity_heatmap from AdminStats ([91c022b](https://github.com/stevendejongnl/retrospekt/commit/91c022b3789f6346fd2df91b4223d16e30626a08))
+* **stats:** trim stats-page to pure public rendering, update PublicStats/AdminStats types ([ec102c1](https://github.com/stevendejongnl/retrospekt/commit/ec102c13f0db97f03976a69528dc4ffda5c729ba))
+
+### Documentation
+
+* document /admin route and public stats split ([f7f837d](https://github.com/stevendejongnl/retrospekt/commit/f7f837d50cc317902dc642dc464c733cef047b0e))
+
 ## [1.34.0](https://github.com/stevendejongnl/retrospekt/compare/v1.33.2...v1.34.0) (2026-07-20)
 
 ### Features
