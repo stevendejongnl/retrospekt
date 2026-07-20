@@ -197,6 +197,20 @@ export class ChangelogPage extends LitElement {
     }
   `
 
+  connectedCallback(): void {
+    super.connectedCallback()
+    // Defer to after first render — shadowRoot content doesn't exist yet at connectedCallback time
+    requestAnimationFrame(() => this._scrollToHash())
+  }
+
+  private _scrollToHash(): void {
+    const hash = window.location.hash
+    if (!hash) return
+    const id = hash.slice(1)
+    const target = this.shadowRoot?.getElementById(id)
+    target?.scrollIntoView({ behavior: 'auto', block: 'start' })
+  }
+
   private _renderEntry(entry: ChangelogEntry, idx: number) {
     return html`
       <div class="version-card" id="v${entry.version}">
