@@ -15,6 +15,8 @@ TDD commit order:
   feat(stats): add SentryHealth to AdminStats and call SentryService in admin endpoint
 """
 
+from datetime import UTC, datetime, timedelta
+
 from argon2 import PasswordHasher
 
 from src.config import settings
@@ -196,6 +198,125 @@ class TestPublicStatsCardsVotesReactions:
         )
         response = await client.get("/api/v1/stats")
         assert response.json()["total_reactions"] == 1
+
+
+# ---------------------------------------------------------------------------
+# Public stats — reaction breakdown, cards per column, funnel, lifetime
+# (moved from admin stats — these have no sensitive content)
+# ---------------------------------------------------------------------------
+
+
+class TestPublicStatsReactionCardsFunnelLifetime:
+    async def test_reaction_breakdown(self, client):
+        s = await make_session(client, name="Retro")
+        resp = await client.post(
+            f"/api/v1/sessions/{s.id}/cards",
+            json={"column": "Went Well", "text": "Card", "author_name": "Alice"},
+        )
+        card_id = resp.json()["id"]
+        await client.post(
+            f"/api/v1/sessions/{s.id}/phase",
+            json={"phase": "discussing"},
+            headers={"X-Facilitator-Token": s.facilitator_token},
+        )
+        await client.post(
+            f"/api/v1/sessions/{s.id}/cards/{card_id}/publish",
+            headers={"X-Participant-Name": "Alice"},
+        )
+        await client.post(
+            f"/api/v1/sessions/{s.id}/cards/{card_id}/reactions",
+            json={"emoji": "❤️"},
+            headers={"X-Participant-Name": "Bob"},
+        )
+        await client.post(
+            f"/api/v1/sessions/{s.id}/cards/{card_id}/reactions",
+            json={"emoji": "❤️"},
+            headers={"X-Participant-Name": "Alice"},
+        )
+
+        response = await client.get("/api/v1/stats")
+        data = response.json()
+        breakdown = {item["emoji"]: item["count"] for item in data["reaction_breakdown"]}
+        assert breakdown.get("❤️", 0) == 2
+
+    async def test_engagement_funnel(self, client):
+        await make_session(client, name="Empty")
+        s2 = await make_session(client, name="Has cards")
+        await client.post(
+            f"/api/v1/sessions/{s2.id}/cards",
+            json={"column": "Went Well", "text": "C", "author_name": "Alice"},
+        )
+        s3 = await make_session(client, name="Full")
+        resp = await client.post(
+            f"/api/v1/sessions/{s3.id}/cards",
+            json={"column": "Went Well", "text": "C", "author_name": "Alice"},
+        )
+        card_id = resp.json()["id"]
+        await client.post(
+            f"/api/v1/sessions/{s3.id}/phase",
+            json={"phase": "discussing"},
+            headers={"X-Facilitator-Token": s3.facilitator_token},
+        )
+        await client.post(
+            f"/api/v1/sessions/{s3.id}/cards/{card_id}/publish",
+            headers={"X-Participant-Name": "Alice"},
+        )
+        await client.post(
+            f"/api/v1/sessions/{s3.id}/cards/{card_id}/votes",
+            headers={"X-Participant-Name": "Bob"},
+        )
+        await client.post(
+            f"/api/v1/sessions/{s3.id}/phase",
+            json={"phase": "closed"},
+            headers={"X-Facilitator-Token": s3.facilitator_token},
+        )
+
+        response = await client.get("/api/v1/stats")
+        funnel = response.json()["engagement_funnel"]
+        assert funnel["created"] == 3
+        assert funnel["has_cards"] == 2
+        assert funnel["has_votes"] == 1
+        assert funnel["closed"] == 1
+
+    async def test_lifetime_distribution_has_four_buckets(self, client):
+        response = await client.get("/api/v1/stats")
+        buckets = response.json()["session_lifetime"]["lifetime_distribution"]
+        assert len(buckets) == 4
+        labels = [b["label"] for b in buckets]
+        assert labels == ["<1 day", "1–7 days", "7–30 days", "30+ days"]
+
+    async def test_lifetime_distribution_new_session_is_less_than_1_day(
+        self, client, session_factory
+    ):
+        await session_factory()
+        response = await client.get("/api/v1/stats")
+        dist = {b["label"]: b["count"] for b in response.json()["session_lifetime"]["lifetime_distribution"]}
+        assert dist["<1 day"] == 1
+        assert dist["1–7 days"] == 0
+
+    async def test_avg_duration_open_sessions(self, client, session_factory):
+        now = datetime.now(UTC)
+        await session_factory(
+            phase="collecting",
+            created_at=now - timedelta(hours=48),
+            last_accessed_at=now,
+        )
+        response = await client.get("/api/v1/stats")
+        avg = response.json()["session_lifetime"]["avg_duration"]["open_avg_hours"]
+        assert avg is not None
+        assert 47 <= avg <= 49
+
+    async def test_avg_time_to_close_from_created_to_updated(self, client, session_factory):
+        now = datetime.now(UTC)
+        await session_factory(
+            phase="closed",
+            created_at=now - timedelta(hours=6),
+            updated_at=now,
+        )
+        response = await client.get("/api/v1/stats")
+        avg = response.json()["session_lifetime"]["avg_time_to_close_hours"]
+        assert avg is not None
+        assert 5 <= avg <= 7
 
 
 # ---------------------------------------------------------------------------
