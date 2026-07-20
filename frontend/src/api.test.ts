@@ -286,8 +286,7 @@ describe('stats endpoints', () => {
   })
 
   it('getAdminStats GETs /api/v1/stats/admin with X-Admin-Token header', async () => {
-    mockOk({ reaction_breakdown: [], cards_per_column: [], activity_heatmap: [],
-      engagement_funnel: { created: 0, has_cards: 0, has_votes: 0, closed: 0 } })
+    mockOk({ sentry: null, sentry_frontend: null, feedback: { total: 0, avg_rating: null, by_rating: [], recent: [] } })
     await api.getAdminStats('my-admin-token')
     const [url, opts] = mockFetch.mock.calls[0]
     expect(url).toBe('/api/v1/stats/admin')
