@@ -69,6 +69,28 @@ class TestPublicStatsCounts:
         data = response.json()
         assert data["active_sessions"] == 2  # s + "Closed" are still collecting
 
+    async def test_public_stats_includes_reaction_cards_funnel_lifetime_feedback_ratings(self, client):
+        response = await client.get("/api/v1/stats")
+        data = response.json()
+        assert "reaction_breakdown" in data
+        assert "cards_per_column" in data
+        assert "engagement_funnel" in data
+        assert "session_lifetime" in data
+        assert "feedback_avg_rating" in data
+        assert "feedback_by_rating" in data
+        assert data["feedback_avg_rating"] is None
+        assert data["feedback_by_rating"] == []
+
+    async def test_public_stats_feedback_ratings_reflect_submissions(self, client):
+        await client.post("/api/v1/feedback", json={"rating": 4})
+        await client.post("/api/v1/feedback", json={"rating": 2})
+        response = await client.get("/api/v1/stats")
+        data = response.json()
+        assert data["feedback_avg_rating"] == 3.0
+        by_rating = {d["rating"]: d["count"] for d in data["feedback_by_rating"]}
+        assert by_rating[4] == 1
+        assert by_rating[2] == 1
+
 
 class TestPublicStatsByPhase:
     async def test_sessions_by_phase_groups_correctly(self, client):
