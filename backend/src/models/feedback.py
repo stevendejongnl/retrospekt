@@ -13,6 +13,7 @@ class Feedback(BaseModel):
     session_id: str | None = None
     participant_name: str | None = None
     app_version: str = ""
+    fixed_in_version: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @field_validator("created_at", mode="before")

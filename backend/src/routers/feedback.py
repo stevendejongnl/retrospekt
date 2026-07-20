@@ -21,6 +21,18 @@ class SubmitFeedbackRequest(BaseModel):
     app_version: str = ""
 
 
+class PatchFeedbackRequest(BaseModel):
+    fixed_in_version: str
+
+
+async def _require_admin(redis: aioredis.Redis, x_admin_token: str) -> None:
+    if not x_admin_token:
+        raise HTTPException(status_code=401, detail="Invalid or expired admin token")
+    exists = await redis.exists(f"admin_token:{x_admin_token}")
+    if not exists:
+        raise HTTPException(status_code=401, detail="Invalid or expired admin token")
+
+
 @router.post("", status_code=201)
 async def submit_feedback(
     body: SubmitFeedbackRequest,
@@ -42,9 +54,20 @@ async def list_feedback(
     redis: Annotated[aioredis.Redis, Depends(get_redis)],
     x_admin_token: Annotated[str, Header()] = "",
 ) -> list[Feedback]:
-    if not x_admin_token:
-        raise HTTPException(status_code=401, detail="Invalid or expired admin token")
-    exists = await redis.exists(f"admin_token:{x_admin_token}")
-    if not exists:
-        raise HTTPException(status_code=401, detail="Invalid or expired admin token")
+    await _require_admin(redis, x_admin_token)
     return await repo.list_feedback()
+
+
+@router.patch("/{feedback_id}")
+async def patch_feedback(
+    feedback_id: str,
+    body: PatchFeedbackRequest,
+    repo: Annotated[FeedbackRepository, Depends(get_feedback_repo)],
+    redis: Annotated[aioredis.Redis, Depends(get_redis)],
+    x_admin_token: Annotated[str, Header()] = "",
+) -> Feedback:
+    await _require_admin(redis, x_admin_token)
+    updated = await repo.set_fixed_in_version(feedback_id, body.fixed_in_version)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Feedback not found")
+    return updated

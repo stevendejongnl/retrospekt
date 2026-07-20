@@ -74,6 +74,7 @@ class RecentFeedbackEntry(BaseModel):
     comment: str
     participant_name: str | None = None
     app_version: str
+    fixed_in_version: str | None = None
     created_at: str  # ISO string
 
 
@@ -518,7 +519,6 @@ class StatsRepository:
                     ],
                     "recent": [
                         {"$sort": {"created_at": -1}},
-                        {"$limit": 5},
                     ],
                 }
             }
@@ -545,6 +545,7 @@ class StatsRepository:
                     comment=d.get("comment", ""),
                     participant_name=d.get("participant_name"),
                     app_version=d.get("app_version", ""),
+                    fixed_in_version=d.get("fixed_in_version"),
                     created_at=created_str,
                 )
             )
