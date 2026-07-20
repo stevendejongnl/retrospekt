@@ -172,7 +172,7 @@ async def test_public_stats_feedback_total_increments(client: AsyncClient):
 async def test_patch_feedback_without_token_returns_401(client: AsyncClient):
     response = await client.post("/api/v1/feedback", json={"rating": 1})
     fb_id = response.json()["id"]
-    response = await client.patch(f"/api/v1/feedback/{fb_id}", json={"fixed_in_version": "1.32.0"})
+    response = await client.patch(f"/api/v1/feedback/{fb_id}", json={"status": "ignored"})
     assert response.status_code == 401
 
 

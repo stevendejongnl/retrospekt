@@ -1,9 +1,12 @@
 """Feedback domain model."""
 
 from datetime import UTC, datetime
+from typing import Literal
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
+
+FeedbackStatus = Literal["new", "ignored", "fixed"]
 
 
 class Feedback(BaseModel):
@@ -13,6 +16,7 @@ class Feedback(BaseModel):
     session_id: str | None = None
     participant_name: str | None = None
     app_version: str = ""
+    status: FeedbackStatus = "new"
     fixed_in_version: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

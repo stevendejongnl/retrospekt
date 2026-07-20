@@ -3,7 +3,7 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo import ReturnDocument
 
-from ..models.feedback import Feedback
+from ..models.feedback import Feedback, FeedbackStatus
 
 
 class FeedbackRepository:
@@ -18,10 +18,12 @@ class FeedbackRepository:
         docs = await self.collection.find().sort("created_at", -1).limit(limit).to_list(length=limit)
         return [Feedback(**d) for d in docs]
 
-    async def set_fixed_in_version(self, feedback_id: str, version: str) -> Feedback | None:
+    async def set_status(
+        self, feedback_id: str, status: FeedbackStatus, fixed_in_version: str | None = None
+    ) -> Feedback | None:
         doc = await self.collection.find_one_and_update(
             {"id": feedback_id},
-            {"$set": {"fixed_in_version": version}},
+            {"$set": {"status": status, "fixed_in_version": fixed_in_version}},
             return_document=ReturnDocument.AFTER,
         )
         return Feedback(**doc) if doc else None

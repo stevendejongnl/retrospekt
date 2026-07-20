@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from ..dependencies import get_feedback_repo, get_redis
-from ..models.feedback import Feedback
+from ..models.feedback import Feedback, FeedbackStatus
 from ..repositories.feedback_repo import FeedbackRepository
 
 router = APIRouter(prefix="/api/v1/feedback", tags=["feedback"])
@@ -22,7 +22,8 @@ class SubmitFeedbackRequest(BaseModel):
 
 
 class PatchFeedbackRequest(BaseModel):
-    fixed_in_version: str
+    status: FeedbackStatus
+    fixed_in_version: str | None = None
 
 
 async def _require_admin(redis: aioredis.Redis, x_admin_token: str) -> None:
@@ -67,7 +68,7 @@ async def patch_feedback(
     x_admin_token: Annotated[str, Header()] = "",
 ) -> Feedback:
     await _require_admin(redis, x_admin_token)
-    updated = await repo.set_fixed_in_version(feedback_id, body.fixed_in_version)
+    updated = await repo.set_status(feedback_id, body.status, body.fixed_in_version)
     if updated is None:
         raise HTTPException(status_code=404, detail="Feedback not found")
     return updated
