@@ -162,3 +162,80 @@ async def test_public_stats_feedback_total_increments(client: AsyncClient):
     await client.post("/api/v1/feedback", json={"rating": 5})
     response = await client.get("/api/v1/stats")
     assert response.json()["feedback_total"] == 1
+
+
+# ---------------------------------------------------------------------------
+# PATCH /api/v1/feedback/{id} — set fixed_in_version
+# ---------------------------------------------------------------------------
+
+
+async def test_patch_feedback_without_token_returns_401(client: AsyncClient):
+    response = await client.post("/api/v1/feedback", json={"rating": 1})
+    fb_id = response.json()["id"]
+    response = await client.patch(f"/api/v1/feedback/{fb_id}", json={"fixed_in_version": "1.32.0"})
+    assert response.status_code == 401
+
+
+async def test_patch_feedback_sets_fixed_in_version(client: AsyncClient, fake_redis):
+    token = "admin-token"
+    await fake_redis.set(f"admin_token:{token}", "1")
+
+    submitted = await client.post("/api/v1/feedback", json={"rating": 1})
+    fb_id = submitted.json()["id"]
+
+    response = await client.patch(
+        f"/api/v1/feedback/{fb_id}",
+        json={"fixed_in_version": "1.32.0"},
+        headers={"X-Admin-Token": token},
+    )
+    assert response.status_code == 200
+    assert response.json()["fixed_in_version"] == "1.32.0"
+
+    listed = await client.get("/api/v1/feedback", headers={"X-Admin-Token": token})
+    assert listed.json()[0]["fixed_in_version"] == "1.32.0"
+
+
+async def test_patch_feedback_unknown_id_returns_404(client: AsyncClient, fake_redis):
+    token = "admin-token"
+    await fake_redis.set(f"admin_token:{token}", "1")
+
+    response = await client.patch(
+        "/api/v1/feedback/does-not-exist",
+        json={"fixed_in_version": "1.32.0"},
+        headers={"X-Admin-Token": token},
+    )
+    assert response.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/stats/admin — recent feedback returns all, not capped at 5
+# ---------------------------------------------------------------------------
+
+
+async def test_admin_stats_recent_feedback_returns_more_than_five(client: AsyncClient, fake_redis):
+    token = "admin-token"
+    await fake_redis.set(f"admin_token:{token}", "1")
+
+    for i in range(7):
+        await client.post("/api/v1/feedback", json={"rating": (i % 5) + 1})
+
+    response = await client.get("/api/v1/stats/admin", headers={"X-Admin-Token": token})
+    recent = response.json()["feedback"]["recent"]
+    assert len(recent) == 7
+
+
+async def test_admin_stats_recent_feedback_includes_fixed_in_version(client: AsyncClient, fake_redis):
+    token = "admin-token"
+    await fake_redis.set(f"admin_token:{token}", "1")
+
+    submitted = await client.post("/api/v1/feedback", json={"rating": 1})
+    fb_id = submitted.json()["id"]
+    await client.patch(
+        f"/api/v1/feedback/{fb_id}",
+        json={"fixed_in_version": "1.32.0"},
+        headers={"X-Admin-Token": token},
+    )
+
+    response = await client.get("/api/v1/stats/admin", headers={"X-Admin-Token": token})
+    recent = response.json()["feedback"]["recent"]
+    assert recent[0]["fixed_in_version"] == "1.32.0"
