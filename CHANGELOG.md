@@ -1,3 +1,10 @@
+## [1.36.0](https://github.com/stevendejongnl/retrospekt/compare/v1.35.0...v1.36.0) (2026-07-21)
+
+### Features
+
+* **cards:** add unpublish endpoint, block delete/unpublish of grouped cards ([b0fa0fc](https://github.com/stevendejongnl/retrospekt/commit/b0fa0fc11ec17ced9772fb14eec47dca36994462))
+* **cards:** wire up delete/unpublish own published card in UI ([fff1823](https://github.com/stevendejongnl/retrospekt/commit/fff18231fd1ef2693d1ff45d89054fad2c9b880b))
+
 ## [1.35.0](https://github.com/stevendejongnl/retrospekt/compare/v1.34.0...v1.35.0) (2026-07-20)
 
 ### Features
