@@ -1,14 +1,17 @@
 """Feedback router — submit feedback (open) + list feedback (admin-only)."""
 
+import asyncio
 from typing import Annotated
 
 import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field
 
+from ..config import settings
 from ..dependencies import get_feedback_repo, get_redis
 from ..models.feedback import Feedback, FeedbackStatus
 from ..repositories.feedback_repo import FeedbackRepository
+from ..services.apprise_client import AppriseClient
 
 router = APIRouter(prefix="/api/v1/feedback", tags=["feedback"])
 
@@ -46,7 +49,20 @@ async def submit_feedback(
         participant_name=body.participant_name,
         app_version=body.app_version,
     )
-    return await repo.add_feedback(fb)
+    saved = await repo.add_feedback(fb)
+
+    if settings.apprise_configured:
+        client = AppriseClient(settings.apprise_base_url, settings.apprise_key)
+        stars = "★" * saved.rating + "☆" * (5 - saved.rating)
+        title = f"New feedback {stars}"
+        parts = [saved.comment] if saved.comment else []
+        meta = " · ".join(p for p in (saved.participant_name, saved.app_version) if p)
+        if meta:
+            parts.append(f"— {meta}")
+        body_text = " ".join(parts) or title
+        asyncio.create_task(client.notify(title=title, body=body_text))
+
+    return saved
 
 
 @router.get("")

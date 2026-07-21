@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     sentry_org_slug: str = ""
     sentry_project_slug: str = ""
     sentry_frontend_project_slug: str = ""
+    apprise_base_url: str = ""
+    apprise_key: str = ""
 
     @property
     def sentry_api_configured(self) -> bool:
@@ -23,6 +25,10 @@ class Settings(BaseSettings):
     def sentry_frontend_api_configured(self) -> bool:
         # Shares same auth token and org as backend project
         return bool(self.sentry_api_configured and self.sentry_frontend_project_slug)
+
+    @property
+    def apprise_configured(self) -> bool:
+        return bool(self.apprise_base_url and self.apprise_key)
 
 
 settings = Settings()

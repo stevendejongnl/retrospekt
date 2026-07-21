@@ -66,6 +66,7 @@ async def test_submit_feedback_comment_optional(client: AsyncClient):
 
 
 async def test_submit_feedback_notifies_apprise_when_configured(client: AsyncClient, monkeypatch):
+    import asyncio
     from unittest.mock import AsyncMock, patch
 
     from src.config import settings
@@ -81,6 +82,7 @@ async def test_submit_feedback_notifies_apprise_when_configured(client: AsyncCli
             json={"rating": 1, "comment": "Broken", "participant_name": "Alice", "app_version": "1.2.3"},
         )
         assert response.status_code == 201
+        await asyncio.sleep(0)
 
     mock_notify.assert_awaited_once()
     _, kwargs = mock_notify.call_args
@@ -109,6 +111,7 @@ async def test_submit_feedback_skips_apprise_when_not_configured(client: AsyncCl
 
 
 async def test_submit_feedback_succeeds_even_if_apprise_notify_raises(client: AsyncClient, monkeypatch):
+    import asyncio
     from unittest.mock import AsyncMock, patch
 
     from src.config import settings
@@ -121,6 +124,7 @@ async def test_submit_feedback_succeeds_even_if_apprise_notify_raises(client: As
         new=AsyncMock(side_effect=Exception("boom")),
     ):
         response = await client.post("/api/v1/feedback", json={"rating": 2})
+        await asyncio.sleep(0)
 
     assert response.status_code == 201
 

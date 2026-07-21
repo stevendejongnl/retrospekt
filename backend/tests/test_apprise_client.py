@@ -7,8 +7,6 @@ TDD commit order:
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 
 class TestAppriseClientNotify:
     async def test_posts_title_and_body_to_notify_url(self):
