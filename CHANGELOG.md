@@ -1,3 +1,13 @@
+## [1.37.0](https://github.com/stevendejongnl/retrospekt/compare/v1.36.0...v1.37.0) (2026-07-21)
+
+### Features
+
+* **feedback:** notify Apprise on new feedback submission ([c5711b4](https://github.com/stevendejongnl/retrospekt/commit/c5711b49e6bc7a1c4e319d3049fc24905fac464d))
+
+### Documentation
+
+* document Apprise feedback notifications (APPRISE_BASE_URL/APPRISE_KEY) ([c7e29e7](https://github.com/stevendejongnl/retrospekt/commit/c7e29e798af84d69c7678f3f904bb7cd3d2f92cb))
+
 ## [1.36.0](https://github.com/stevendejongnl/retrospekt/compare/v1.35.0...v1.36.0) (2026-07-21)
 
 ### Features
