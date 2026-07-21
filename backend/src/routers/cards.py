@@ -64,6 +64,8 @@ async def delete_card(
         raise HTTPException(status_code=404, detail="Card not found")
     if card.author_name != x_participant_name:
         raise HTTPException(status_code=403, detail="Only the author can delete this card")
+    if card.group_id is not None:
+        raise HTTPException(status_code=409, detail="Ungroup card before deleting")
 
     session.cards = [c for c in session.cards if c.id != card_id]
     session = await repo.update(session)
@@ -184,6 +186,35 @@ async def publish_card(
         raise HTTPException(status_code=403, detail="Only the author can publish this card")
 
     card.published = True
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
+
+    return card.model_dump()
+
+
+@router.post("/{session_id}/cards/{card_id}/unpublish")
+async def unpublish_card(
+    session_id: str,
+    card_id: str,
+    x_participant_name: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
+    if not x_participant_name:
+        raise HTTPException(status_code=400, detail="X-Participant-Name header required")
+
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    card = next((c for c in session.cards if c.id == card_id), None)
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found")
+    if card.author_name != x_participant_name:
+        raise HTTPException(status_code=403, detail="Only the author can unpublish this card")
+    if card.group_id is not None:
+        raise HTTPException(status_code=409, detail="Ungroup card before unpublishing")
+
+    card.published = False
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
 
