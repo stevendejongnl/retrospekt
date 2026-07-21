@@ -1,3 +1,9 @@
+## [1.37.1](https://github.com/stevendejongnl/retrospekt/compare/v1.37.0...v1.37.1) (2026-07-21)
+
+### Bug Fixes
+
+* **feedback:** prefix Apprise notification title with "Retrospekt" ([b657faf](https://github.com/stevendejongnl/retrospekt/commit/b657fafc0c0083031cb8fefc8db671cafeac5cde))
+
 ## [1.37.0](https://github.com/stevendejongnl/retrospekt/compare/v1.36.0...v1.37.0) (2026-07-21)
 
 ### Features
