@@ -22,6 +22,7 @@ export class RetroCard extends LitElement {
   @property({ type: Boolean }) showVote = true
   @property({ type: Boolean }) canDelete = false
   @property({ type: Boolean }) canPublish = false
+  @property({ type: Boolean }) canUnpublish = false
   @property({ type: Boolean }) canReact = false
   @property({ type: Boolean }) canAssign = false
   @property({ type: Boolean }) reactionsEnabled = true
@@ -259,6 +260,22 @@ export class RetroCard extends LitElement {
     .delete-btn:hover {
       color: var(--retro-error);
     }
+    .unpublish-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--retro-text-disabled);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-family: inherit;
+      transition: color 0.12s;
+    }
+    .unpublish-btn:hover {
+      color: var(--card-accent, #e85d04);
+    }
   `]
 
   private get hasVoted(): boolean {
@@ -338,6 +355,16 @@ export class RetroCard extends LitElement {
     )
   }
 
+  private onUnpublishClick(): void {
+    this.dispatchEvent(
+      new CustomEvent('unpublish-card', {
+        detail: { cardId: this.card.id },
+        bubbles: true,
+        composed: true,
+      }),
+    )
+  }
+
   private onReactClick(emoji: string, myReaction: boolean): void {
     const type = myReaction ? 'unreact' : 'react'
     this.dispatchEvent(
@@ -406,7 +433,7 @@ export class RetroCard extends LitElement {
   }
 
   render() {
-    const { card, canVote, canDelete, canPublish } = this
+    const { card, canVote, canDelete, canPublish, canUnpublish } = this
     const groups = this.reactionGroups
     return html`
       <div
@@ -501,6 +528,11 @@ export class RetroCard extends LitElement {
                   </button>
                 `
           : ''}
+            ${canUnpublish
+        ? html`<button class="unpublish-btn" @click=${this.onUnpublishClick} title="Unpublish card">
+                  Unpublish
+                </button>`
+        : ''}
             ${canDelete
         ? html`<button class="delete-btn" @click=${this.onDeleteClick} title="Delete card">
                   ×

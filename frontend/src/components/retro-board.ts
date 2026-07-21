@@ -616,6 +616,14 @@ export class RetroBoard extends LitElement {
     )
   }
 
+  private async onUnpublishCard(e: CustomEvent): Promise<void> {
+    await api.unpublishCard(
+      this.session.id,
+      (e.detail as { cardId: string }).cardId,
+      this.participantName,
+    )
+  }
+
   private async onPublishAllCards(e: CustomEvent): Promise<void> {
     await api.publishAllCards(
       this.session.id,
@@ -885,6 +893,7 @@ export class RetroBoard extends LitElement {
         @delete-card=${this.onDeleteCard}
         @edit-card=${this.onEditCard}
         @publish-card=${this.onPublishCard}
+        @unpublish-card=${this.onUnpublishCard}
         @publish-all-cards=${this.onPublishAllCards}
         @react=${this.onReact}
         @unreact=${this.onUnreact}

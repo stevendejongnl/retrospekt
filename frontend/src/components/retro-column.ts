@@ -658,12 +658,15 @@ export class RetroColumn extends LitElement {
         card.published &&
         card.author_name !== this.participantName}
         ?canDelete=${card.author_name === this.participantName &&
-        this.phase === 'collecting'}
+        !card.group_id}
         ?canEdit=${card.author_name === this.participantName &&
         this.phase !== 'closed'}
         ?canPublish=${this.phase === 'discussing' &&
         !card.published &&
         card.author_name === this.participantName}
+        ?canUnpublish=${card.published &&
+        card.author_name === this.participantName &&
+        !card.group_id}
         .reactionsEnabled=${this.reactionsEnabled}
         ?canReact=${canReact && card.published}
         ?canAssign=${this.phase !== 'collecting' &&

@@ -85,6 +85,7 @@ DELETE /api/v1/sessions/{id}/cards/{card_id}                    delete own card
 POST   /api/v1/sessions/{id}/cards/{card_id}/votes              vote (idempotent)
 DELETE /api/v1/sessions/{id}/cards/{card_id}/votes              remove vote
 POST   /api/v1/sessions/{id}/cards/{card_id}/publish            publish own card (discussing phase)
+POST   /api/v1/sessions/{id}/cards/{card_id}/unpublish           unpublish own card
 POST   /api/v1/sessions/{id}/cards/publish-all                  publish all own cards in a column (discussing phase)
 POST   /api/v1/sessions/{id}/cards/{card_id}/reactions          add emoji reaction (discussing/closed)
 DELETE /api/v1/sessions/{id}/cards/{card_id}/reactions          remove emoji reaction (?emoji=...)
