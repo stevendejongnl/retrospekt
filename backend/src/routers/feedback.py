@@ -54,7 +54,7 @@ async def submit_feedback(
     if settings.apprise_configured:
         client = AppriseClient(settings.apprise_base_url, settings.apprise_key)
         stars = "★" * saved.rating + "☆" * (5 - saved.rating)
-        title = f"New feedback {stars}"
+        title = f"Retrospekt feedback {stars}"
         parts = [saved.comment] if saved.comment else []
         meta = " · ".join(p for p in (saved.participant_name, saved.app_version) if p)
         if meta:

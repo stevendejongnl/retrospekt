@@ -86,7 +86,9 @@ async def test_submit_feedback_notifies_apprise_when_configured(client: AsyncCli
 
     mock_notify.assert_awaited_once()
     _, kwargs = mock_notify.call_args
-    assert "★" in kwargs["title"] or "★" in mock_notify.call_args.args[0]
+    title = kwargs.get("title") or mock_notify.call_args.args[0]
+    assert "★" in title
+    assert "Retrospekt" in title
     body = kwargs.get("body") or mock_notify.call_args.args[1]
     assert "Broken" in body
     assert "Alice" in body
