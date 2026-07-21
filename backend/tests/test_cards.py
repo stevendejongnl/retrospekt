@@ -80,6 +80,73 @@ async def test_non_author_cannot_delete_a_card(client: AsyncClient):
     assert response.status_code == 403
 
 
+async def test_author_can_delete_their_own_published_card(client: AsyncClient):
+    session = await make_session(client)
+    card = await _add_card(client, session.id, author="Alice")
+    await client.post(
+        f"/api/v1/sessions/{session.id}/phase",
+        json={"phase": "discussing"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    await client.post(
+        f"/api/v1/sessions/{session.id}/cards/{card['id']}/publish",
+        headers={"X-Participant-Name": "Alice"},
+    )
+    response = await client.delete(
+        f"/api/v1/sessions/{session.id}/cards/{card['id']}",
+        headers={"X-Participant-Name": "Alice"},
+    )
+    assert response.status_code == 204
+    data = (await client.get(f"/api/v1/sessions/{session.id}")).json()
+    assert not data["cards"]
+
+
+async def test_author_can_delete_their_own_card_in_closed_phase(client: AsyncClient):
+    session = await make_session(client)
+    card = await _add_card(client, session.id, author="Alice")
+    await client.post(
+        f"/api/v1/sessions/{session.id}/phase",
+        json={"phase": "discussing"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    await client.post(
+        f"/api/v1/sessions/{session.id}/phase",
+        json={"phase": "closed"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    response = await client.delete(
+        f"/api/v1/sessions/{session.id}/cards/{card['id']}",
+        headers={"X-Participant-Name": "Alice"},
+    )
+    assert response.status_code == 204
+
+
+async def test_cannot_delete_grouped_card(client: AsyncClient):
+    session = await make_session(client)
+    card = await _add_card(client, session.id, author="Alice")
+    other = await _add_card(client, session.id, author="Alice")
+    await client.post(
+        f"/api/v1/sessions/{session.id}/phase",
+        json={"phase": "discussing"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    for c in (card, other):
+        await client.post(
+            f"/api/v1/sessions/{session.id}/cards/{c['id']}/publish",
+            headers={"X-Participant-Name": "Alice"},
+        )
+    await client.post(
+        f"/api/v1/sessions/{session.id}/cards/{card['id']}/group",
+        json={"target_card_id": other["id"]},
+        headers={"X-Participant-Name": "Alice"},
+    )
+    response = await client.delete(
+        f"/api/v1/sessions/{session.id}/cards/{card['id']}",
+        headers={"X-Participant-Name": "Alice"},
+    )
+    assert response.status_code == 409
+
+
 async def test_deleting_missing_card_returns_404(client: AsyncClient):
     session = await make_session(client)
     response = await client.delete(
