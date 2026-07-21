@@ -61,6 +61,71 @@ async def test_submit_feedback_comment_optional(client: AsyncClient):
 
 
 # ---------------------------------------------------------------------------
+# Apprise notification on submit
+# ---------------------------------------------------------------------------
+
+
+async def test_submit_feedback_notifies_apprise_when_configured(client: AsyncClient, monkeypatch):
+    from unittest.mock import AsyncMock, patch
+
+    from src.config import settings
+
+    monkeypatch.setattr(settings, "apprise_base_url", "http://apprise.local:8000")
+    monkeypatch.setattr(settings, "apprise_key", "retrospekt")
+
+    with patch(
+        "src.routers.feedback.AppriseClient.notify", new=AsyncMock()
+    ) as mock_notify:
+        response = await client.post(
+            "/api/v1/feedback",
+            json={"rating": 1, "comment": "Broken", "participant_name": "Alice", "app_version": "1.2.3"},
+        )
+        assert response.status_code == 201
+
+    mock_notify.assert_awaited_once()
+    _, kwargs = mock_notify.call_args
+    assert "★" in kwargs["title"] or "★" in mock_notify.call_args.args[0]
+    body = kwargs.get("body") or mock_notify.call_args.args[1]
+    assert "Broken" in body
+    assert "Alice" in body
+    assert "1.2.3" in body
+
+
+async def test_submit_feedback_skips_apprise_when_not_configured(client: AsyncClient, monkeypatch):
+    from unittest.mock import AsyncMock, patch
+
+    from src.config import settings
+
+    monkeypatch.setattr(settings, "apprise_base_url", "")
+    monkeypatch.setattr(settings, "apprise_key", "")
+
+    with patch(
+        "src.routers.feedback.AppriseClient.notify", new=AsyncMock()
+    ) as mock_notify:
+        response = await client.post("/api/v1/feedback", json={"rating": 3})
+        assert response.status_code == 201
+
+    mock_notify.assert_not_awaited()
+
+
+async def test_submit_feedback_succeeds_even_if_apprise_notify_raises(client: AsyncClient, monkeypatch):
+    from unittest.mock import AsyncMock, patch
+
+    from src.config import settings
+
+    monkeypatch.setattr(settings, "apprise_base_url", "http://apprise.local:8000")
+    monkeypatch.setattr(settings, "apprise_key", "retrospekt")
+
+    with patch(
+        "src.routers.feedback.AppriseClient.notify",
+        new=AsyncMock(side_effect=Exception("boom")),
+    ):
+        response = await client.post("/api/v1/feedback", json={"rating": 2})
+
+    assert response.status_code == 201
+
+
+# ---------------------------------------------------------------------------
 # GET /api/v1/feedback
 # ---------------------------------------------------------------------------
 
