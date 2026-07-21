@@ -82,6 +82,18 @@ spec:
                   name: retrospekt-sentry-secret
                   key: frontend-project-slug
                   optional: true
+            - name: APPRISE_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: retrospekt-apprise-secret
+                  key: base-url
+                  optional: true
+            - name: APPRISE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: retrospekt-apprise-secret
+                  key: key
+                  optional: true
           resources:
             requests:
               memory: "128Mi"
