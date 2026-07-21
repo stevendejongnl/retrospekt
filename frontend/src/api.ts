@@ -89,6 +89,12 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         headers: { 'X-Participant-Name': participantName },
       }),
 
+    unpublishCard: (sessionId: string, cardId: string, participantName: string) =>
+      request<Card>(`/sessions/${sessionId}/cards/${cardId}/unpublish`, {
+        method: 'POST',
+        headers: { 'X-Participant-Name': participantName },
+      }),
+
     publishAllCards: (sessionId: string, column: string, participantName: string) =>
       request<Card[]>(`/sessions/${sessionId}/cards/publish-all`, {
         method: 'POST',

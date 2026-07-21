@@ -101,4 +101,28 @@ describe('retro-card', () => {
     expect(captured).to.not.be.null
     expect(captured!.detail.cardId).to.equal('card-1')
   })
+
+  it('unpublish button is absent when canUnpublish=false', async () => {
+    const card = makeCard({ published: true })
+    const el = await fixture<RetroCard>(
+      html`<retro-card .card=${card} .canUnpublish=${false}></retro-card>`,
+    )
+    expect(el.shadowRoot!.querySelector('.unpublish-btn')).to.be.null
+  })
+
+  it('unpublish button is present and dispatches "unpublish-card" CustomEvent when canUnpublish=true', async () => {
+    const card = makeCard({ published: true })
+    const el = await fixture<RetroCard>(
+      html`<retro-card .card=${card} .canUnpublish=${true}></retro-card>`,
+    )
+    const unpublishBtn = el.shadowRoot!.querySelector('.unpublish-btn')
+    expect(unpublishBtn).to.not.be.null
+    let captured: CustomEvent | null = null
+    el.addEventListener('unpublish-card', (e) => {
+      captured = e as CustomEvent
+    })
+    ;(unpublishBtn as HTMLButtonElement).click()
+    expect(captured).to.not.be.null
+    expect(captured!.detail.cardId).to.equal('card-1')
+  })
 })
