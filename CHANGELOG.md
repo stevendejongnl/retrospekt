@@ -1,3 +1,21 @@
+## [1.38.0](https://github.com/stevendejongnl/retrospekt/compare/v1.37.1...v1.38.0) (2026-08-03)
+
+### Features
+
+* **notes:** add optional title field ([d78a4b9](https://github.com/stevendejongnl/retrospekt/commit/d78a4b988b4be6483927a2c666fff30956dea191))
+* **notes:** title field, checklist syntax, and edit UX polish ([773a765](https://github.com/stevendejongnl/retrospekt/commit/773a765214c473418d20b9170b9953eaad098184))
+* **theme:** add explicit theme preference + halal mode ([cdc1685](https://github.com/stevendejongnl/retrospekt/commit/cdc1685c61d602228ed6bc4823c0877d5c5f3c9d))
+* **theme:** replace theme toggle button with popup menu + halal mode ([edaac7e](https://github.com/stevendejongnl/retrospekt/commit/edaac7e199773c9820e82687e62410269f04c4b0))
+
+### Bug Fixes
+
+* **ui:** use theme-aware glass background instead of hardcoded white ([fb86942](https://github.com/stevendejongnl/retrospekt/commit/fb86942a800699416712a9899bd984b40854ca45))
+
+### Documentation
+
+* document board notes title, checklist, and edit UX ([8c68c9c](https://github.com/stevendejongnl/retrospekt/commit/8c68c9c8990fe6572dede46735fcffe7de71adb6))
+* document theme-menu and halal mode ([c6f5846](https://github.com/stevendejongnl/retrospekt/commit/c6f58461658797da909c61c35fe9bb90c8834b7e))
+
 ## [1.37.1](https://github.com/stevendejongnl/retrospekt/compare/v1.37.0...v1.37.1) (2026-07-21)
 
 ### Bug Fixes
