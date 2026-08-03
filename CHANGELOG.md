@@ -1,3 +1,9 @@
+## [1.38.1](https://github.com/stevendejongnl/retrospekt/compare/v1.38.0...v1.38.1) (2026-08-03)
+
+### Bug Fixes
+
+* **theme:** fix misaligned theme-menu on home page + swap to gear icon ([77fd13f](https://github.com/stevendejongnl/retrospekt/commit/77fd13ff8c280eac5311aa8dc2d7026c584735c9))
+
 ## [1.38.0](https://github.com/stevendejongnl/retrospekt/compare/v1.37.1...v1.38.0) (2026-08-03)
 
 ### Features
