@@ -96,7 +96,7 @@ export class FeedbackDialog extends LitElement {
 
     .emoji-btn.selected {
       border-color: var(--retro-accent);
-      background: color-mix(in srgb, var(--retro-accent) 12%, rgba(255,255,255,0.7));
+      background: color-mix(in srgb, var(--retro-accent) 12%, var(--retro-glass-bg-light));
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--retro-accent) 15%, transparent);
       transform: scale(1.05);
     }
@@ -111,7 +111,7 @@ export class FeedbackDialog extends LitElement {
       resize: vertical;
       min-height: 80px;
       box-sizing: border-box;
-      background: rgba(255, 255, 255, 0.5);
+      background: var(--retro-glass-bg-light);
       color: var(--retro-text-primary);
       transition: border-color 0.12s;
       margin-bottom: 18px;
@@ -120,7 +120,7 @@ export class FeedbackDialog extends LitElement {
     textarea:focus {
       outline: none;
       border-color: var(--retro-accent);
-      background: rgba(255, 255, 255, 0.7);
+      background: var(--retro-glass-bg-strong);
     }
 
     textarea::placeholder {

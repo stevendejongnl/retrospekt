@@ -222,13 +222,13 @@ export class HomePage extends LitElement {
       color: var(--retro-text-primary);
       box-sizing: border-box;
       transition: border-color 0.12s, box-shadow 0.12s;
-      background: rgba(255, 255, 255, 0.5);
+      background: var(--retro-glass-bg-light);
     }
     input:focus {
       outline: none;
       border-color: var(--retro-accent);
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--retro-accent) 12%, transparent);
-      background: rgba(255, 255, 255, 0.7);
+      background: var(--retro-glass-bg-strong);
     }
     input::placeholder {
       color: var(--retro-text-disabled);
@@ -287,18 +287,18 @@ export class HomePage extends LitElement {
       border: 1px solid var(--retro-border-default);
       border-radius: 10px;
       cursor: pointer;
-      background: rgba(255, 255, 255, 0.55);
+      background: var(--retro-glass-bg-light);
       text-align: left;
       font-family: inherit;
       transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
     }
     .template-btn:hover {
       border-color: var(--retro-accent);
-      background: color-mix(in srgb, var(--retro-accent) 8%, rgba(255,255,255,0.7));
+      background: color-mix(in srgb, var(--retro-accent) 8%, var(--retro-glass-bg-strong));
     }
     .template-btn.selected {
       border-color: var(--retro-accent);
-      background: color-mix(in srgb, var(--retro-accent) 8%, rgba(255,255,255,0.7));
+      background: color-mix(in srgb, var(--retro-accent) 8%, var(--retro-glass-bg-strong));
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--retro-accent) 12%, transparent);
     }
     .template-btn .t-label {
@@ -319,7 +319,7 @@ export class HomePage extends LitElement {
       border: 1px solid var(--retro-border-default);
       border-radius: 10px;
       cursor: pointer;
-      background: rgba(255, 255, 255, 0.55);
+      background: var(--retro-glass-bg-light);
       transition: border-color 0.12s, background 0.12s;
       user-select: none;
     }
