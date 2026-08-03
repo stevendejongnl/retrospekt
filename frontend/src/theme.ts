@@ -1,5 +1,8 @@
 const STORAGE_KEY = 'retro_theme'
 type ThemePreference = 'light' | 'dark'
+type ThemeChoice = ThemePreference | 'system'
+
+const HALAL_STORAGE_KEY = 'retro_halal_mode'
 
 const BRAND_STORAGE_KEY = 'retro_brand'
 const SUPPORTED_BRANDS = ['cs'] as const
@@ -20,6 +23,37 @@ export function toggleTheme(): void {
   localStorage.setItem(STORAGE_KEY, next)
   applyTheme(next)
   window.dispatchEvent(new CustomEvent('retro-theme-change', { detail: { theme: next } }))
+}
+
+export function getThemePreference(): ThemeChoice {
+  const stored = localStorage.getItem(STORAGE_KEY)
+  if (stored === 'light' || stored === 'dark') return stored
+  return 'system'
+}
+
+export function setThemePreference(choice: ThemeChoice): void {
+  if (choice === 'system') {
+    localStorage.removeItem(STORAGE_KEY)
+  } else {
+    localStorage.setItem(STORAGE_KEY, choice)
+  }
+  const effective = getEffectiveTheme()
+  applyTheme(effective)
+  window.dispatchEvent(new CustomEvent('retro-theme-change', { detail: { theme: effective } }))
+}
+
+export function getHalalMode(): boolean {
+  return localStorage.getItem(HALAL_STORAGE_KEY) === 'true'
+}
+
+export function setHalalMode(enabled: boolean): void {
+  if (enabled) localStorage.setItem(HALAL_STORAGE_KEY, 'true')
+  else localStorage.removeItem(HALAL_STORAGE_KEY)
+  window.dispatchEvent(new CustomEvent('retro-halal-change', { detail: { halal: enabled } }))
+}
+
+export function bacon(): string {
+  return getHalalMode() ? '🍆' : '🥓'
 }
 
 export function getBrand(): Brand | null {

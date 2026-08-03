@@ -1,5 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getEffectiveTheme, toggleTheme, initTheme, getBrand, initBrand, clearBrand } from './theme'
+import {
+  getEffectiveTheme,
+  toggleTheme,
+  initTheme,
+  getBrand,
+  initBrand,
+  clearBrand,
+  getThemePreference,
+  setThemePreference,
+  getHalalMode,
+  setHalalMode,
+  bacon,
+} from './theme'
 
 // jsdom doesn't implement matchMedia — stub it
 function mockMatchMedia(prefersDark: boolean) {
@@ -166,6 +178,88 @@ describe('initBrand', () => {
     window.history.replaceState(null, '', '/?theme=unknown')
     initBrand()
     expect(window.location.search).toBe('')
+  })
+})
+
+describe('getThemePreference / setThemePreference', () => {
+  it('returns "system" when nothing is stored', () => {
+    expect(getThemePreference()).toBe('system')
+  })
+
+  it('returns "light" when stored', () => {
+    localStorage.setItem('retro_theme', 'light')
+    expect(getThemePreference()).toBe('light')
+  })
+
+  it('returns "dark" when stored', () => {
+    localStorage.setItem('retro_theme', 'dark')
+    expect(getThemePreference()).toBe('dark')
+  })
+
+  it('setThemePreference("dark") stores and applies dark', () => {
+    mockMatchMedia(false)
+    setThemePreference('dark')
+    expect(localStorage.getItem('retro_theme')).toBe('dark')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+  })
+
+  it('setThemePreference("light") stores and applies light', () => {
+    mockMatchMedia(true)
+    setThemePreference('light')
+    expect(localStorage.getItem('retro_theme')).toBe('light')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light')
+  })
+
+  it('setThemePreference("system") clears storage and applies system preference', () => {
+    mockMatchMedia(true)
+    localStorage.setItem('retro_theme', 'light')
+    setThemePreference('system')
+    expect(localStorage.getItem('retro_theme')).toBeNull()
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+  })
+
+  it('dispatches retro-theme-change on setThemePreference', () => {
+    mockMatchMedia(false)
+    const handler = vi.fn()
+    window.addEventListener('retro-theme-change', handler)
+    setThemePreference('dark')
+    window.removeEventListener('retro-theme-change', handler)
+    expect(handler).toHaveBeenCalledOnce()
+  })
+})
+
+describe('halal mode', () => {
+  it('getHalalMode returns false by default', () => {
+    expect(getHalalMode()).toBe(false)
+  })
+
+  it('setHalalMode(true) persists and getHalalMode reflects it', () => {
+    setHalalMode(true)
+    expect(getHalalMode()).toBe(true)
+  })
+
+  it('setHalalMode(false) clears the stored flag', () => {
+    setHalalMode(true)
+    setHalalMode(false)
+    expect(getHalalMode()).toBe(false)
+  })
+
+  it('dispatches retro-halal-change when toggled', () => {
+    const handler = vi.fn()
+    window.addEventListener('retro-halal-change', handler)
+    setHalalMode(true)
+    window.removeEventListener('retro-halal-change', handler)
+    expect(handler).toHaveBeenCalledOnce()
+  })
+
+  it('bacon() returns the pig emoji when halal mode is off', () => {
+    setHalalMode(false)
+    expect(bacon()).toBe('🥓')
+  })
+
+  it('bacon() returns the eggplant emoji when halal mode is on', () => {
+    setHalalMode(true)
+    expect(bacon()).toBe('🍆')
   })
 })
 
