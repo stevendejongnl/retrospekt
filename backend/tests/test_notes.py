@@ -137,6 +137,35 @@ async def test_delete_note_missing_header_returns_400(client: AsyncClient):
     assert response.status_code == 400
 
 
+async def test_note_can_be_added_with_a_title(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.post(
+        f"/api/v1/sessions/{session.id}/notes",
+        json={"title": "Retro follow-ups", "text": "Don't forget to celebrate wins", "author_name": "Alice"},
+        headers={"X-Participant-Name": "Alice"},
+    )
+    assert response.status_code == 201, response.text
+    assert response.json()["title"] == "Retro follow-ups"
+
+
+async def test_note_title_defaults_to_none(client: AsyncClient):
+    session = await make_session(client)
+    note = await _add_note(client, session.id)
+    assert note["title"] is None
+
+
+async def test_note_title_can_be_updated(client: AsyncClient):
+    session = await make_session(client)
+    note = await _add_note(client, session.id)
+    response = await client.patch(
+        f"/api/v1/sessions/{session.id}/notes/{note['id']}",
+        json={"title": "New title", "text": note["text"]},
+        headers={"X-Participant-Name": "Alice"},
+    )
+    assert response.status_code == 200
+    assert response.json()["title"] == "New title"
+
+
 async def test_notes_allowed_in_all_phases(client: AsyncClient):
     """Notes can be added in any phase, unlike cards."""
     session = await make_session(client)

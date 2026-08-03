@@ -37,6 +37,7 @@ class Card(BaseModel):
 
 class Note(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
+    title: str | None = None
     text: str
     author_name: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

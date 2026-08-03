@@ -60,11 +60,13 @@ class UpdateSessionRequest(BaseModel):
 
 
 class AddNoteRequest(BaseModel):
+    title: str | None = None
     text: str
     author_name: str
 
 
 class UpdateNoteRequest(BaseModel):
+    title: str | None = None
     text: str
 
 

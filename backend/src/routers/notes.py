@@ -24,7 +24,7 @@ async def add_note(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    note = Note(text=body.text, author_name=body.author_name)
+    note = Note(title=body.title, text=body.text, author_name=body.author_name)
     session.notes.append(note)
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
@@ -50,6 +50,7 @@ async def update_note(
     if not note:
         raise HTTPException(status_code=404, detail="Note not found")
 
+    note.title = body.title
     note.text = body.text
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
