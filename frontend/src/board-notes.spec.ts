@@ -12,6 +12,7 @@ function sse(data: object): string {
 
 const NOTE_1 = {
   id: 'note-1',
+  title: null,
   text: "Don't forget to celebrate wins",
   author_name: 'Alice',
   created_at: '2026-01-01T10:00:00Z',
@@ -19,9 +20,26 @@ const NOTE_1 = {
 
 const NOTE_2 = {
   id: 'note-2',
+  title: null,
   text: 'Follow up on CI pipeline',
   author_name: 'Bob',
   created_at: '2026-01-01T11:00:00Z',
+}
+
+const NOTE_WITH_TITLE = {
+  id: 'note-3',
+  title: 'Retro follow-ups',
+  text: 'Some details',
+  author_name: 'Alice',
+  created_at: '2026-01-01T12:00:00Z',
+}
+
+const NOTE_WITH_CHECKLIST = {
+  id: 'note-4',
+  title: null,
+  text: '- [ ] write tests\n- [x] deploy',
+  author_name: 'Alice',
+  created_at: '2026-01-01T13:00:00Z',
 }
 
 function makeSession(notes: object[] = []) {
@@ -304,5 +322,206 @@ test.describe('board-notes inline edit', () => {
 
     await expect(page.locator('board-notes .note-edit-textarea')).not.toBeVisible()
     expect(patchCalled).toBe(false)
+  })
+
+  test('clicking outside (blur) cancels the edit without saving', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, makeSession([NOTE_1]))
+
+    let patchCalled = false
+    await page.route(`/api/v1/sessions/${SESSION_ID}/notes/**`, async route => {
+      if (route.request().method() === 'PATCH') {
+        patchCalled = true
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(NOTE_1) })
+      } else {
+        await route.continue()
+      }
+    })
+
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button[title="Board notes"]').click()
+    await page.locator('board-notes .note-text').first().click()
+    const textarea = page.locator('board-notes .note-edit-textarea')
+    await textarea.fill('Changed but not saved')
+    await page.locator('board-notes .sidebar-title').click()
+
+    await expect(page.locator('board-notes .note-edit-textarea')).not.toBeVisible()
+    expect(patchCalled).toBe(false)
+  })
+
+  test('Save button saves the edit via PATCH API', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = makeSession([NOTE_1])
+    await mockApi(page, session)
+
+    let patchBody: unknown = null
+    await page.route(`/api/v1/sessions/${SESSION_ID}/notes/**`, async route => {
+      if (route.request().method() === 'PATCH') {
+        patchBody = JSON.parse(route.request().postData() ?? '{}')
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...NOTE_1, text: 'Saved via button' }) })
+      } else {
+        await route.continue()
+      }
+    })
+
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button[title="Board notes"]').click()
+    await page.locator('board-notes .note-text').first().click()
+    await page.locator('board-notes .note-edit-textarea').fill('Saved via button')
+    await page.locator('board-notes .note-save-btn').click()
+
+    await expect(async () => {
+      expect(patchBody).toMatchObject({ text: 'Saved via button' })
+    }).toPass({ timeout: 3000 })
+  })
+
+  test('Cancel button cancels the edit without saving', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, makeSession([NOTE_1]))
+
+    let patchCalled = false
+    await page.route(`/api/v1/sessions/${SESSION_ID}/notes/**`, async route => {
+      if (route.request().method() === 'PATCH') {
+        patchCalled = true
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(NOTE_1) })
+      } else {
+        await route.continue()
+      }
+    })
+
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button[title="Board notes"]').click()
+    await page.locator('board-notes .note-text').first().click()
+    await page.locator('board-notes .note-edit-textarea').fill('Should not save')
+    await page.locator('board-notes .note-cancel-btn').click()
+
+    await expect(page.locator('board-notes .note-edit-textarea')).not.toBeVisible()
+    expect(patchCalled).toBe(false)
+  })
+
+  test('delete button uses a trash icon, not an × character', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, makeSession([NOTE_1]))
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button[title="Board notes"]').click()
+    const btn = page.locator('board-notes .delete-note-btn').first()
+    await expect(btn).toBeVisible()
+    await expect(btn.locator('svg.fa-icon')).toBeVisible()
+    await expect(btn).not.toHaveText('×')
+  })
+})
+
+test.describe('board-notes title', () => {
+  test('note title is displayed when set', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, makeSession([NOTE_WITH_TITLE]))
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button[title="Board notes"]').click()
+    await expect(page.locator('board-notes .note-title')).toHaveText('Retro follow-ups')
+  })
+
+  test('note without a title shows no title element', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, makeSession([NOTE_1]))
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button[title="Board notes"]').click()
+    await expect(page.locator('board-notes .note-title')).toHaveCount(0)
+  })
+
+  test('add form includes a title input that is sent on submit', async ({ page }) => {
+    await withName(page, 'Alice')
+    const session = makeSession()
+    await mockApi(page, session)
+
+    let postedBody: unknown = null
+    await page.route(`/api/v1/sessions/${SESSION_ID}/notes`, async route => {
+      postedBody = JSON.parse(route.request().postData() ?? '{}')
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(NOTE_WITH_TITLE) })
+    })
+
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button[title="Board notes"]').click()
+    await page.locator('board-notes .add-note-title-input').fill('My title')
+    await page.locator('board-notes .add-note-textarea').fill('Body text')
+    await page.locator('board-notes .add-note-btn').click()
+
+    await expect(async () => {
+      expect(postedBody).toMatchObject({ title: 'My title', text: 'Body text' })
+    }).toPass({ timeout: 3000 })
+  })
+
+  test('editing a note pre-fills the title input and saves changes', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, makeSession([NOTE_WITH_TITLE]))
+
+    let patchBody: unknown = null
+    await page.route(`/api/v1/sessions/${SESSION_ID}/notes/**`, async route => {
+      if (route.request().method() === 'PATCH') {
+        patchBody = JSON.parse(route.request().postData() ?? '{}')
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(NOTE_WITH_TITLE) })
+      } else {
+        await route.continue()
+      }
+    })
+
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button[title="Board notes"]').click()
+    await page.locator('board-notes .note-title').click()
+    await expect(page.locator('board-notes .note-edit-title-input')).toHaveValue('Retro follow-ups')
+    await page.locator('board-notes .note-edit-title-input').fill('Updated title')
+    await page.locator('board-notes .note-save-btn').click()
+
+    await expect(async () => {
+      expect(patchBody).toMatchObject({ title: 'Updated title' })
+    }).toPass({ timeout: 3000 })
+  })
+})
+
+test.describe('board-notes checklist', () => {
+  test('checklist lines render as checkboxes with labels', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, makeSession([NOTE_WITH_CHECKLIST]))
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button[title="Board notes"]').click()
+
+    const rows = page.locator('board-notes .checklist-row')
+    await expect(rows).toHaveCount(2)
+    await expect(rows.nth(0)).toContainText('write tests')
+    await expect(rows.nth(1)).toContainText('deploy')
+    await expect(rows.nth(1)).toHaveClass(/checked/)
+    await expect(rows.nth(0)).not.toHaveClass(/checked/)
+  })
+
+  test('clicking a checkbox toggles the item via PATCH API', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, makeSession([NOTE_WITH_CHECKLIST]))
+
+    let patchBody: unknown = null
+    await page.route(`/api/v1/sessions/${SESSION_ID}/notes/**`, async route => {
+      if (route.request().method() === 'PATCH') {
+        patchBody = JSON.parse(route.request().postData() ?? '{}')
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(NOTE_WITH_CHECKLIST) })
+      } else {
+        await route.continue()
+      }
+    })
+
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('retro-board')).toBeVisible()
+    await page.locator('button[title="Board notes"]').click()
+    await page.locator('board-notes .checklist-row').nth(0).locator('input[type="checkbox"]').click()
+
+    await expect(async () => {
+      expect(patchBody).toMatchObject({ text: '- [x] write tests\n- [x] deploy' })
+    }).toPass({ timeout: 3000 })
   })
 })

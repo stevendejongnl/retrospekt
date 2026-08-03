@@ -167,17 +167,17 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         headers: { 'X-Participant-Name': participantName, 'X-Facilitator-Token': facilitatorToken },
       }),
 
-    addNote: (sessionId: string, text: string, authorName: string) =>
+    addNote: (sessionId: string, text: string, authorName: string, title?: string) =>
       request<Note>(`/sessions/${sessionId}/notes`, {
         method: 'POST',
-        body: JSON.stringify({ text, author_name: authorName }),
+        body: JSON.stringify({ text, author_name: authorName, ...(title ? { title } : {}) }),
         headers: { 'X-Participant-Name': authorName },
       }),
 
-    updateNote: (sessionId: string, noteId: string, text: string, participantName: string) =>
+    updateNote: (sessionId: string, noteId: string, text: string, participantName: string, title?: string) =>
       request<Note>(`/sessions/${sessionId}/notes/${noteId}`, {
         method: 'PATCH',
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, ...(title ? { title } : {}) }),
         headers: { 'X-Participant-Name': participantName },
       }),
 

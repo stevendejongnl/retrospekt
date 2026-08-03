@@ -357,7 +357,7 @@ describe('timer endpoints', () => {
 
 describe('addNote', () => {
   it('POSTs to /notes with text, author_name and X-Participant-Name header', async () => {
-    const mockNote = { id: 'note-1', text: 'Great idea', author_name: 'Alice', created_at: '' }
+    const mockNote = { id: 'note-1', title: null, text: 'Great idea', author_name: 'Alice', created_at: '' }
     mockOk(mockNote, 201)
     await api.addNote('sess-1', 'Great idea', 'Alice')
 
@@ -367,11 +367,20 @@ describe('addNote', () => {
     expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Alice' })
     expect(JSON.parse(opts.body)).toMatchObject({ text: 'Great idea', author_name: 'Alice' })
   })
+
+  it('includes title in the body when provided', async () => {
+    const mockNote = { id: 'note-1', title: 'Follow-ups', text: 'Great idea', author_name: 'Alice', created_at: '' }
+    mockOk(mockNote, 201)
+    await api.addNote('sess-1', 'Great idea', 'Alice', 'Follow-ups')
+
+    const [, opts] = mockFetch.mock.calls[0]
+    expect(JSON.parse(opts.body)).toMatchObject({ title: 'Follow-ups' })
+  })
 })
 
 describe('updateNote', () => {
   it('PATCHes /notes/:id with text and X-Participant-Name header', async () => {
-    const mockNote = { id: 'note-1', text: 'Updated', author_name: 'Alice', created_at: '' }
+    const mockNote = { id: 'note-1', title: null, text: 'Updated', author_name: 'Alice', created_at: '' }
     mockOk(mockNote)
     await api.updateNote('sess-1', 'note-1', 'Updated', 'Bob')
 
@@ -380,6 +389,15 @@ describe('updateNote', () => {
     expect(opts.method).toBe('PATCH')
     expect(opts.headers).toMatchObject({ 'X-Participant-Name': 'Bob' })
     expect(JSON.parse(opts.body)).toMatchObject({ text: 'Updated' })
+  })
+
+  it('includes title in the body when provided', async () => {
+    const mockNote = { id: 'note-1', title: 'New title', text: 'Updated', author_name: 'Alice', created_at: '' }
+    mockOk(mockNote)
+    await api.updateNote('sess-1', 'note-1', 'Updated', 'Bob', 'New title')
+
+    const [, opts] = mockFetch.mock.calls[0]
+    expect(JSON.parse(opts.body)).toMatchObject({ title: 'New title' })
   })
 })
 

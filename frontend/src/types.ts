@@ -11,6 +11,7 @@ export interface Reaction {
 
 export interface Note {
   id: string
+  title: string | null
   text: string
   author_name: string
   created_at: string

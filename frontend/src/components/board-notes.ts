@@ -3,7 +3,23 @@ import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Note } from '../types'
 import { api } from '../api'
-import { faIconStyles, iconNoteSticky } from '../icons'
+import { faIconStyles, iconNoteSticky, iconTrashCan } from '../icons'
+
+const CHECKLIST_LINE = /^- \[([ xX])\] (.*)$/
+
+export function parseChecklistLine(line: string): { checked: boolean; label: string } | null {
+  const match = CHECKLIST_LINE.exec(line)
+  if (!match) return null
+  return { checked: match[1].toLowerCase() === 'x', label: match[2] }
+}
+
+export function toggleChecklistLine(text: string, lineIndex: number): string {
+  const lines = text.split('\n')
+  const parsed = parseChecklistLine(lines[lineIndex] ?? '')
+  if (!parsed) return text
+  lines[lineIndex] = `- [${parsed.checked ? ' ' : 'x'}] ${parsed.label}`
+  return lines.join('\n')
+}
 
 @customElement('board-notes')
 export class BoardNotes extends LitElement {
@@ -12,8 +28,10 @@ export class BoardNotes extends LitElement {
   @property({ type: String }) participantName = ''
   @property({ type: String }) sessionId = ''
 
+  @state() private newNoteTitle = ''
   @state() private newNoteText = ''
   @state() private editingNoteId: string | null = null
+  @state() private editTitle = ''
   @state() private editText = ''
 
   static styles = [faIconStyles, css`
@@ -146,6 +164,20 @@ export class BoardNotes extends LitElement {
       color: var(--retro-error);
     }
 
+    .note-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--retro-text-primary);
+      margin-bottom: 4px;
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 2px 4px;
+      margin-left: -4px;
+    }
+    .note-title:hover {
+      background: var(--retro-bg-subtle);
+    }
+
     .note-text {
       font-size: 13px;
       color: var(--retro-text-primary);
@@ -159,6 +191,36 @@ export class BoardNotes extends LitElement {
     }
     .note-text:hover {
       background: var(--retro-bg-subtle);
+    }
+
+    .checklist-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 1px 0;
+    }
+    .checklist-row input[type="checkbox"] {
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+    .checklist-row.checked .checklist-label {
+      text-decoration: line-through;
+      color: var(--retro-text-muted);
+    }
+
+    .note-edit-title-input {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      color: var(--retro-text-primary);
+      background: var(--retro-bg-page);
+      border: 1.5px solid var(--retro-accent);
+      border-radius: 6px;
+      padding: 5px 8px;
+      outline: none;
+      margin-bottom: 6px;
     }
 
     .note-edit-textarea {
@@ -175,6 +237,38 @@ export class BoardNotes extends LitElement {
       min-height: 60px;
       outline: none;
       line-height: 1.5;
+    }
+
+    .note-edit-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .note-save-btn,
+    .note-cancel-btn {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+    }
+    .note-save-btn {
+      background: var(--retro-accent);
+      color: white;
+    }
+    .note-save-btn:hover {
+      background: var(--retro-accent-hover);
+    }
+    .note-cancel-btn {
+      background: none;
+      color: var(--retro-text-muted);
+      border: 1px solid var(--retro-border-default);
+    }
+    .note-cancel-btn:hover {
+      background: var(--retro-bg-subtle);
     }
 
     .empty-state {
@@ -209,6 +303,23 @@ export class BoardNotes extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+    .add-note-title-input {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      color: var(--retro-text-primary);
+      background: var(--retro-bg-page);
+      border: 1.5px solid var(--retro-border-default);
+      border-radius: 8px;
+      padding: 7px 10px;
+      outline: none;
+      transition: border-color 0.12s;
+    }
+    .add-note-title-input:focus {
+      border-color: var(--retro-accent);
     }
     .add-note-textarea {
       width: 100%;
@@ -261,8 +372,10 @@ export class BoardNotes extends LitElement {
   private async addNote(): Promise<void> {
     const text = this.newNoteText.trim()
     if (!text) return
+    const title = this.newNoteTitle.trim()
+    this.newNoteTitle = ''
     this.newNoteText = ''
-    await api.addNote(this.sessionId, text, this.participantName)
+    await api.addNote(this.sessionId, text, this.participantName, title || undefined)
   }
 
   private onAddKeydown(e: KeyboardEvent): void {
@@ -270,21 +383,24 @@ export class BoardNotes extends LitElement {
       e.preventDefault()
       void this.addNote()
     } else if (e.key === 'Escape') {
+      this.newNoteTitle = ''
       this.newNoteText = ''
     }
   }
 
   private startEdit(note: Note): void {
     this.editingNoteId = note.id
+    this.editTitle = note.title ?? ''
     this.editText = note.text
   }
 
   private async saveEdit(noteId: string): Promise<void> {
     if (this.editingNoteId !== noteId) return
     const text = this.editText.trim()
+    const title = this.editTitle.trim()
     this.editingNoteId = null
     if (text) {
-      await api.updateNote(this.sessionId, noteId, text, this.participantName)
+      await api.updateNote(this.sessionId, noteId, text, this.participantName, title || undefined)
     }
   }
 
@@ -293,7 +409,7 @@ export class BoardNotes extends LitElement {
   }
 
   private onEditKeydown(e: KeyboardEvent, noteId: string): void {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       void this.saveEdit(noteId)
     } else if (e.key === 'Escape') {
@@ -303,6 +419,37 @@ export class BoardNotes extends LitElement {
 
   private async deleteNote(noteId: string): Promise<void> {
     await api.deleteNote(this.sessionId, noteId, this.participantName)
+  }
+
+  private async toggleChecklistItem(note: Note, lineIndex: number): Promise<void> {
+    const text = toggleChecklistLine(note.text, lineIndex)
+    await api.updateNote(this.sessionId, note.id, text, this.participantName, note.title ?? undefined)
+  }
+
+  private renderNoteBody(note: Note) {
+    const lines = note.text.split('\n')
+    if (!lines.some(line => parseChecklistLine(line))) {
+      return html`<div class="note-text" @click=${() => this.startEdit(note)} title="Click to edit">${note.text}</div>`
+    }
+    return html`
+      <div class="note-text" title="Click a line to edit">
+        ${lines.map((line, i) => {
+          const item = parseChecklistLine(line)
+          if (!item) return html`<div @click=${() => this.startEdit(note)}>${line}</div>`
+          return html`
+            <div class="checklist-row ${item.checked ? 'checked' : ''}">
+              <input
+                type="checkbox"
+                .checked=${item.checked}
+                @click=${(e: Event) => e.stopPropagation()}
+                @change=${() => this.toggleChecklistItem(note, i)}
+              />
+              <span class="checklist-label" @click=${() => this.startEdit(note)}>${item.label}</span>
+            </div>
+          `
+        })}
+      </div>
+    `
   }
 
   render() {
@@ -335,24 +482,35 @@ export class BoardNotes extends LitElement {
                       @click=${() => this.deleteNote(note.id)}
                       aria-label="Delete note"
                       title="Delete"
-                    >×</button>
+                    >${iconTrashCan()}</button>
                   </div>
                   ${this.editingNoteId === note.id
                     ? html`
+                        <input
+                          class="note-edit-title-input"
+                          placeholder="Title (optional)"
+                          .value=${this.editTitle}
+                          @input=${(e: Event) => { this.editTitle = (e.target as HTMLInputElement).value }}
+                          @keydown=${(e: KeyboardEvent) => this.onEditKeydown(e, note.id)}
+                          @blur=${() => this.cancelEdit()}
+                        />
                         <textarea
                           class="note-edit-textarea"
                           .value=${this.editText}
                           @input=${(e: Event) => { this.editText = (e.target as HTMLTextAreaElement).value }}
                           @keydown=${(e: KeyboardEvent) => this.onEditKeydown(e, note.id)}
-                          @blur=${() => this.saveEdit(note.id)}
+                          @blur=${() => this.cancelEdit()}
                         ></textarea>
+                        <div class="note-edit-actions">
+                          <button class="note-cancel-btn" @mousedown=${(e: Event) => e.preventDefault()} @click=${() => this.cancelEdit()}>Cancel</button>
+                          <button class="note-save-btn" @mousedown=${(e: Event) => e.preventDefault()} @click=${() => this.saveEdit(note.id)}>Save</button>
+                        </div>
                       `
                     : html`
-                        <div
-                          class="note-text"
-                          @click=${() => this.startEdit(note)}
-                          title="Click to edit"
-                        >${note.text}</div>
+                        ${note.title
+                          ? html`<div class="note-title" @click=${() => this.startEdit(note)}>${note.title}</div>`
+                          : ''}
+                        ${this.renderNoteBody(note)}
                       `}
                 </div>
               `)}
@@ -360,6 +518,13 @@ export class BoardNotes extends LitElement {
 
         ${this.open ? html`
           <div class="add-note-form">
+            <input
+              class="add-note-title-input"
+              placeholder="Title (optional)"
+              .value=${this.newNoteTitle}
+              @input=${(e: Event) => { this.newNoteTitle = (e.target as HTMLInputElement).value }}
+              @keydown=${this.onAddKeydown}
+            />
             <textarea
               class="add-note-textarea"
               placeholder="Add a shared note… (Ctrl+Enter to submit)"
