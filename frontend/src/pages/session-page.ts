@@ -148,26 +148,8 @@ export class SessionPage extends LitElement {
       border-color: var(--retro-accent);
       color: var(--retro-accent);
     }
-    .theme-toggle {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: var(--retro-glass-bg-light);
-      backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
-      border: 1px solid var(--retro-glass-border);
-      color: var(--retro-text-secondary);
-      cursor: pointer;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: border-color 0.12s, color 0.12s;
+    theme-menu {
       flex-shrink: 0;
-    }
-    .theme-toggle:hover {
-      border-color: var(--retro-accent);
-      color: var(--retro-accent);
     }
     .user-chip {
       display: flex;

@@ -115,24 +115,10 @@ export class HomePage extends LitElement {
       border-color: var(--retro-accent);
       color: var(--retro-accent);
     }
-    .theme-toggle {
+    theme-menu {
       position: absolute;
       top: 16px;
       right: 16px;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--retro-glass-bg-medium);
-      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      border: 1px solid var(--retro-glass-border);
-      color: var(--retro-text-secondary);
-      cursor: pointer;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.12s, border-color 0.12s;
       z-index: 2;
     }
     .brand-reset {

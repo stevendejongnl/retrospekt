@@ -1,12 +1,11 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
 
-import { faIconStyles, iconSun, iconMoon } from '../icons'
-import { getEffectiveTheme, getThemePreference, setThemePreference, getHalalMode, setHalalMode } from '../theme'
+import { faIconStyles, iconGear } from '../icons'
+import { getThemePreference, setThemePreference, getHalalMode, setHalalMode } from '../theme'
 
 @customElement('theme-menu')
 export class ThemeMenu extends LitElement {
-  @state() private isDark = getEffectiveTheme() === 'dark'
   @state() private preference = getThemePreference()
   @state() private halal = getHalalMode()
   @state() private open = false
@@ -22,22 +21,24 @@ export class ThemeMenu extends LitElement {
     }
 
     .theme-toggle {
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      border: 1.5px solid var(--retro-border-default);
-      background: none;
+      background: var(--retro-glass-bg-medium);
+      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
+      border: 1px solid var(--retro-glass-border);
       cursor: pointer;
-      color: var(--retro-text-muted);
+      color: var(--retro-text-secondary);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 16px;
       transition: background 0.12s, border-color 0.12s;
     }
     .theme-toggle:hover {
-      background: var(--retro-bg-subtle);
-      color: var(--retro-text-primary);
+      border-color: var(--retro-accent);
+      color: var(--retro-accent);
     }
 
     .popup {
@@ -101,7 +102,6 @@ export class ThemeMenu extends LitElement {
   connectedCallback(): void {
     super.connectedCallback()
     this._themeListener = () => {
-      this.isDark = getEffectiveTheme() === 'dark'
       this.preference = getThemePreference()
       this.halal = getHalalMode()
     }
@@ -133,7 +133,7 @@ export class ThemeMenu extends LitElement {
         aria-label="Theme settings"
         aria-haspopup="true"
         aria-expanded=${this.open}
-      >${this.isDark ? iconSun() : iconMoon()}</button>
+      >${iconGear()}</button>
       ${this.open ? html`
         <div class="popup">
           <button
