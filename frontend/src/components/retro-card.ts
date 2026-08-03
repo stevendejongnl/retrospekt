@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Card } from '../types'
 import { faIconStyles, iconThumbsUp } from '../icons'
+import { bacon } from '../theme'
 
 // Module-level fallback for Firefox, which clears dataTransfer between events
 let _draggedCardId: string | null = null
@@ -34,6 +35,19 @@ export class RetroCard extends LitElement {
   @state() private isDragOver = false
   @state() private editing = false
   @state() private editText = ''
+
+  private _halalListener!: EventListener
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    this._halalListener = () => { this.requestUpdate() }
+    window.addEventListener('retro-halal-change', this._halalListener)
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    window.removeEventListener('retro-halal-change', this._halalListener)
+  }
 
   static styles = [faIconStyles, css`
     :host {
@@ -282,9 +296,10 @@ export class RetroCard extends LitElement {
     return this.card.votes.some((v) => v.participant_name === this.participantName)
   }
 
-  private get reactionGroups(): { emoji: string; count: number; myReaction: boolean }[] {
+  private get reactionGroups(): { emoji: string; displayEmoji: string; count: number; myReaction: boolean }[] {
     return REACTION_EMOJI.map((emoji) => ({
       emoji,
+      displayEmoji: emoji === '🥓' ? bacon() : emoji,
       count: this.card.reactions.filter((r) => r.emoji === emoji).length,
       myReaction: this.card.reactions.some(
         (r) => r.emoji === emoji && r.participant_name === this.participantName,
@@ -468,9 +483,9 @@ export class RetroCard extends LitElement {
                       style="${this.canReact && g.count === 0 ? 'opacity:0.35' : ''}"
                       ?disabled=${!this.canReact}
                       @click=${() => { if (this.canReact) this.onReactClick(g.emoji, g.myReaction) }}
-                      title="${g.emoji}"
+                      title="${g.displayEmoji}"
                     >
-                      ${g.emoji}${g.count > 0
+                      ${g.displayEmoji}${g.count > 0
               ? html`<span class="reaction-count">${g.count}</span>`
               : ''}
                     </button>

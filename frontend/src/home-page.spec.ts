@@ -92,16 +92,12 @@ test.describe('home-page template picker', () => {
 })
 
 test.describe('home-page theme toggle', () => {
-  test('clicking the theme toggle switches the theme', async ({ page }) => {
+  test('opening the theme menu and picking Dark switches the theme', async ({ page }) => {
     await page.goto('/')
-    const before = await page.evaluate(
-      () => document.documentElement.getAttribute('data-theme') ?? 'light',
-    )
-    await page.locator('.theme-toggle').click()
-    const after = await page.evaluate(
-      () => document.documentElement.getAttribute('data-theme'),
-    )
-    expect(after).not.toBe(before)
+    const menu = page.locator('theme-menu')
+    await menu.getByRole('button', { name: 'Theme settings' }).click()
+    await menu.getByText('Dark', { exact: true }).click()
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   })
 })
 
@@ -358,14 +354,16 @@ test.describe('home-page matchMedia change', () => {
 // ── Theme toggle from dark (theme.ts line 15 'light' branch) ─────────────────
 
 test.describe('home-page theme toggle from dark', () => {
-  test('toggleTheme switches from dark to light (covers "light" branch)', async ({ page }) => {
+  test('picking Light from the theme menu switches from dark to light', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'dark' })
     await page.goto('/')
     const before = await page.evaluate(() =>
       document.documentElement.getAttribute('data-theme'),
     )
     expect(before).toBe('dark')
-    await page.locator('.theme-toggle').click()
+    const menu = page.locator('theme-menu')
+    await menu.getByRole('button', { name: 'Theme settings' }).click()
+    await menu.getByText('Light', { exact: true }).click()
     const after = await page.evaluate(() =>
       document.documentElement.getAttribute('data-theme'),
     )
@@ -455,13 +453,15 @@ test.describe('home-page mobile layout', () => {
     await expect(page.locator('.sidebar.open')).toBeVisible()
   })
 
-  test('theme toggle is clickable on mobile viewport', async ({ page }) => {
+  test('theme menu is usable on mobile viewport', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/')
     const before = await page.evaluate(
       () => document.documentElement.getAttribute('data-theme') ?? 'light',
     )
-    await page.locator('.theme-toggle').click()
+    const menu = page.locator('theme-menu')
+    await menu.getByRole('button', { name: 'Theme settings' }).click()
+    await menu.getByText(before === 'dark' ? 'Light' : 'Dark', { exact: true }).click()
     const after = await page.evaluate(
       () => document.documentElement.getAttribute('data-theme'),
     )

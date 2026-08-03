@@ -3,10 +3,11 @@ import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 import { storage } from '../storage'
-import { getEffectiveTheme, toggleTheme, getBrand, clearBrand } from '../theme'
-import { faIconStyles, iconSun, iconMoon, iconClockRotateLeft, iconRotateLeft, iconChartBar } from '../icons'
+import { getBrand, clearBrand, bacon } from '../theme'
+import { faIconStyles, iconClockRotateLeft, iconRotateLeft, iconChartBar } from '../icons'
 import '../components/session-history'
 import '../components/background-blobs'
+import '../components/theme-menu'
 
 const COLUMN_TEMPLATES = [
   { label: 'Standard', columns: ['Went Well', 'To Improve', 'Action Items'] },
@@ -22,7 +23,6 @@ export class HomePage extends LitElement {
   @state() private loading = false
   @state() private error = ''
   @state() private selectedTemplate = 0
-  @state() private isDark = getEffectiveTheme() === 'dark'
   @state() private brand = getBrand()
   @state() private showHistory = false
   @state() private reactionsEnabled = true
@@ -30,19 +30,19 @@ export class HomePage extends LitElement {
   @state() private maxVotesPerParticipant: number | null = null
   @state() private sessionNotFound = false
 
-  private _themeListener!: EventListener
   private _brandListener!: EventListener
+  private _halalListener!: EventListener
 
   connectedCallback(): void {
     super.connectedCallback()
-    this._themeListener = () => {
-      this.isDark = getEffectiveTheme() === 'dark'
-    }
     this._brandListener = () => {
       this.brand = getBrand()
     }
-    window.addEventListener('retro-theme-change', this._themeListener)
+    this._halalListener = () => {
+      this.requestUpdate()
+    }
     window.addEventListener('retro-brand-change', this._brandListener)
+    window.addEventListener('retro-halal-change', this._halalListener)
     const params = new URLSearchParams(window.location.search)
     if (params.has('session_not_found')) {
       this.sessionNotFound = true
@@ -52,8 +52,8 @@ export class HomePage extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback()
-    window.removeEventListener('retro-theme-change', this._themeListener)
     window.removeEventListener('retro-brand-change', this._brandListener)
+    window.removeEventListener('retro-halal-change', this._halalListener)
   }
 
   static styles = [faIconStyles, css`
@@ -417,10 +417,6 @@ export class HomePage extends LitElement {
     if (e.key === 'Enter') void this.createSession()
   }
 
-  private onThemeToggle(): void {
-    toggleTheme()
-  }
-
   private onBrandReset(): void {
     clearBrand()
   }
@@ -448,9 +444,9 @@ export class HomePage extends LitElement {
       >${iconChartBar()}</button>
       ${this.brand === 'cs'
         ? html`<button class="brand-reset" @click=${this.onBrandReset} title="Reset to default theme">${iconRotateLeft()}</button>`
-        : html`<button class="theme-toggle" @click=${this.onThemeToggle}>${this.isDark ? iconSun() : iconMoon()}</button>`}
+        : html`<theme-menu></theme-menu>`}
       <div class="hero">
-        <div class="logo">🥓</div>
+        <div class="logo">${bacon()}</div>
         <h1>Retro<em>spekt</em></h1>
         <p class="tagline">A simple, self-hosted retrospective board</p>
 

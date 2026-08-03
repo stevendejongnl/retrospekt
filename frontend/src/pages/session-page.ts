@@ -7,13 +7,11 @@ import { buildParticipantColorMap } from '../types'
 import { api } from '../api'
 import { SSEClient } from '../sse'
 import { storage } from '../storage'
-import { getEffectiveTheme, toggleTheme, getBrand, clearBrand } from '../theme'
+import { getBrand, clearBrand, bacon } from '../theme'
 import {
   faIconStyles,
   iconCommentDots,
   iconLock,
-  iconSun,
-  iconMoon,
   iconLink,
   iconCheck,
   iconClockRotateLeft,
@@ -30,6 +28,7 @@ import '../components/feedback-dialog'
 import '../components/whats-new-dialog'
 import '../components/background-blobs'
 import '../components/retro-help'
+import '../components/theme-menu'
 import { CHANGELOG } from '../generated/changelog'
 import { semverGt } from '../storage'
 
@@ -46,7 +45,6 @@ export class SessionPage extends LitElement {
   @state() private loading = true
   @state() private showNamePrompt = false
   @state() private copied = false
-  @state() private isDark = getEffectiveTheme() === 'dark'
   @state() private brand = getBrand()
   @state() private showHelp = false
   @state() private showHistory = false
@@ -55,7 +53,7 @@ export class SessionPage extends LitElement {
   @state() private showWhatsNew = false
 
   private sseClient: SSEClient | null = null
-  private _themeListener!: EventListener
+  private _halalListener!: EventListener
   private _brandListener!: EventListener
   private _idleCheckInterval: ReturnType<typeof setInterval> | null = null
   private _lastActivityAt = Date.now()
@@ -424,13 +422,13 @@ export class SessionPage extends LitElement {
 
   async connectedCallback(): Promise<void> {
     super.connectedCallback()
-    this._themeListener = () => {
-      this.isDark = getEffectiveTheme() === 'dark'
+    this._halalListener = () => {
+      this.requestUpdate()
     }
     this._brandListener = () => {
       this.brand = getBrand()
     }
-    window.addEventListener('retro-theme-change', this._themeListener)
+    window.addEventListener('retro-halal-change', this._halalListener)
     window.addEventListener('retro-brand-change', this._brandListener)
     window.addEventListener('pointermove', this._onActivity)
     window.addEventListener('keydown', this._onActivity)
@@ -441,7 +439,7 @@ export class SessionPage extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback()
     this.sseClient?.disconnect()
-    window.removeEventListener('retro-theme-change', this._themeListener)
+    window.removeEventListener('retro-halal-change', this._halalListener)
     window.removeEventListener('retro-brand-change', this._brandListener)
     window.removeEventListener('pointermove', this._onActivity)
     window.removeEventListener('keydown', this._onActivity)
@@ -654,7 +652,7 @@ export class SessionPage extends LitElement {
         ? html`
             <div class="overlay">
               <div class="name-card">
-                <div class="logo">🥓</div>
+                <div class="logo">${bacon()}</div>
                 <h2>${session.name}</h2>
                 <p>Enter your name to join the retrospective.</p>
                 <input
@@ -678,7 +676,7 @@ export class SessionPage extends LitElement {
         : ''}
 
       <header>
-        <span class="brand" @click=${this.goHome}>🥓 Retro<em>spekt</em>${getBrand() === 'cs' ? html`<span class="cs-collab">× ${csLogo()}</span>` : nothing}</span>
+        <span class="brand" @click=${this.goHome}>${bacon()} Retro<em>spekt</em>${getBrand() === 'cs' ? html`<span class="cs-collab">× ${csLogo()}</span>` : nothing}</span>
         <span class="session-title">
           ${session.name}<span class="session-date">· ${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
         </span>
@@ -695,7 +693,7 @@ export class SessionPage extends LitElement {
         <button class="icon-btn feedback-btn" @click=${() => { this.showFeedback = true }} title="Give feedback">💬</button>
         ${this.brand === 'cs'
           ? html`<button class="icon-btn brand-reset" @click=${clearBrand} title="Reset to default theme">${iconRotateLeft()}</button>`
-          : html`<button class="theme-toggle" @click=${toggleTheme}>${this.isDark ? iconSun() : iconMoon()}</button>`}
+          : html`<theme-menu></theme-menu>`}
         ${this.participantName
           ? html`
               <div class="user-chip">

@@ -2,6 +2,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement } from 'lit/decorators.js'
 
 import '../components/background-blobs'
+import { bacon } from '../theme'
 
 @customElement('not-found-page')
 export class NotFoundPage extends LitElement {
@@ -84,7 +85,7 @@ export class NotFoundPage extends LitElement {
     return html`
       <background-blobs></background-blobs>
       <div class="content">
-        <span class="emoji">🥓</span>
+        <span class="emoji">${bacon()}</span>
         <h2>404 — Nothing to retro<em>spekt</em></h2>
         <p>This page never made it past the collecting phase.</p>
         <a class="back-pill" href="/" @click=${(e: Event) => { e.preventDefault(); window.router.navigate('/') }}>

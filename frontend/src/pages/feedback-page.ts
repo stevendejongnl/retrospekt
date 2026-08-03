@@ -5,6 +5,7 @@ import { api } from '../api'
 import { storage } from '../storage'
 import { faIconStyles } from '../icons'
 import { EMOJI_SCALE } from '../components/feedback-dialog'
+import { bacon } from '../theme'
 import '../components/background-blobs'
 
 @customElement('feedback-page')
@@ -184,7 +185,7 @@ export class FeedbackPage extends LitElement {
     return html`
       <background-blobs></background-blobs>
       <div class="content">
-        <a class="brand" href="/">🥓 Retro<em>spekt</em></a>
+        <a class="brand" href="/">${bacon()} Retro<em>spekt</em></a>
         <div class="card">
           ${this.submitted
             ? html`

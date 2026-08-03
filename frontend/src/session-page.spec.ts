@@ -160,11 +160,13 @@ test.describe('session-page board (participant)', () => {
     await expect(page.locator('.sidebar.open')).toBeVisible()
   })
 
-  test('theme toggle button switches the document theme', async ({ page }) => {
+  test('theme menu switches the document theme', async ({ page }) => {
     const before = await page.evaluate(
       () => document.documentElement.getAttribute('data-theme') ?? 'light',
     )
-    await page.locator('.theme-toggle').click()
+    const menu = page.locator('theme-menu')
+    await menu.getByRole('button', { name: 'Theme settings' }).click()
+    await menu.getByText(before === 'dark' ? 'Light' : 'Dark', { exact: true }).click()
     const after = await page.evaluate(() => document.documentElement.getAttribute('data-theme'))
     expect(after).not.toBe(before)
   })
