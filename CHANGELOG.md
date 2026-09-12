@@ -1,3 +1,9 @@
+## [1.39.0](https://github.com/stevendejongnl/retrospekt/compare/v1.38.1...v1.39.0) (2026-09-12)
+
+### Features
+
+* **analytics:** add Matomo tracking with router hook test ([f7414e5](https://github.com/stevendejongnl/retrospekt/commit/f7414e56597b2540968b89036e06d4e07ca11e39))
+
 ## [1.38.1](https://github.com/stevendejongnl/retrospekt/compare/v1.38.0...v1.38.1) (2026-08-03)
 
 ### Bug Fixes
