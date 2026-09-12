@@ -1,3 +1,9 @@
+declare global {
+  interface Window {
+    _paq?: unknown[][]
+  }
+}
+
 interface Route {
   path: string
   component: string
@@ -47,11 +53,19 @@ class Router {
   handleRoute(): void {
     const { route, params } = matchRoute(window.location.pathname)
     document.title = route.title
+    this.trackPageView(route.title)
 
     // Use replaceChildren() — safe DOM clearing (no innerHTML)
     const el = document.createElement(route.component)
     if (params.id) el.setAttribute('session-id', params.id)
     this.outlet.replaceChildren(el)
+  }
+
+  private trackPageView(title: string): void {
+    const _paq = (window._paq = window._paq || [])
+    _paq.push(['setCustomUrl', window.location.pathname])
+    _paq.push(['setDocumentTitle', title])
+    _paq.push(['trackPageView'])
   }
 
   start(): void {

@@ -60,4 +60,23 @@ describe('Router', () => {
     expect(el.tagName.toLowerCase()).toBe('session-page')
     expect(el.getAttribute('session-id')).toBe('xyz')
   })
+
+  describe('analytics tracking', () => {
+    afterEach(() => {
+      delete window._paq
+    })
+
+    it('pushes a Matomo trackPageView on navigate', () => {
+      window._paq = []
+      router.navigate('/stats')
+      const calls = window._paq.map((call) => call[0])
+      expect(calls).toContain('trackPageView')
+      expect(calls).toContain('setDocumentTitle')
+    })
+
+    it('creates window._paq lazily if the analytics script has not loaded yet', () => {
+      router.navigate('/stats')
+      expect(window._paq).toBeDefined()
+    })
+  })
 })
