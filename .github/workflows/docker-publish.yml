@@ -52,6 +52,7 @@ jobs:
 
   deploy:
     name: Deploy to k8s
+    needs: build-and-deploy
     runs-on: [self-hosted, k8s]
     steps:
       - name: Restart deployment
