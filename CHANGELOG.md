@@ -1,3 +1,9 @@
+## [1.39.1](https://github.com/stevendejongnl/retrospekt/compare/v1.39.0...v1.39.1) (2026-09-12)
+
+### Bug Fixes
+
+* **ci:** make k8s deploy job wait for image build/push ([ab25b9e](https://github.com/stevendejongnl/retrospekt/commit/ab25b9e98d23d033add52ddc8f3ad38b626c5912))
+
 ## [1.39.0](https://github.com/stevendejongnl/retrospekt/compare/v1.38.1...v1.39.0) (2026-09-12)
 
 ### Features
