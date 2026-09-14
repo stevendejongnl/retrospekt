@@ -1,3 +1,19 @@
+## [1.41.0](https://github.com/stevendejongnl/retrospekt/compare/v1.40.0...v1.41.0) (2026-09-14)
+
+### Features
+
+* **analytics:** add trackEvent to the TagManager layer ([da526f3](https://github.com/stevendejongnl/retrospekt/commit/da526f3cad43096a76c5bc4e7d6b6d6a44c5557d))
+* **api:** track every mutating action through the TagManager layer ([bfe81e5](https://github.com/stevendejongnl/retrospekt/commit/bfe81e544b0569d9e0e752bab4cded546552beb5))
+* **theme,session:** track theme/halal toggles, copy link, and export as events ([9b69f23](https://github.com/stevendejongnl/retrospekt/commit/9b69f235cc4346a91e64819697de65c067a6b093))
+
+### Bug Fixes
+
+* **test:** wait for copy feedback before reading _mtm in the copy_link CT test ([426c5be](https://github.com/stevendejongnl/retrospekt/commit/426c5beb7db661d2f9ea5e169ab03150fdd3a4b7))
+
+### Documentation
+
+* document trackEvent and the api.ts-centralized event instrumentation ([dafb951](https://github.com/stevendejongnl/retrospekt/commit/dafb95190e592d6877b6703773e23f416620e8f5))
+
 ## [1.40.0](https://github.com/stevendejongnl/retrospekt/compare/v1.39.1...v1.40.0) (2026-09-14)
 
 ### Features
