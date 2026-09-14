@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApi } from './api'
 
+vi.mock('./analytics', () => ({ tagManager: { trackEvent: vi.fn(), trackPageView: vi.fn(), init: vi.fn() } }))
+import { tagManager } from './analytics'
+const trackEvent = vi.mocked(tagManager.trackEvent)
+
 const mockFetch = vi.fn()
 const api = createApi(mockFetch)
 
@@ -32,7 +36,10 @@ function mockError(status: number, message: string) {
   })
 }
 
-beforeEach(() => mockFetch.mockReset())
+beforeEach(() => {
+  mockFetch.mockReset()
+  trackEvent.mockReset()
+})
 
 describe('createSession', () => {
   it('POSTs to /api/v1/sessions with name and participant_name', async () => {
@@ -487,6 +494,61 @@ describe('createSession with custom columns', () => {
     await api.createSession('Retro', 'Alice', ['Roses', 'Thorns'])
     const [, opts] = mockFetch.mock.calls[0]
     expect(JSON.parse(opts.body as string)).toMatchObject({ columns: ['Roses', 'Thorns'] })
+  })
+})
+
+describe('analytics events (trackEvent fired on success)', () => {
+  const cases: Array<[string, () => Promise<unknown>, [string, string, string?, number?]]> = [
+    ['createSession', () => api.createSession('Retro', 'Alice'), ['Session', 'create']],
+    ['joinSession', () => api.joinSession('sess-1', 'Alice'), ['Session', 'join']],
+    ['updateSession', () => api.updateSession('sess-1', { name: 'x' }, 'tok-1'), ['Session', 'update_settings']],
+    ['setPhase', () => api.setPhase('sess-1', 'discussing', 'tok-1'), ['Session', 'phase_change', 'discussing']],
+    ['addCard', () => api.addCard('sess-1', 'Went Well', 'text', 'Alice'), ['Card', 'add', 'Went Well']],
+    ['deleteCard', () => api.deleteCard('sess-1', 'card-1', 'Alice'), ['Card', 'delete']],
+    ['updateCardText', () => api.updateCardText('sess-1', 'card-1', 'x', 'Alice'), ['Card', 'edit']],
+    ['addVote', () => api.addVote('sess-1', 'card-1', 'Alice'), ['Card', 'vote']],
+    ['removeVote', () => api.removeVote('sess-1', 'card-1', 'Alice'), ['Card', 'unvote']],
+    ['publishCard', () => api.publishCard('sess-1', 'card-1', 'Alice'), ['Card', 'publish']],
+    ['unpublishCard', () => api.unpublishCard('sess-1', 'card-1', 'Alice'), ['Card', 'unpublish']],
+    ['publishAllCards', () => api.publishAllCards('sess-1', 'Went Well', 'Alice'), ['Card', 'publish_all', 'Went Well']],
+    ['addColumn', () => api.addColumn('sess-1', 'Kudos', 'tok-1'), ['Column', 'add']],
+    ['renameColumn', () => api.renameColumn('sess-1', 'Went Well', 'Highlights', 'tok-1'), ['Column', 'rename']],
+    ['removeColumn', () => api.removeColumn('sess-1', 'Action Items', 'tok-1'), ['Column', 'remove']],
+    ['setColumnSort', () => api.setColumnSort('sess-1', 'Went Well', true, 'tok-1'), ['Column', 'sort_toggle', 'votes']],
+    ['setColumnSort (default order)', () => api.setColumnSort('sess-1', 'Went Well', false, 'tok-1'), ['Column', 'sort_toggle', 'default']],
+    ['addReaction', () => api.addReaction('sess-1', 'card-1', '❤️', 'Alice'), ['Reaction', 'add', '❤️']],
+    ['removeReaction', () => api.removeReaction('sess-1', 'card-1', '❤️', 'Alice'), ['Reaction', 'remove', '❤️']],
+    ['assignCard', () => api.assignCard('sess-1', 'card-1', 'Bob', 'Alice', 'tok-1'), ['Card', 'assign', 'Bob']],
+    ['assignCard (unassign)', () => api.assignCard('sess-1', 'card-1', null, 'Alice', 'tok-1'), ['Card', 'assign', 'unassign']],
+    ['addNote', () => api.addNote('sess-1', 'text', 'Alice'), ['Note', 'add']],
+    ['updateNote', () => api.updateNote('sess-1', 'note-1', 'text', 'Alice'), ['Note', 'edit']],
+    ['deleteNote', () => api.deleteNote('sess-1', 'note-1', 'Alice'), ['Note', 'delete']],
+    ['groupCard', () => api.groupCard('sess-1', 'card-1', 'card-2', 'Alice'), ['Card', 'group']],
+    ['ungroupCard', () => api.ungroupCard('sess-1', 'card-1', 'Alice'), ['Card', 'ungroup']],
+    ['submitFeedback', () => api.submitFeedback(5, 'great'), ['Feedback', 'submit', '5', 5]],
+    ['patchFeedback', () => api.patchFeedback('fb-1', 'fixed', 'admin-tok'), ['Feedback', 'triage', 'fixed']],
+    ['setTimerDuration', () => api.setTimerDuration('sess-1', 300, 'tok-1'), ['Timer', 'set_duration', undefined, 300]],
+    ['startTimer', () => api.startTimer('sess-1', 'tok-1'), ['Timer', 'start']],
+    ['pauseTimer', () => api.pauseTimer('sess-1', 'tok-1'), ['Timer', 'pause']],
+    ['resetTimer', () => api.resetTimer('sess-1', 'tok-1'), ['Timer', 'reset']],
+  ]
+
+  it.each(cases)('%s fires the expected trackEvent on success', async (_desc, call, [category, action, name, value]) => {
+    mockOk({})
+    await call()
+    expect(trackEvent).toHaveBeenCalledWith(category, action, name, value)
+  })
+
+  it('does not fire a trackEvent when the request fails', async () => {
+    mockError(500, 'boom')
+    await expect(api.addCard('sess-1', 'Went Well', 'text', 'Alice')).rejects.toThrow()
+    expect(trackEvent).not.toHaveBeenCalled()
+  })
+
+  it('does not fire trackEvent for read-only calls', async () => {
+    mockOk({})
+    await api.getSession('sess-1')
+    expect(trackEvent).not.toHaveBeenCalled()
   })
 })
 
