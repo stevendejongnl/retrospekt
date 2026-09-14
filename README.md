@@ -48,6 +48,7 @@ A simple, self-hosted retrospective board.
 | Database | MongoDB (Motor async driver) |
 | Real-time | Server-Sent Events (SSE) + Redis pub/sub |
 | Monitoring | Sentry (frontend + backend) |
+| Analytics | Matomo Tag Manager (self-hosted Matomo, swappable via `TagManager` interface) |
 | Deployment | Docker Compose / Kubernetes |
 
 ## Running locally

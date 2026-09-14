@@ -1,8 +1,4 @@
-declare global {
-  interface Window {
-    _paq?: unknown[][]
-  }
-}
+import { tagManager } from './analytics'
 
 interface Route {
   path: string
@@ -62,10 +58,7 @@ class Router {
   }
 
   private trackPageView(title: string): void {
-    const _paq = (window._paq = window._paq || [])
-    _paq.push(['setCustomUrl', window.location.pathname])
-    _paq.push(['setDocumentTitle', title])
-    _paq.push(['trackPageView'])
+    tagManager.trackPageView(window.location.pathname, title)
   }
 
   start(): void {

@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/browser'
 import { initTheme, initBrand } from './theme'
+import { tagManager } from './analytics'
 
 /* istanbul ignore next -- Sentry DSN not set in CT environment; only active in production */
 if (window.__SENTRY_DSN__) {
@@ -20,4 +21,5 @@ import { router } from './router'
 
 initTheme()
 initBrand()
+tagManager.init()
 router.start()
