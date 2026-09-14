@@ -13,6 +13,10 @@ import {
   bacon,
 } from './theme'
 
+vi.mock('./analytics', () => ({ tagManager: { trackEvent: vi.fn(), trackPageView: vi.fn(), init: vi.fn() } }))
+import { tagManager } from './analytics'
+const trackEvent = vi.mocked(tagManager.trackEvent)
+
 // jsdom doesn't implement matchMedia — stub it
 function mockMatchMedia(prefersDark: boolean) {
   const mql = {
@@ -30,6 +34,7 @@ beforeEach(() => {
   document.documentElement.removeAttribute('data-brand')
   window.history.replaceState(null, '', '/')
   vi.unstubAllGlobals()
+  trackEvent.mockReset()
 })
 
 describe('getEffectiveTheme', () => {
@@ -226,6 +231,18 @@ describe('getThemePreference / setThemePreference', () => {
     window.removeEventListener('retro-theme-change', handler)
     expect(handler).toHaveBeenCalledOnce()
   })
+
+  it('fires a Theme/change trackEvent with the chosen preference', () => {
+    mockMatchMedia(false)
+    setThemePreference('dark')
+    expect(trackEvent).toHaveBeenCalledWith('Theme', 'change', 'dark')
+  })
+
+  it('fires Theme/change with "system" when reverting to system preference', () => {
+    mockMatchMedia(false)
+    setThemePreference('system')
+    expect(trackEvent).toHaveBeenCalledWith('Theme', 'change', 'system')
+  })
 })
 
 describe('halal mode', () => {
@@ -250,6 +267,13 @@ describe('halal mode', () => {
     setHalalMode(true)
     window.removeEventListener('retro-halal-change', handler)
     expect(handler).toHaveBeenCalledOnce()
+  })
+
+  it('fires a Theme/halal_toggle trackEvent with "on"/"off"', () => {
+    setHalalMode(true)
+    expect(trackEvent).toHaveBeenCalledWith('Theme', 'halal_toggle', 'on')
+    setHalalMode(false)
+    expect(trackEvent).toHaveBeenCalledWith('Theme', 'halal_toggle', 'off')
   })
 
   it('bacon() returns the pig emoji when halal mode is off', () => {

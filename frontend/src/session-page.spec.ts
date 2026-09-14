@@ -204,6 +204,15 @@ test.describe('session-page board (participant)', () => {
     await expect(page.getByText(/Copied/)).toBeVisible()
   })
 
+  test('"Copy link" button fires a Session/copy_link trackEvent', async ({ page }) => {
+    await page.context().grantPermissions(['clipboard-write'])
+    await page.getByRole('button', { name: 'Copy link' }).click()
+    const events = await page.evaluate(() => window._mtm ?? [])
+    expect(events).toContainEqual(expect.objectContaining({
+      event: 'retrospektEvent', eventCategory: 'Session', eventAction: 'copy_link',
+    }))
+  })
+
   test('participant bar (not facilitator bar) is rendered', async ({ page }) => {
     await expect(page.locator('.participant-bar')).toBeVisible()
     await expect(page.locator('.facilitator-bar')).not.toBeVisible()
@@ -629,6 +638,19 @@ test.describe('session-page export', () => {
     await page.locator('.export-btn').click()
     const download = await downloadPromise
     expect(download.suggestedFilename()).toMatch(/sprint-retro.*\.md/)
+  })
+
+  test('clicking the export button fires a Session/export_markdown trackEvent', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, { ...BASE, phase: 'discussing' } as typeof BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    const downloadPromise = page.waitForEvent('download')
+    await page.locator('.export-btn').click()
+    await downloadPromise
+    const events = await page.evaluate(() => window._mtm ?? [])
+    expect(events).toContainEqual(expect.objectContaining({
+      event: 'retrospektEvent', eventCategory: 'Session', eventAction: 'export_markdown',
+    }))
   })
 
   test('export includes board notes section when session has notes', async ({ page }) => {
