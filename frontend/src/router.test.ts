@@ -63,20 +63,23 @@ describe('Router', () => {
 
   describe('analytics tracking', () => {
     afterEach(() => {
-      delete window._paq
+      delete window._mtm
     })
 
-    it('pushes a Matomo trackPageView on navigate', () => {
-      window._paq = []
+    it('pushes a tag manager page-view event on navigate', () => {
+      window._mtm = []
       router.navigate('/stats')
-      const calls = window._paq.map((call) => call[0])
-      expect(calls).toContain('trackPageView')
-      expect(calls).toContain('setDocumentTitle')
+      const entry = window._mtm.find((e) => e.event === 'retrospektPageView')
+      expect(entry).toEqual({
+        event: 'retrospektPageView',
+        pageUrl: '/stats',
+        pageTitle: 'Stats — Retrospekt',
+      })
     })
 
-    it('creates window._paq lazily if the analytics script has not loaded yet', () => {
+    it('creates window._mtm lazily if the tag manager script has not loaded yet', () => {
       router.navigate('/stats')
-      expect(window._paq).toBeDefined()
+      expect(window._mtm).toBeDefined()
     })
   })
 })
