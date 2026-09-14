@@ -8,6 +8,7 @@ import { api } from '../api'
 import { SSEClient } from '../sse'
 import { storage } from '../storage'
 import { getBrand, clearBrand, bacon } from '../theme'
+import { tagManager } from '../analytics'
 import {
   faIconStyles,
   iconCommentDots,
@@ -482,6 +483,7 @@ export class SessionPage extends LitElement {
     await navigator.clipboard.writeText(window.location.href)
     this.copied = true
     setTimeout(() => (this.copied = false), 2000)
+    tagManager.trackEvent('Session', 'copy_link')
   }
 
   private goHome(e: Event): void {
@@ -582,6 +584,7 @@ export class SessionPage extends LitElement {
     a.download = `${session.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.md`
     a.click()
     URL.revokeObjectURL(url)
+    tagManager.trackEvent('Session', 'export_markdown')
   }
 
 

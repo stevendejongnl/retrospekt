@@ -1,3 +1,5 @@
+import { tagManager } from './analytics'
+
 const STORAGE_KEY = 'retro_theme'
 type ThemePreference = 'light' | 'dark'
 type ThemeChoice = ThemePreference | 'system'
@@ -40,6 +42,7 @@ export function setThemePreference(choice: ThemeChoice): void {
   const effective = getEffectiveTheme()
   applyTheme(effective)
   window.dispatchEvent(new CustomEvent('retro-theme-change', { detail: { theme: effective } }))
+  tagManager.trackEvent('Theme', 'change', choice)
 }
 
 export function getHalalMode(): boolean {
@@ -50,6 +53,7 @@ export function setHalalMode(enabled: boolean): void {
   if (enabled) localStorage.setItem(HALAL_STORAGE_KEY, 'true')
   else localStorage.removeItem(HALAL_STORAGE_KEY)
   window.dispatchEvent(new CustomEvent('retro-halal-change', { detail: { halal: enabled } }))
+  tagManager.trackEvent('Theme', 'halal_toggle', enabled ? 'on' : 'off')
 }
 
 export function bacon(): string {
