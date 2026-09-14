@@ -45,6 +45,37 @@ describe('MatomoTagManager', () => {
     matomo.trackPageView('/', 'Retrospekt')
     expect(window._mtm).toBeDefined()
   })
+
+  it('pushes a custom event with category and action on trackEvent', () => {
+    window._mtm = []
+    matomo.trackEvent('Card', 'vote')
+    const entry = window._mtm.find((e) => e.event === 'retrospektEvent')
+    expect(entry).toEqual({
+      event: 'retrospektEvent',
+      eventCategory: 'Card',
+      eventAction: 'vote',
+      eventName: undefined,
+      eventValue: undefined,
+    })
+  })
+
+  it('includes an optional name and value on trackEvent', () => {
+    window._mtm = []
+    matomo.trackEvent('Timer', 'set_duration', 'facilitator', 300)
+    const entry = window._mtm.find((e) => e.event === 'retrospektEvent')
+    expect(entry).toEqual({
+      event: 'retrospektEvent',
+      eventCategory: 'Timer',
+      eventAction: 'set_duration',
+      eventName: 'facilitator',
+      eventValue: 300,
+    })
+  })
+
+  it('creates window._mtm lazily if trackEvent is called before init', () => {
+    matomo.trackEvent('Card', 'add')
+    expect(window._mtm).toBeDefined()
+  })
 })
 
 describe('tagManager', () => {
