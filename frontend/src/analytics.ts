@@ -12,6 +12,7 @@ declare global {
 export interface TagManager {
   init(): void
   trackPageView(path: string, title: string): void
+  trackEvent(category: string, action: string, name?: string, value?: number): void
 }
 
 export class MatomoTagManager implements TagManager {
@@ -32,6 +33,17 @@ export class MatomoTagManager implements TagManager {
   trackPageView(path: string, title: string): void {
     const _mtm = (window._mtm = window._mtm || [])
     _mtm.push({ event: 'retrospektPageView', pageUrl: path, pageTitle: title })
+  }
+
+  trackEvent(category: string, action: string, name?: string, value?: number): void {
+    const _mtm = (window._mtm = window._mtm || [])
+    _mtm.push({
+      event: 'retrospektEvent',
+      eventCategory: category,
+      eventAction: action,
+      eventName: name,
+      eventValue: value,
+    })
   }
 }
 
