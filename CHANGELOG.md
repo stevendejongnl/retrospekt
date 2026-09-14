@@ -1,3 +1,9 @@
+## [1.40.0](https://github.com/stevendejongnl/retrospekt/compare/v1.39.1...v1.40.0) (2026-09-14)
+
+### Features
+
+* **analytics:** switch to Matomo Tag Manager via a swappable TagManager layer ([4df7848](https://github.com/stevendejongnl/retrospekt/commit/4df7848aa4e6a44064055f8ca737ca91d2915324))
+
 ## [1.39.1](https://github.com/stevendejongnl/retrospekt/compare/v1.39.0...v1.39.1) (2026-09-12)
 
 ### Bug Fixes
