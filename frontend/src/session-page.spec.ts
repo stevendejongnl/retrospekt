@@ -207,6 +207,9 @@ test.describe('session-page board (participant)', () => {
   test('"Copy link" button fires a Session/copy_link trackEvent', async ({ page }) => {
     await page.context().grantPermissions(['clipboard-write'])
     await page.getByRole('button', { name: 'Copy link' }).click()
+    // copyUrl() is async (awaits navigator.clipboard.writeText) — wait for its
+    // completion signal before reading window._mtm, or this races and flakes.
+    await expect(page.getByText(/Copied/)).toBeVisible()
     const events = await page.evaluate(() => window._mtm ?? [])
     expect(events).toContainEqual(expect.objectContaining({
       event: 'retrospektEvent', eventCategory: 'Session', eventAction: 'copy_link',
