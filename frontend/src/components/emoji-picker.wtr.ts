@@ -124,6 +124,36 @@ describe('emoji-picker', () => {
       expect(popupRect.bottom).to.be.at.most(triggerRect.top + 1)
       expect(popupRect.bottom).to.be.at.most(window.innerHeight)
     })
+
+    it('stays viewport-relative even inside an ancestor with backdrop-filter', async () => {
+      // Any backdrop-filter value — even blur(0px) — makes that ancestor the
+      // containing block for a plain position:fixed descendant. Without
+      // popover="manual" promoting .popup to the top layer, its top/left
+      // (computed against window.innerWidth/innerHeight) would land relative
+      // to this wrapper instead, landing far from the trigger. Reproduces
+      // the real .column ancestor in retro-column.ts (frosted-glass cards).
+      const el = await fixture<EmojiPicker>(
+        html`<div style="position:absolute; top:500px; left:50px; backdrop-filter:blur(0px);">
+          <emoji-picker></emoji-picker>
+        </div>`,
+      )
+      const picker = el.querySelector('emoji-picker') as EmojiPicker
+      const trigger = picker.shadowRoot!.querySelector<HTMLButtonElement>('.trigger')!
+      trigger.click()
+      await picker.updateComplete
+      await picker.updateComplete
+      const popup = picker.shadowRoot!.querySelector<HTMLElement>('.popup')!
+      const triggerRect = trigger.getBoundingClientRect()
+      const popupRect = popup.getBoundingClientRect()
+      // Should open directly adjacent to the trigger — below it if there's
+      // room, else above (whichever this viewport has space for) — not
+      // offset by however far the filtered ancestor sits from the origin,
+      // which is what a containing-block escape failure would look like.
+      const opensBelow = Math.abs(popupRect.top - (triggerRect.bottom + 8)) <= 2
+      const opensAbove = Math.abs(popupRect.bottom - (triggerRect.top - 8)) <= 2
+      expect(opensBelow || opensAbove, `popup wasn't adjacent to trigger: ${JSON.stringify({ triggerRect, popupRect })}`).to.be.true
+      expect(popupRect.left).to.be.closeTo(triggerRect.left, 2)
+    })
   })
 
   describe('closing on scroll/resize', () => {
