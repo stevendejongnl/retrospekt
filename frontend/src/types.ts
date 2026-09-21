@@ -153,6 +153,13 @@ export interface SentryHealth {
   error: string | null
 }
 
+export interface GifResult {
+  id: string
+  preview_url: string
+  url: string
+  provider: 'giphy' | 'tenor'
+}
+
 export interface Feedback {
   id: string
   rating: number

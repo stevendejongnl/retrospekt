@@ -1,4 +1,4 @@
-import type { AdminStats, Card, CreateSessionResponse, Feedback, Note, PublicStats, Session } from './types'
+import type { AdminStats, Card, CreateSessionResponse, Feedback, GifResult, Note, PublicStats, Session } from './types'
 import { tagManager } from './analytics'
 
 const BASE = '/api/v1'
@@ -223,6 +223,11 @@ export function createApi(fetchFn: typeof fetch = fetch) {
       }, { category: 'Feedback', action: 'submit', name: String(rating), value: rating }),
 
     getPublicStats: () => request<PublicStats>('/stats'),
+
+    getGifsStatus: () => request<{ enabled: boolean }>('/gifs/status'),
+
+    searchGifs: (query: string) =>
+      request<GifResult[]>(`/gifs/search?q=${encodeURIComponent(query)}`),
 
     adminAuth: (password: string) =>
       request<{ token: string }>('/stats/auth', {
