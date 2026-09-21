@@ -173,6 +173,47 @@ test.describe('retro-column emoji picker', () => {
   })
 })
 
+test.describe('retro-column gif picker', () => {
+  test('is not shown when the backend has no GIF provider configured', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, BASE as unknown as Record<string, unknown>)
+    await page.route('**/api/v1/gifs/status', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ enabled: false }) }),
+    )
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.getByRole('button', { name: '+ Add a card' }).first().click()
+    await expect(page.locator('gif-picker .trigger')).not.toBeVisible()
+  })
+
+  test('searching and picking a GIF inserts its URL into the textarea', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, BASE as unknown as Record<string, unknown>)
+    await page.route('**/api/v1/gifs/status', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ enabled: true }) }),
+    )
+    await page.route('**/api/v1/gifs/search**', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { id: 'g1', preview_url: 'https://x/small.gif', url: 'https://x/full.gif', provider: 'giphy' },
+        ]),
+      }),
+    )
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.getByRole('button', { name: '+ Add a card' }).first().click()
+
+    await expect(page.locator('gif-picker .trigger')).toBeVisible()
+    await page.locator('gif-picker .trigger').click()
+    await page.locator('gif-picker .search-input').fill('cat')
+    await expect(page.locator('gif-picker .gif-btn')).toBeVisible()
+
+    await page.locator('gif-picker .gif-btn').click()
+    await expect(page.locator('gif-picker .popup')).not.toBeVisible()
+    await expect(page.locator('textarea')).toHaveValue('https://x/full.gif')
+  })
+})
+
 // ── Title editing (facilitator) ───────────────────────────────────────────────
 
 test.describe('retro-column title editing', () => {
