@@ -75,10 +75,22 @@ async def test_invalid_emoji_returns_400(client: AsyncClient):
     session_id, _, card_id = await _published_card(client)
     response = await client.post(
         f"/api/v1/sessions/{session_id}/cards/{card_id}/reactions",
-        json={"emoji": "🦄"},
+        json={"emoji": "not-an-emoji"},
         headers={"X-Participant-Name": "Bob"},
     )
     assert response.status_code == 400
+
+
+async def test_any_standard_emoji_is_accepted_not_just_the_old_curated_subset(
+    client: AsyncClient,
+):
+    session_id, _, card_id = await _published_card(client)
+    response = await client.post(
+        f"/api/v1/sessions/{session_id}/cards/{card_id}/reactions",
+        json={"emoji": "🦄"},
+        headers={"X-Participant-Name": "Bob"},
+    )
+    assert response.status_code == 200
 
 
 async def test_reaction_missing_participant_name_returns_400(client: AsyncClient):
