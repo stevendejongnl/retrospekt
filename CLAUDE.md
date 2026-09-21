@@ -89,7 +89,7 @@ Every mutation (add card, vote, publish, phase change) calls the REST API → ba
 
 ### Auth model
 - **Facilitator**: UUID token in `X-Facilitator-Token` header, stored in localStorage
-- **Participants**: Name in `X-Participant-Name` header
+- **Participants**: Name in `X-Participant-Name` header — this name IS the identity, so anyone typing an in-use name gets full author access (edit/delete/see private drafts) to that name's cards. `session-page.ts` guards the collision at name entry (`submitName`/`saveRename` reject a name already in `session.participants`, case-insensitive) and lets you change your name later by clicking it in the header (`.avatar-name` → `.avatar-name-input`, Enter saves/Escape cancels/blur saves) — but the backend has no matching check (defense-in-depth only, not enforced server-side)
 - No login system — session-scoped tokens only
 
 ### Phase-based visibility (frontend enforced)

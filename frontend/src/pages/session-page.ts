@@ -43,6 +43,10 @@ export class SessionPage extends LitElement {
   @state() private session: Session | null = null
   @state() private participantName = ''
   @state() private nameInput = ''
+  @state() private nameTakenError = false
+  @state() private renamingName = false
+  @state() private renameInput = ''
+  @state() private renameTakenError = false
   @state() private loading = true
   @state() private showNamePrompt = false
   @state() private copied = false
@@ -153,6 +157,7 @@ export class SessionPage extends LitElement {
       flex-shrink: 0;
     }
     .user-chip {
+      position: relative;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -176,6 +181,34 @@ export class SessionPage extends LitElement {
       max-width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .avatar-name:hover {
+      text-decoration: underline;
+    }
+    .avatar-name-input {
+      width: 110px;
+      font-size: 13px;
+      font-family: inherit;
+      padding: 3px 6px;
+      border: 1.5px solid var(--retro-accent);
+      border-radius: 6px;
+      background: var(--retro-bg-surface);
+      color: var(--retro-text-primary);
+    }
+    .avatar-name-input:focus {
+      outline: none;
+    }
+    .rename-error {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      padding: 4px 8px;
+      background: var(--retro-bg-surface);
+      border: 1px solid var(--retro-error);
+      border-radius: 6px;
       white-space: nowrap;
     }
     .help-btn {
@@ -380,6 +413,12 @@ export class SessionPage extends LitElement {
     .name-card input::placeholder {
       color: var(--retro-text-disabled);
     }
+    .name-error {
+      margin: 8px 0 0;
+      font-size: 13px;
+      color: var(--retro-error);
+      text-align: left;
+    }
     .name-card button {
       width: 100%;
       margin-top: 10px;
@@ -468,6 +507,14 @@ export class SessionPage extends LitElement {
     const name = this.nameInput.trim()
     if (!name) return
 
+    const taken = this.session?.participants.some(
+      (p) => p.name.toLowerCase() === name.toLowerCase(),
+    )
+    if (taken) {
+      this.nameTakenError = true
+      return
+    }
+
     storage.setName(this.sessionId, name)
     this.participantName = name
     /* istanbul ignore next */
@@ -475,6 +522,43 @@ export class SessionPage extends LitElement {
     /* istanbul ignore next */
     Sentry.setTag('session_id', this.sessionId)
     this.showNamePrompt = false
+    await api.joinSession(this.sessionId, name)
+    if (this.session) this.saveToHistory(this.session, name)
+  }
+
+  private startRename(): void {
+    this.renameInput = this.participantName
+    this.renameTakenError = false
+    this.renamingName = true
+  }
+
+  private cancelRename(): void {
+    this.renamingName = false
+    this.renameTakenError = false
+  }
+
+  private async saveRename(): Promise<void> {
+    const name = this.renameInput.trim()
+    if (!name || name === this.participantName) {
+      this.cancelRename()
+      return
+    }
+
+    const taken = this.session?.participants.some(
+      (p) => p.name.toLowerCase() === name.toLowerCase() &&
+        p.name.toLowerCase() !== this.participantName.toLowerCase(),
+    )
+    if (taken) {
+      this.renameTakenError = true
+      return
+    }
+
+    storage.setName(this.sessionId, name)
+    this.participantName = name
+    /* istanbul ignore next */
+    Sentry.setUser({ username: name })
+    this.renamingName = false
+    this.renameTakenError = false
     await api.joinSession(this.sessionId, name)
     if (this.session) this.saveToHistory(this.session, name)
   }
@@ -646,12 +730,16 @@ export class SessionPage extends LitElement {
                   .value=${this.nameInput}
                   @input=${(e: Event) => {
                     this.nameInput = (e.target as HTMLInputElement).value
+                    this.nameTakenError = false
                   }}
                   @keydown=${(e: KeyboardEvent) => {
                     if (e.key === 'Enter') void this.submitName()
                   }}
                   autofocus
                 />
+                ${this.nameTakenError
+                  ? html`<p class="name-error">That name is already taken in this retro — try another.</p>`
+                  : ''}
                 <button @click=${this.submitName} ?disabled=${!this.nameInput.trim()}>
                   Join session →
                 </button>
@@ -683,8 +771,34 @@ export class SessionPage extends LitElement {
           ? html`
               <div class="user-chip">
                 <div class="avatar" style="background:${this.myColor}">${this.participantName[0].toUpperCase()}</div>
-                <span class="avatar-name">${this.participantName}</span>
+                ${this.renamingName
+                  ? html`
+                      <input
+                        class="avatar-name-input"
+                        .value=${this.renameInput}
+                        @input=${(e: Event) => {
+                          this.renameInput = (e.target as HTMLInputElement).value
+                          this.renameTakenError = false
+                        }}
+                        @keydown=${(e: KeyboardEvent) => {
+                          if (e.key === 'Enter') void this.saveRename()
+                          if (e.key === 'Escape') this.cancelRename()
+                        }}
+                        @blur=${() => { if (this.renamingName) void this.saveRename() }}
+                        autofocus
+                      />
+                    `
+                  : html`
+                      <span
+                        class="avatar-name"
+                        title="Click to change your name"
+                        @click=${this.startRename}
+                      >${this.participantName}</span>
+                    `}
                 <button class="help-btn" @click=${() => (this.showHelp = true)}>?</button>
+                ${this.renameTakenError
+                  ? html`<p class="name-error rename-error">That name is already taken in this retro.</p>`
+                  : ''}
               </div>
             `
           : ''}
