@@ -1,3 +1,13 @@
+## [1.44.1](https://github.com/stevendejongnl/retrospekt/compare/v1.44.0...v1.44.1) (2026-09-21)
+
+### Bug Fixes
+
+* **pickers:** promote popup to the top layer, escaping filtered ancestors ([21eb6ee](https://github.com/stevendejongnl/retrospekt/commit/21eb6eef4005aa86aa6e698656f0ebb35bd39371))
+
+### Documentation
+
+* document the containing-block root cause and top-layer fix ([7d75eb5](https://github.com/stevendejongnl/retrospekt/commit/7d75eb52ec8dd911a8f2b596f8578551f616e025))
+
 ## [1.44.0](https://github.com/stevendejongnl/retrospekt/compare/v1.43.0...v1.44.0) (2026-09-21)
 
 ### Features
