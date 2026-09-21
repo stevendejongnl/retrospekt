@@ -125,6 +125,79 @@ test.describe('session-page name prompt', () => {
     await page.getByPlaceholder('Your name').press('Enter')
     await expect(page.locator('.overlay')).toBeVisible()
   })
+
+  test('submitting a name already taken by another participant shows an error and does not join', async ({ page }) => {
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.getByPlaceholder('Your name').fill('Alice')
+    await page.getByRole('button', { name: /Join session/ }).click()
+    await expect(page.locator('.overlay')).toBeVisible()
+    await expect(page.getByText(/already taken/i)).toBeVisible()
+  })
+
+  test('the taken-name check is case-insensitive', async ({ page }) => {
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.getByPlaceholder('Your name').fill('alice')
+    await page.getByRole('button', { name: /Join session/ }).click()
+    await expect(page.getByText(/already taken/i)).toBeVisible()
+  })
+
+  test('editing the name after a taken-name error clears the error', async ({ page }) => {
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.getByPlaceholder('Your name').fill('Alice')
+    await page.getByRole('button', { name: /Join session/ }).click()
+    await expect(page.getByText(/already taken/i)).toBeVisible()
+    await page.getByPlaceholder('Your name').fill('Alice2')
+    await expect(page.getByText(/already taken/i)).not.toBeVisible()
+  })
+})
+
+// ── Rename ───────────────────────────────────────────────────────────────────
+
+test.describe('session-page rename', () => {
+  const TWO_PARTICIPANTS = {
+    ...BASE,
+    participants: [
+      { name: 'Alice', joined_at: '2026-01-01T00:00:00Z' },
+      { name: 'Bob', joined_at: '2026-01-01T00:00:00Z' },
+    ],
+  }
+
+  test.beforeEach(async ({ page }) => {
+    await mockApi(page, TWO_PARTICIPANTS)
+    await withName(page, 'Alice')
+  })
+
+  test('clicking your name turns it into an editable input', async ({ page }) => {
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.locator('.avatar-name').click()
+    await expect(page.locator('.avatar-name-input')).toBeVisible()
+    await expect(page.locator('.avatar-name-input')).toHaveValue('Alice')
+  })
+
+  test('renaming to a free name updates the displayed name', async ({ page }) => {
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.locator('.avatar-name').click()
+    await page.locator('.avatar-name-input').fill('Alicia')
+    await page.locator('.avatar-name-input').press('Enter')
+    await expect(page.locator('.avatar-name')).toHaveText('Alicia')
+  })
+
+  test('renaming to a name already taken by another participant shows an error and keeps editing', async ({ page }) => {
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.locator('.avatar-name').click()
+    await page.locator('.avatar-name-input').fill('Bob')
+    await page.locator('.avatar-name-input').press('Enter')
+    await expect(page.getByText(/already taken/i)).toBeVisible()
+    await expect(page.locator('.avatar-name-input')).toBeVisible()
+  })
+
+  test('pressing Escape cancels the rename without saving', async ({ page }) => {
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.locator('.avatar-name').click()
+    await page.locator('.avatar-name-input').fill('Something Else')
+    await page.locator('.avatar-name-input').press('Escape')
+    await expect(page.locator('.avatar-name')).toHaveText('Alice')
+  })
 })
 
 // ── Board: participant view ───────────────────────────────────────────────────
