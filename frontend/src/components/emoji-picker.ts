@@ -2,6 +2,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import { EMOJI_GROUPS, type EmojiGroup } from '../emoji-data'
+import { computePopupPosition } from '../popup-position'
 import { bacon } from '../theme'
 
 /**
@@ -18,9 +19,12 @@ export class EmojiPicker extends LitElement {
 
   @state() private open = false
   @state() private search = ''
+  @state() private popupStyle = ''
 
   private _outsideClickListener!: (e: MouseEvent) => void
   private _escListener!: (e: KeyboardEvent) => void
+  private _scrollListener!: (e: Event) => void
+  private _resizeListener!: () => void
 
   static styles = css`
     :host {
@@ -50,9 +54,14 @@ export class EmojiPicker extends LitElement {
       color: var(--retro-accent);
     }
     .popup {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
+      /* Positioned via inline style (position() below), computed from the
+         trigger's real screen position and clamped to the viewport — an
+         anchored position:absolute here previously escaped off-screen
+         (above the viewport, or past the right edge) depending on where
+         the trigger sat on the page, which grew the document's scrollable
+         area and produced spurious scrollbars. */
+      position: fixed;
+      box-sizing: border-box;
       width: 260px;
       max-height: 260px;
       overflow-y: auto;
@@ -123,12 +132,22 @@ export class EmojiPicker extends LitElement {
       if (this.open && e.key === 'Escape') this.close()
     }
     document.addEventListener('keydown', this._escListener)
+    // A scroll anywhere (the page, or a scrollable ancestor like .columns)
+    // can move the trigger without moving us — close rather than show a
+    // stale position. capture:true so this fires even for non-bubbling
+    // scroll on an inner container.
+    this._scrollListener = () => { if (this.open) this.close() }
+    document.addEventListener('scroll', this._scrollListener, true)
+    this._resizeListener = () => { if (this.open) this.positionPopup() }
+    window.addEventListener('resize', this._resizeListener)
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback()
     document.removeEventListener('click', this._outsideClickListener)
     document.removeEventListener('keydown', this._escListener)
+    document.removeEventListener('scroll', this._scrollListener, true)
+    window.removeEventListener('resize', this._resizeListener)
   }
 
   private close(): void {
@@ -136,9 +155,30 @@ export class EmojiPicker extends LitElement {
     this.search = ''
   }
 
+  private async toggleOpen(): Promise<void> {
+    this.open = !this.open
+    if (this.open) {
+      await this.updateComplete
+      this.positionPopup()
+    }
+  }
+
   private pick(emoji: string): void {
     this.dispatchEvent(new CustomEvent('pick-emoji', { detail: { emoji }, bubbles: true, composed: true }))
     this.close()
+  }
+
+  private positionPopup(): void {
+    const trigger = this.shadowRoot?.querySelector('.trigger') as HTMLElement | null
+    if (!trigger) return
+    const { top, left } = computePopupPosition(
+      trigger.getBoundingClientRect(),
+      window.innerWidth,
+      window.innerHeight,
+      260,
+      260,
+    )
+    this.popupStyle = `top:${top}px; left:${left}px;`
   }
 
   private get filteredGroups(): EmojiGroup[] {
@@ -153,14 +193,14 @@ export class EmojiPicker extends LitElement {
     return html`
       <button
         class="trigger"
-        @click=${() => { this.open = !this.open }}
+        @click=${() => void this.toggleOpen()}
         title=${this.triggerTitle}
         aria-label=${this.triggerTitle}
         aria-haspopup="true"
         aria-expanded=${this.open}
       >${this.triggerLabel}</button>
       ${this.open ? html`
-        <div class="popup">
+        <div class="popup" style=${this.popupStyle}>
           <input
             class="search-input"
             type="text"
