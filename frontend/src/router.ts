@@ -13,6 +13,7 @@ const routes: Route[] = [
   { path: '/admin', component: 'admin-page', title: 'Admin — Retrospekt' },
   { path: '/feedback', component: 'feedback-page', title: 'Feedback — Retrospekt' },
   { path: '/changelog', component: 'changelog-page', title: 'Changelog — Retrospekt' },
+  { path: '/privacy', component: 'privacy-page', title: 'Privacy — Retrospekt' },
   { path: '*', component: 'not-found-page', title: 'Not Found — Retrospekt' },
 ]
 

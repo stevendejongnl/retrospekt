@@ -38,6 +38,13 @@ describe('Router', () => {
     expect(el.getAttribute('session-id')).toBe('abc123')
   })
 
+  it('routes /privacy to <privacy-page>', () => {
+    router.navigate('/privacy')
+    const app = document.getElementById('app')!
+    expect(app.children[0].tagName.toLowerCase()).toBe('privacy-page')
+    expect(document.title).toBe('Privacy — Retrospekt')
+  })
+
   it('routes unknown paths to <not-found-page> (wildcard fallback)', () => {
     router.navigate('/this/does/not/exist')
     const app = document.getElementById('app')!
