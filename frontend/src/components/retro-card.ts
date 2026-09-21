@@ -4,6 +4,8 @@ import { customElement, property, state } from 'lit/decorators.js'
 import type { Card } from '../types'
 import { faIconStyles, iconThumbsUp } from '../icons'
 import { bacon } from '../theme'
+import { renderCardText } from '../linkify'
+import '../components/emoji-picker'
 
 // Module-level fallback for Firefox, which clears dataTransfer between events
 let _draggedCardId: string | null = null
@@ -12,8 +14,6 @@ let _draggedCardColumn: string | null = null
 export function getDraggedCardInfo(): { id: string | null; column: string | null } {
   return { id: _draggedCardId, column: _draggedCardColumn }
 }
-
-const REACTION_EMOJI = ['❤️', '😂', '😮', '🎉', '🤔', '👀', '🥓']
 
 @customElement('retro-card')
 export class RetroCard extends LitElement {
@@ -84,6 +84,16 @@ export class RetroCard extends LitElement {
     }
     .card-text.editable:hover {
       text-decoration: underline dotted var(--retro-text-muted);
+    }
+    .card-text a {
+      color: var(--retro-accent);
+    }
+    .card-text-image {
+      display: block;
+      max-width: 100%;
+      max-height: 220px;
+      border-radius: 8px;
+      margin-top: 6px;
     }
     .card-edit-input {
       width: 100%;
@@ -297,14 +307,15 @@ export class RetroCard extends LitElement {
   }
 
   private get reactionGroups(): { emoji: string; displayEmoji: string; count: number; myReaction: boolean }[] {
-    return REACTION_EMOJI.map((emoji) => ({
+    const distinctEmoji = [...new Set(this.card.reactions.map((r) => r.emoji))]
+    return distinctEmoji.map((emoji) => ({
       emoji,
       displayEmoji: emoji === '🥓' ? bacon() : emoji,
       count: this.card.reactions.filter((r) => r.emoji === emoji).length,
       myReaction: this.card.reactions.some(
         (r) => r.emoji === emoji && r.participant_name === this.participantName,
       ),
-    })).filter((g) => this.canReact || g.count > 0)
+    }))
   }
 
   private onVoteClick(): void {
@@ -328,8 +339,10 @@ export class RetroCard extends LitElement {
     )
   }
 
-  private onTextClick(): void {
+  private onTextClick(e: Event): void {
     if (!this.canEdit) return
+    // A link/image inside the text should open, not trigger edit mode.
+    if ((e.target as HTMLElement).closest('a')) return
     this.editText = this.card.text
     this.editing = true
     void this.updateComplete.then(() => {
@@ -389,6 +402,14 @@ export class RetroCard extends LitElement {
         composed: true,
       }),
     )
+  }
+
+  private onPickEmoji(e: CustomEvent<{ emoji: string }>): void {
+    const { emoji } = e.detail
+    const myReaction = this.card.reactions.some(
+      (r) => r.emoji === emoji && r.participant_name === this.participantName,
+    )
+    this.onReactClick(emoji, myReaction)
   }
 
   private onAssignChange(e: Event): void {
@@ -471,26 +492,26 @@ export class RetroCard extends LitElement {
           : html`<p
               class="card-text ${this.canEdit ? 'editable' : ''}"
               @click=${this.onTextClick}
-            >${card.text}</p>`}
+            >${renderCardText(card.text)}</p>`}
 
-        ${this.reactionsEnabled && groups.length > 0
+        ${this.reactionsEnabled && (groups.length > 0 || this.canReact)
         ? html`
               <div class="reactions-row">
                 ${groups.map(
           (g) => html`
                     <button
                       class="reaction-btn ${g.myReaction ? 'reacted' : ''}"
-                      style="${this.canReact && g.count === 0 ? 'opacity:0.35' : ''}"
                       ?disabled=${!this.canReact}
                       @click=${() => { if (this.canReact) this.onReactClick(g.emoji, g.myReaction) }}
                       title="${g.displayEmoji}"
                     >
-                      ${g.displayEmoji}${g.count > 0
-              ? html`<span class="reaction-count">${g.count}</span>`
-              : ''}
+                      ${g.displayEmoji}<span class="reaction-count">${g.count}</span>
                     </button>
                   `,
         )}
+                ${this.canReact
+          ? html`<emoji-picker @pick-emoji=${this.onPickEmoji}></emoji-picker>`
+          : ''}
               </div>
             `
         : ''}

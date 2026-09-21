@@ -112,6 +112,40 @@ function makeCard(overrides: Record<string, unknown> = {}) {
   }
 }
 
+// ── Card text: links and image embeds ──────────────────────────────────────────
+
+test.describe('retro-card text rendering', () => {
+  test('a plain https link in card text is rendered as a clickable link', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ text: 'see https://example.com/notes for background' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    const link = page.locator('.card-text a')
+    await expect(link).toHaveAttribute('href', 'https://example.com/notes')
+    await expect(link).toHaveAttribute('target', '_blank')
+  })
+
+  test('an image URL in card text is embedded as an image, not a link', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ text: 'https://example.com/screenshot.png' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('.card-text img')).toHaveAttribute('src', 'https://example.com/screenshot.png')
+    await expect(page.locator('.card-text a')).toHaveCount(0)
+  })
+
+  test('plain text with no links renders as before', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ text: 'Great teamwork' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('.card-text')).toHaveText('Great teamwork')
+  })
+})
+
 // ── Vote button ───────────────────────────────────────────────────────────────
 
 test.describe('retro-card vote button', () => {
@@ -238,25 +272,46 @@ test.describe('retro-card delete button', () => {
 // ── Reactions row ─────────────────────────────────────────────────────────────
 
 test.describe('retro-card reactions', () => {
-  test('reactions row is shown for published card in discussing phase', async ({ page }) => {
+  test('reactions row is shown for published card in discussing phase, with an add-reaction control and no buttons yet', async ({ page }) => {
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Bob', published: true })],
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.reactions-row')).toBeVisible()
-    await expect(page.locator('.reaction-btn')).toHaveCount(7)
+    await expect(page.locator('.reaction-btn')).toHaveCount(0)
+    await expect(page.locator('emoji-picker .trigger')).toBeVisible()
   })
 
-  test('clicking a reaction button calls POST /reactions', async ({ page }) => {
+  test('existing reactions render as buttons with their emoji and count', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({
+        author_name: 'Bob',
+        published: true,
+        reactions: [
+          { emoji: '❤️', participant_name: 'Bob' },
+          { emoji: '❤️', participant_name: 'Carol' },
+        ],
+      })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('.reaction-btn')).toHaveCount(1)
+    await expect(page.locator('.reaction-count')).toHaveText('2')
+  })
+
+  test('picking an emoji from the picker calls POST /reactions with that emoji', async ({ page }) => {
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Bob', published: true })],
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('emoji-picker .trigger').click()
+    await page.locator('emoji-picker .search-input').fill('unicorn')
     const req = page.waitForRequest(r => r.url().includes('/reactions') && r.method() === 'POST')
-    await page.locator('.reaction-btn').first().click()
-    await req
+    await page.locator('emoji-picker .emoji-btn').click()
+    const request = await req
+    expect(request.postDataJSON()).toEqual({ emoji: '🦄' })
   })
 
   test('reacted button has .reacted class', async ({ page }) => {
@@ -396,8 +451,10 @@ test.describe('retro-card reactions empty handling', () => {
       cards: [makeCard({ author_name: 'Bob', published: true, reactions: [] })],
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
-    // canReact=true (discussing, published, not own card) — all 7 buttons shown with count=0
-    await expect(page.locator('.reaction-btn')).toHaveCount(7)
+    // canReact=true (discussing, published, not own card) — row shown via the
+    // add-reaction picker even though there are no reaction buttons yet
+    await expect(page.locator('.reactions-row')).toBeVisible()
+    await expect(page.locator('.reaction-btn')).toHaveCount(0)
   })
 })
 
