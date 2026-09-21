@@ -479,8 +479,6 @@ export class SessionPage extends LitElement {
       if (storedName) {
         this.participantName = storedName
         /* istanbul ignore next */
-        Sentry.setUser({ username: storedName })
-        /* istanbul ignore next */
         Sentry.setTag('session_id', this.sessionId)
         await api.joinSession(this.sessionId, storedName)
         this.saveToHistory(session, storedName)
@@ -518,8 +516,6 @@ export class SessionPage extends LitElement {
     storage.setName(this.sessionId, name)
     this.participantName = name
     /* istanbul ignore next */
-    Sentry.setUser({ username: name })
-    /* istanbul ignore next */
     Sentry.setTag('session_id', this.sessionId)
     this.showNamePrompt = false
     await api.joinSession(this.sessionId, name)
@@ -555,8 +551,6 @@ export class SessionPage extends LitElement {
 
     storage.setName(this.sessionId, name)
     this.participantName = name
-    /* istanbul ignore next */
-    Sentry.setUser({ username: name })
     this.renamingName = false
     this.renameTakenError = false
     await api.joinSession(this.sessionId, name)

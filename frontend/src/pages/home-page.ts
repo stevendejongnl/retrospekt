@@ -545,6 +545,8 @@ export class HomePage extends LitElement {
         <p class="footer">
           No account required &middot; Share the URL to collaborate &middot;
           <a href="https://github.com/stevendejongnl/retrospekt" target="_blank" rel="noopener noreferrer">GitHub</a>
+          &middot;
+          <a href="/privacy" @click=${(e: Event) => { e.preventDefault(); window.router.navigate('/privacy') }}>Privacy</a>
           &middot; v${__APP_VERSION__}
         </p>
       </div>
