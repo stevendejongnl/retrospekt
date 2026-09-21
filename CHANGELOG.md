@@ -1,3 +1,28 @@
+## [1.42.0](https://github.com/stevendejongnl/retrospekt/compare/v1.41.0...v1.42.0) (2026-09-21)
+
+### Features
+
+* **cards:** recognize http(s) links and image URLs in card text ([1ff42fe](https://github.com/stevendejongnl/retrospekt/commit/1ff42feace15d91fb5aca06bba75d4b3f85f109a))
+* **cards:** wire up link/image rendering and the full-emoji reaction picker ([9d850f2](https://github.com/stevendejongnl/retrospekt/commit/9d850f2d0b75d45e4def02b7b2447476bf351b6f))
+* **emoji-picker:** searchable popup over the full standard emoji set ([4dc384b](https://github.com/stevendejongnl/retrospekt/commit/4dc384b9b234543e7ebe7256e616447bd2abedac))
+* **privacy:** add a /privacy page summarizing data collection ([8285e0c](https://github.com/stevendejongnl/retrospekt/commit/8285e0c1fa4878beabfbc6b94ff94f055599191f))
+* **privacy:** add a non-blocking analytics consent banner ([98f260a](https://github.com/stevendejongnl/retrospekt/commit/98f260ad9da22e5f5635b6f0d0430975893a0a68))
+* **reactions:** accept the full standard emoji set, not a curated 7 ([75fc28e](https://github.com/stevendejongnl/retrospekt/commit/75fc28e64957c6e1b51f58cd520f048f21eba7ef))
+* **storage:** persist an analytics consent choice ([e225e37](https://github.com/stevendejongnl/retrospekt/commit/e225e37283b1c0e678789239a7e1577e7db6367e))
+
+### Bug Fixes
+
+* **privacy:** don't track before consent, don't send names to Sentry ([01d0263](https://github.com/stevendejongnl/retrospekt/commit/01d02636b3d02bfc2a7a0d446a7c186b92aed5c1))
+* **session:** guard against duplicate participant names in a session ([2359f7e](https://github.com/stevendejongnl/retrospekt/commit/2359f7e83b6644b5d4484baf8c7cf072fd329005))
+
+### Code Refactoring
+
+* **cards:** replace the card-text emoji inserter with <emoji-picker> ([f538d0d](https://github.com/stevendejongnl/retrospekt/commit/f538d0d606da60e94393685947dd1a026ab1e1d9))
+
+### Documentation
+
+* document name-collision guard, emoji picker, links, and privacy ([44b0d00](https://github.com/stevendejongnl/retrospekt/commit/44b0d00d5b0505f1b8c43ef56cadab51b5051289))
+
 ## [1.41.0](https://github.com/stevendejongnl/retrospekt/compare/v1.40.0...v1.41.0) (2026-09-14)
 
 ### Features
