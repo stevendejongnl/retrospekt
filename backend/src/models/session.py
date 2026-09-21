@@ -1,10 +1,18 @@
+import json
 from datetime import UTC, datetime
 from enum import StrEnum
+from pathlib import Path
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
 
-REACTION_EMOJI = frozenset(["❤️", "😂", "😮", "🎉", "🤔", "👀", "🥓"])
+# Full standard Unicode emoji set (unicode.org, via the `unicode-emoji-json` npm
+# package — see frontend/package.json) so reactions aren't limited to a curated
+# handful. Regenerate by copying frontend/node_modules/unicode-emoji-json/data-ordered-emoji.json
+# over this file if the frontend dependency is upgraded to a newer Unicode revision.
+REACTION_EMOJI: frozenset[str] = frozenset(
+    json.loads((Path(__file__).parent.parent / "data" / "emoji.json").read_text())
+)
 
 
 class SessionPhase(StrEnum):
