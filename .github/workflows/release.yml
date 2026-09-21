@@ -137,10 +137,14 @@ jobs:
 
       - name: Mark fixed feedback (Fixes-Feedback commit trailers)
         if: env.SHOULD_RELEASE == 'true'
+        # Best-effort: this hitting a transient failure (it has, twice —
+        # connecting to Mongo directly from a GitHub-hosted runner's
+        # ephemeral IP kept failing TLS against Atlas) must never block
+        # the deploy that follows.
+        continue-on-error: true
         env:
-          MONGO_PRODUCTION_USERNAME: ${{ secrets.MONGO_PRODUCTION_USERNAME }}
-          MONGO_PRODUCTION_PASSWORD: ${{ secrets.MONGO_PRODUCTION_PASSWORD }}
-          MONGO_PRODUCTION_URL: ${{ secrets.MONGO_PRODUCTION_URL }}
+          RETROSPEKT_API_URL: https://retrospekt.madebysteven.nl
+          RETROSPEKT_ADMIN_PASSWORD: ${{ secrets.RETROSPEKT_ADMIN_PASSWORD }}
         run: |
           cd backend
           uv run python scripts/mark_feedback_fixed.py "$PREV_TAG" "$NEXT_VERSION"
