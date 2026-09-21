@@ -115,7 +115,10 @@ function makeCard(overrides: Record<string, unknown> = {}) {
 // ── Card text: links and image embeds ──────────────────────────────────────────
 
 test.describe('retro-card text rendering', () => {
-  test('a plain https link in card text is rendered as a clickable link', async ({ page }) => {
+  test('a URL that fails to load as an image falls back to a clickable link', async ({ page }) => {
+    await page.route('https://example.com/notes', (route) =>
+      route.fulfill({ status: 404, contentType: 'text/plain', body: 'not found' }),
+    )
     const session = {
       ...BASE,
       cards: [makeCard({ text: 'see https://example.com/notes for background' })],
@@ -126,13 +129,22 @@ test.describe('retro-card text rendering', () => {
     await expect(link).toHaveAttribute('target', '_blank')
   })
 
-  test('an image URL in card text is embedded as an image, not a link', async ({ page }) => {
+  test('a URL with no recognizable extension still embeds as an image when it loads as one', async ({ page }) => {
+    // A signed CDN URL / imgur-style short link has no file extension —
+    // detection has to rely on the browser's own decode, not the extension.
+    const onePxPng = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+      'base64',
+    )
+    await page.route('https://example.com/i/abc123', (route) =>
+      route.fulfill({ status: 200, contentType: 'image/png', body: onePxPng }),
+    )
     const session = {
       ...BASE,
-      cards: [makeCard({ text: 'https://example.com/screenshot.png' })],
+      cards: [makeCard({ text: 'https://example.com/i/abc123' })],
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
-    await expect(page.locator('.card-text img')).toHaveAttribute('src', 'https://example.com/screenshot.png')
+    await expect(page.locator('.card-text img')).toHaveAttribute('src', 'https://example.com/i/abc123')
     await expect(page.locator('.card-text a')).toHaveCount(0)
   })
 
@@ -143,6 +155,28 @@ test.describe('retro-card text rendering', () => {
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     await expect(page.locator('.card-text')).toHaveText('Great teamwork')
+  })
+
+  test('renders inline markdown: **bold**, *italic*, and `code`', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ text: 'this is **great**, *really*, run `npm test`' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('.card-text strong')).toHaveText('great')
+    await expect(page.locator('.card-text em')).toHaveText('really')
+    await expect(page.locator('.card-text code')).toHaveText('npm test')
+  })
+
+  test('a markdown link renders with its label, not the raw URL', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ text: 'see [the doc](https://example.com/doc)' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    const link = page.locator('.card-text a')
+    await expect(link).toHaveText('the doc')
+    await expect(link).toHaveAttribute('href', 'https://example.com/doc')
   })
 })
 
