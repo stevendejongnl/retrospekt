@@ -33,7 +33,6 @@ export class GifPicker extends LitElement {
     :host {
       position: relative;
       display: inline-block;
-      z-index: 250;
     }
     .trigger {
       height: 26px;
@@ -52,7 +51,12 @@ export class GifPicker extends LitElement {
       color: var(--retro-accent);
     }
     .popup {
+      /* popover="manual" promotes this to the top layer via showPopover() —
+         see emoji-picker.ts for why plain position:fixed isn't enough
+         (an ancestor with backdrop-filter/filter/transform becomes the
+         containing block for it, even at e.g. blur(0px)). */
       position: fixed;
+      margin: 0;
       box-sizing: border-box;
       width: 260px;
       max-height: 260px;
@@ -64,7 +68,6 @@ export class GifPicker extends LitElement {
       border-radius: 12px;
       box-shadow: var(--retro-glass-shadow);
       padding: 8px;
-      z-index: 200;
     }
     .search-input {
       width: 100%;
@@ -138,6 +141,7 @@ export class GifPicker extends LitElement {
   }
 
   private close(): void {
+    this.shadowRoot?.querySelector<HTMLElement>('.popup')?.hidePopover()
     this.open = false
     this.search = ''
     this.results = []
@@ -148,6 +152,7 @@ export class GifPicker extends LitElement {
     if (this.open) {
       await this.updateComplete
       this.positionPopup()
+      this.shadowRoot?.querySelector<HTMLElement>('.popup')?.showPopover()
     }
   }
 
@@ -203,7 +208,7 @@ export class GifPicker extends LitElement {
         aria-expanded=${this.open}
       >GIF</button>
       ${this.open ? html`
-        <div class="popup" style=${this.popupStyle}>
+        <div class="popup" popover="manual" style=${this.popupStyle}>
           <input
             class="search-input"
             type="text"

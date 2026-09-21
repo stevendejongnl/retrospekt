@@ -30,10 +30,6 @@ export class EmojiPicker extends LitElement {
     :host {
       position: relative;
       display: inline-block;
-      /* Establish our own stacking context so the popup's z-index is
-         compared against page-level siblings (e.g. <main>), not just
-         swallowed by an unpositioned ancestor chain. */
-      z-index: 250;
     }
     .trigger {
       width: 26px;
@@ -54,13 +50,20 @@ export class EmojiPicker extends LitElement {
       color: var(--retro-accent);
     }
     .popup {
-      /* Positioned via inline style (position() below), computed from the
-         trigger's real screen position and clamped to the viewport — an
-         anchored position:absolute here previously escaped off-screen
-         (above the viewport, or past the right edge) depending on where
-         the trigger sat on the page, which grew the document's scrollable
-         area and produced spurious scrollbars. */
+      /* popover="manual" promotes this to the top layer via showPopover(),
+         which is what actually makes position:fixed viewport-relative here.
+         Any ancestor with backdrop-filter/filter/transform/will-change
+         (e.g. .column's frosted-glass background in retro-column.ts) turns
+         itself into the containing block for a plain position:fixed
+         descendant per spec — even at blur(0px) — so top/left computed
+         against window.innerWidth/innerHeight landed hundreds of pixels
+         off and let the popup spill outside that ancestor's (overflow:
+         visible) box, inflating the scrollable area into spurious
+         scrollbars. The top layer is exempt from all of that, by design.
+         Positioned via inline style, computed from the trigger's real
+         screen position and clamped to the true viewport. */
       position: fixed;
+      margin: 0;
       box-sizing: border-box;
       width: 260px;
       max-height: 260px;
@@ -72,7 +75,6 @@ export class EmojiPicker extends LitElement {
       border-radius: 12px;
       box-shadow: var(--retro-glass-shadow);
       padding: 8px;
-      z-index: 200;
     }
     .search-input {
       width: 100%;
@@ -151,6 +153,7 @@ export class EmojiPicker extends LitElement {
   }
 
   private close(): void {
+    this.shadowRoot?.querySelector<HTMLElement>('.popup')?.hidePopover()
     this.open = false
     this.search = ''
   }
@@ -160,6 +163,7 @@ export class EmojiPicker extends LitElement {
     if (this.open) {
       await this.updateComplete
       this.positionPopup()
+      this.shadowRoot?.querySelector<HTMLElement>('.popup')?.showPopover()
     }
   }
 
@@ -200,7 +204,7 @@ export class EmojiPicker extends LitElement {
         aria-expanded=${this.open}
       >${this.triggerLabel}</button>
       ${this.open ? html`
-        <div class="popup" style=${this.popupStyle}>
+        <div class="popup" popover="manual" style=${this.popupStyle}>
           <input
             class="search-input"
             type="text"
