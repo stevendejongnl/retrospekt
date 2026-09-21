@@ -135,8 +135,8 @@ test.describe('retro-column emoji picker', () => {
     await page.goto(`/session/${SESSION_ID}`)
 
     await page.getByRole('button', { name: '+ Add a card' }).first().click()
-    await page.locator('.emoji-toggle').click()
-    await expect(page.locator('.emoji-popover')).toBeVisible()
+    await page.locator('emoji-picker .trigger').click()
+    await expect(page.locator('emoji-picker .popup')).toBeVisible()
   })
 
   test('clicking an emoji item closes the popover and inserts emoji into textarea', async ({ page }) => {
@@ -145,11 +145,11 @@ test.describe('retro-column emoji picker', () => {
     await page.goto(`/session/${SESSION_ID}`)
 
     await page.getByRole('button', { name: '+ Add a card' }).first().click()
-    await page.locator('.emoji-toggle').click()
-    await expect(page.locator('.emoji-popover')).toBeVisible()
+    await page.locator('emoji-picker .trigger').click()
+    await expect(page.locator('emoji-picker .popup')).toBeVisible()
 
-    await page.locator('.emoji-item').first().click()
-    await expect(page.locator('.emoji-popover')).not.toBeVisible()
+    await page.locator('emoji-picker .emoji-btn').first().click()
+    await expect(page.locator('emoji-picker .popup')).not.toBeVisible()
     // Textarea should have the emoji inserted
     const val = await page.locator('textarea').inputValue()
     expect(val.length).toBeGreaterThan(0)
@@ -161,15 +161,15 @@ test.describe('retro-column emoji picker', () => {
     await page.goto(`/session/${SESSION_ID}`)
 
     await page.getByRole('button', { name: '+ Add a card' }).first().click()
-    await page.locator('.emoji-toggle').click()
-    await expect(page.locator('.emoji-popover')).toBeVisible()
+    await page.locator('emoji-picker .trigger').click()
+    await expect(page.locator('emoji-picker .popup')).toBeVisible()
 
     // Click on the page header (outside the column)
     await page.locator('.brand').click()
     // After navigating to home or losing focus, popover should be gone
     // Navigate back and verify
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('.emoji-popover')).not.toBeVisible()
+    await expect(page.locator('emoji-picker .popup')).not.toBeVisible()
   })
 })
 

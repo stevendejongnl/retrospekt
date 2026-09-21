@@ -443,8 +443,8 @@ test.describe('retro-column add-card form', () => {
 
   test('emoji toggle in add form opens the emoji popover', async ({ page }) => {
     await page.getByRole('button', { name: '+ Add a card' }).first().click()
-    await page.locator('.emoji-toggle').click()
-    await expect(page.locator('.emoji-popover')).toBeVisible()
+    await page.locator('emoji-picker .trigger').click()
+    await expect(page.locator('emoji-picker .popup')).toBeVisible()
   })
 
   test('"Add card" button submits the new card to the API', async ({ page }) => {
