@@ -188,4 +188,20 @@ describe('RetroStorage', () => {
     })
   })
 
+  describe('getAnalyticsConsent / setAnalyticsConsent', () => {
+    it('returns null when no choice has been made', () => {
+      expect(storage.getAnalyticsConsent()).toBeNull()
+    })
+
+    it('returns "granted" after setAnalyticsConsent("granted")', () => {
+      storage.setAnalyticsConsent('granted')
+      expect(storage.getAnalyticsConsent()).toBe('granted')
+    })
+
+    it('returns "denied" after setAnalyticsConsent("denied")', () => {
+      storage.setAnalyticsConsent('denied')
+      expect(storage.getAnalyticsConsent()).toBe('denied')
+    })
+  })
+
 })
