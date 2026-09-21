@@ -22,11 +22,12 @@ A simple, self-hosted retrospective board.
 - Share a URL to collaborate in real time
 - Column templates: Standard, Mad·Sad·Glad, Start·Stop·Continue, 4Ls
 - Column management: add, rename, and delete columns (facilitator, collecting phase only)
-- Per-session name (remembered in localStorage)
+- Per-session name (remembered in localStorage; rename anytime by clicking it), guarded against picking a name already taken by another participant in the same session
 - Color-coded participants and cards — 10-color palette, consistent per participant
 - Vote on cards (idempotent, one vote per participant per card)
-- Emoji reactions on published cards (6 fixed emoji, toggle per participant)
-- Emoji picker for card text input
+- Emoji reactions on published cards — full standard emoji set via a searchable picker, toggle per participant
+- Emoji picker for card text input — same searchable picker, full standard emoji set
+- Links in card text are clickable; an image URL (png/jpg/gif/webp/avif/svg) is embedded inline — no uploads, only URLs already in the text
 - Card publishing: each author publishes their own cards during discussing phase
 - Action items: assign cards to participants; action items panel for quick review
 - Session timer: facilitator-controlled countdown (30 s – 2 h), with pause/resume/reset
@@ -38,6 +39,7 @@ A simple, self-hosted retrospective board.
 - Session auto-expiry: sessions deleted after 30 days of inactivity
 - Stats dashboard: `/stats` is fully public (session/card/vote/reaction counts, engagement funnel, reaction breakdown, session lifetime, feedback ratings); `/admin` is token-gated (Sentry health + feedback comments)
 - Brand theming: visit `/?theme=cs` to activate an alternate visual theme (stored in localStorage)
+- GDPR-friendly analytics consent: nothing is tracked until you accept a small, non-blocking banner; `/privacy` explains what's collected and why
 
 ## Stack
 
