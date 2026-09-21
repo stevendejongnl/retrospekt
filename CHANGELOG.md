@@ -1,3 +1,13 @@
+## [1.44.0](https://github.com/stevendejongnl/retrospekt/compare/v1.43.0...v1.44.0) (2026-09-21)
+
+### Features
+
+* **ci:** mark_feedback_fixed calls the admin API instead of Mongo directly ([f8591e1](https://github.com/stevendejongnl/retrospekt/commit/f8591e16aaea5dcfec95fffc9bd97e80c67f0218))
+
+### Documentation
+
+* document the admin-API-based feedback auto-fix and its continue-on-error ([ee6fa66](https://github.com/stevendejongnl/retrospekt/commit/ee6fa66868f783173949480d0d60fed20616b010))
+
 ## [1.43.0](https://github.com/stevendejongnl/retrospekt/compare/v1.42.0...v1.43.0) (2026-09-21)
 
 ### Features
