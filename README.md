@@ -27,7 +27,8 @@ A simple, self-hosted retrospective board.
 - Vote on cards (idempotent, one vote per participant per card)
 - Emoji reactions on published cards — full standard emoji set via a searchable picker, toggle per participant
 - Emoji picker for card text input — same searchable picker, full standard emoji set
-- Links in card text are clickable; an image URL (png/jpg/gif/webp/avif/svg) is embedded inline — no uploads, only URLs already in the text
+- Optional GIF picker for card text input (`GIPHY_API_KEY` and/or `TENOR_API_KEY`) — hidden entirely when neither is configured
+- Card text supports inline markdown (**bold**, *italic*, `code`, [links](url)); bare links are clickable, and a bare image URL embeds inline even without a recognizable extension (detected by trying to load it, not by guessing) — no uploads, only URLs already in the text
 - Card publishing: each author publishes their own cards during discussing phase
 - Action items: assign cards to participants; action items panel for quick review
 - Session timer: facilitator-controlled countdown (30 s – 2 h), with pause/resume/reset
@@ -150,4 +151,4 @@ kubectl create secret generic retrospekt-sentry-secret \
 kubectl apply -f kubernetes.yaml
 ```
 
-Backend env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default: 30), `REDIS_URL`, `SENTRY_DSN` (optional), `ADMIN_PASSWORD_HASH` (optional, argon2 hash; empty = admin stats disabled), `SENTRY_AUTH_TOKEN` + `SENTRY_ORG_SLUG` + `SENTRY_PROJECT_SLUG` (optional; all three required to enable Sentry Health in admin stats), `SENTRY_FRONTEND_PROJECT_SLUG` (optional; requires `SENTRY_AUTH_TOKEN` + `SENTRY_ORG_SLUG`; enables Frontend Sentry Health in admin stats), `APPRISE_BASE_URL` + `APPRISE_KEY` (optional; both required to notify on new feedback via a self-hosted [Apprise API](https://github.com/caronc/apprise-api) instance — configure Telegram/Slack/etc. on that instance, not here).
+Backend env vars: `MONGODB_URL`, `MONGODB_DATABASE`, `SESSION_EXPIRY_DAYS` (default: 30), `REDIS_URL`, `SENTRY_DSN` (optional), `ADMIN_PASSWORD_HASH` (optional, argon2 hash; empty = admin stats disabled), `SENTRY_AUTH_TOKEN` + `SENTRY_ORG_SLUG` + `SENTRY_PROJECT_SLUG` (optional; all three required to enable Sentry Health in admin stats), `SENTRY_FRONTEND_PROJECT_SLUG` (optional; requires `SENTRY_AUTH_TOKEN` + `SENTRY_ORG_SLUG`; enables Frontend Sentry Health in admin stats), `APPRISE_BASE_URL` + `APPRISE_KEY` (optional; both required to notify on new feedback via a self-hosted [Apprise API](https://github.com/caronc/apprise-api) instance — configure Telegram/Slack/etc. on that instance, not here), `GIPHY_API_KEY` (optional, [GIPHY Developers](https://developers.giphy.com) free tier) and/or `TENOR_API_KEY` (optional, [Tenor/Google Cloud](https://tenor.com/gifapi) free tier) — either or both enables the GIF picker on card text (searches whichever is configured; both merges results), neither leaves it hidden.
