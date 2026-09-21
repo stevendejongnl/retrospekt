@@ -7,6 +7,7 @@ import { faIconStyles, iconLayerGroup, iconThumbsUp } from '../icons'
 import './retro-card'
 import { getDraggedCardInfo } from './retro-card'
 import './emoji-picker'
+import './gif-picker'
 
 type CardItem =
   | { kind: 'single'; card: Card }
@@ -752,6 +753,9 @@ export class RetroColumn extends LitElement {
                             trigger-title="Insert emoji"
                             @pick-emoji=${(e: CustomEvent<{ emoji: string }>) => this.insertEmoji(e.detail.emoji)}
                           ></emoji-picker>
+                          <gif-picker
+                            @pick-gif=${(e: CustomEvent<{ url: string }>) => this.insertEmoji(e.detail.url)}
+                          ></gif-picker>
                         </div>
                         <div class="form-row">
                           <button

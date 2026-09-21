@@ -94,6 +94,18 @@ spec:
                   name: retrospekt-apprise-secret
                   key: key
                   optional: true
+            - name: GIPHY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: retrospekt-gif-secret
+                  key: giphy-api-key
+                  optional: true
+            - name: TENOR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: retrospekt-gif-secret
+                  key: tenor-api-key
+                  optional: true
           resources:
             requests:
               memory: "128Mi"
