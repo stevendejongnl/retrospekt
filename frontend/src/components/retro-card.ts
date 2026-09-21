@@ -88,6 +88,13 @@ export class RetroCard extends LitElement {
     .card-text a {
       color: var(--retro-accent);
     }
+    .card-text code {
+      font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+      font-size: 0.9em;
+      background: var(--retro-bg-subtle);
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
     .card-text-image {
       display: block;
       max-width: 100%;
