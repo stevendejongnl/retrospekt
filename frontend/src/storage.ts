@@ -6,7 +6,10 @@
  * Cross-session localStorage contract:
  *   retro_history            — JSON array of SessionHistoryEntry (newest first, max 50)
  *   retro_feedback_v{ver}    — "true" when feedback was submitted for that app version
+ *   retro_analytics_consent  — "granted" | "denied", unset until the consent banner is answered
  */
+
+export type AnalyticsConsent = 'granted' | 'denied'
 
 export interface SessionHistoryEntry {
   id: string
@@ -105,6 +108,14 @@ class RetroStorage {
   /* istanbul ignore next -- tested via Vitest (feedback-dialog.test.ts); not exercised in CT */
   setFeedbackGiven(version: string): void {
     localStorage.setItem(`retro_feedback_v${version}`, 'true')
+  }
+
+  getAnalyticsConsent(): AnalyticsConsent | null {
+    return localStorage.getItem('retro_analytics_consent') as AnalyticsConsent | null
+  }
+
+  setAnalyticsConsent(consent: AnalyticsConsent): void {
+    localStorage.setItem('retro_analytics_consent', consent)
   }
 }
 
