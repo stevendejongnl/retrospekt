@@ -77,4 +77,78 @@ describe('emoji-picker', () => {
     await el.updateComplete
     expect(el.shadowRoot!.querySelector('.popup')).to.not.exist
   })
+
+  describe('positioning', () => {
+    it('is a fixed-position popup anchored just below the trigger by default', async () => {
+      const el = await fixture<EmojiPicker>(html`<emoji-picker></emoji-picker>`)
+      el.shadowRoot!.querySelector<HTMLButtonElement>('.trigger')!.click()
+      await el.updateComplete
+      await el.updateComplete // second cycle: popupStyle is set after positioning runs
+      const popup = el.shadowRoot!.querySelector<HTMLElement>('.popup')!
+      expect(getComputedStyle(popup).position).to.equal('fixed')
+      const triggerRect = el.shadowRoot!.querySelector('.trigger')!.getBoundingClientRect()
+      const popupRect = popup.getBoundingClientRect()
+      expect(popupRect.top).to.be.greaterThan(triggerRect.bottom - 1)
+    })
+
+    it('never overflows the right edge of the viewport, however far right the trigger sits', async () => {
+      const el = await fixture<EmojiPicker>(
+        html`<div style="position:fixed; left:${window.innerWidth - 20}px; top:100px;">
+          <emoji-picker></emoji-picker>
+        </div>`,
+      )
+      const picker = el.querySelector('emoji-picker') as EmojiPicker
+      picker.shadowRoot!.querySelector<HTMLButtonElement>('.trigger')!.click()
+      await picker.updateComplete
+      await picker.updateComplete
+      const popup = picker.shadowRoot!.querySelector<HTMLElement>('.popup')!
+      const popupRect = popup.getBoundingClientRect()
+      expect(popupRect.right).to.be.at.most(window.innerWidth)
+      expect(popupRect.left).to.be.at.least(0)
+    })
+
+    it('opens above the trigger when there is not enough room below', async () => {
+      const el = await fixture<EmojiPicker>(
+        html`<div style="position:fixed; left:20px; top:${window.innerHeight - 30}px;">
+          <emoji-picker></emoji-picker>
+        </div>`,
+      )
+      const picker = el.querySelector('emoji-picker') as EmojiPicker
+      const trigger = picker.shadowRoot!.querySelector<HTMLButtonElement>('.trigger')!
+      trigger.click()
+      await picker.updateComplete
+      await picker.updateComplete
+      const popup = picker.shadowRoot!.querySelector<HTMLElement>('.popup')!
+      const triggerRect = trigger.getBoundingClientRect()
+      const popupRect = popup.getBoundingClientRect()
+      expect(popupRect.bottom).to.be.at.most(triggerRect.top + 1)
+      expect(popupRect.bottom).to.be.at.most(window.innerHeight)
+    })
+  })
+
+  describe('closing on scroll/resize', () => {
+    it('closes the popup on a document scroll event', async () => {
+      const el = await fixture<EmojiPicker>(html`<emoji-picker></emoji-picker>`)
+      el.shadowRoot!.querySelector<HTMLButtonElement>('.trigger')!.click()
+      await el.updateComplete
+      expect(el.shadowRoot!.querySelector('.popup')).to.exist
+      document.dispatchEvent(new Event('scroll'))
+      await el.updateComplete
+      expect(el.shadowRoot!.querySelector('.popup')).to.not.exist
+    })
+
+    it('repositions the popup on window resize while open', async () => {
+      const el = await fixture<EmojiPicker>(html`<emoji-picker></emoji-picker>`)
+      el.shadowRoot!.querySelector<HTMLButtonElement>('.trigger')!.click()
+      await el.updateComplete
+      await el.updateComplete
+      const before = el.shadowRoot!.querySelector<HTMLElement>('.popup')!.getAttribute('style')
+      window.dispatchEvent(new Event('resize'))
+      await el.updateComplete
+      // Still open (resize repositions, doesn't close) and still has a style attribute.
+      expect(el.shadowRoot!.querySelector('.popup')).to.exist
+      expect(el.shadowRoot!.querySelector<HTMLElement>('.popup')!.getAttribute('style')).to.exist
+      expect(before).to.exist
+    })
+  })
 })
