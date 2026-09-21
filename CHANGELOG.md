@@ -1,3 +1,21 @@
+## [1.43.0](https://github.com/stevendejongnl/retrospekt/compare/v1.42.0...v1.43.0) (2026-09-21)
+
+### Features
+
+* **cards:** detect images by trying to load them, add inline markdown ([91f0f8d](https://github.com/stevendejongnl/retrospekt/commit/91f0f8d60bb779e620601cb21c0492536d082fcb))
+* **cards:** wire <gif-picker> into the add-card toolbar ([a4f0182](https://github.com/stevendejongnl/retrospekt/commit/a4f018236c8182dc6ea524b05f282abebce8224f))
+* **gif-picker:** add <gif-picker> — searches GIPHY/Tenor via the backend ([3afa6ca](https://github.com/stevendejongnl/retrospekt/commit/3afa6ca13e66a622b435a774201b94649fe66932))
+* **gif-service:** search GIPHY and/or Tenor, merge whichever is configured ([22a5722](https://github.com/stevendejongnl/retrospekt/commit/22a5722b2ca581a769ae5928c76caf99613316ae))
+* **gifs:** add GET /api/v1/gifs/status and /api/v1/gifs/search ([c0e207b](https://github.com/stevendejongnl/retrospekt/commit/c0e207b651447d1bb9bf18c882f01cbb2a814741))
+
+### Bug Fixes
+
+* **emoji-picker:** keep the popup on-screen regardless of trigger position ([528d1a4](https://github.com/stevendejongnl/retrospekt/commit/528d1a462678d7c9ccc69361bab1a55bd1e70ccc))
+
+### Documentation
+
+* document image detection, markdown, popup positioning, and GIF picker ([4a31948](https://github.com/stevendejongnl/retrospekt/commit/4a319487805d64254414b82b1b4cda3f54cd1ca3))
+
 ## [1.42.0](https://github.com/stevendejongnl/retrospekt/compare/v1.41.0...v1.42.0) (2026-09-21)
 
 ### Features
