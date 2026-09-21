@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     sentry_frontend_project_slug: str = ""
     apprise_base_url: str = ""
     apprise_key: str = ""
+    giphy_api_key: str = ""
+    tenor_api_key: str = ""
 
     @property
     def sentry_api_configured(self) -> bool:
@@ -29,6 +31,10 @@ class Settings(BaseSettings):
     @property
     def apprise_configured(self) -> bool:
         return bool(self.apprise_base_url and self.apprise_key)
+
+    @property
+    def gifs_configured(self) -> bool:
+        return bool(self.giphy_api_key or self.tenor_api_key)
 
 
 settings = Settings()
