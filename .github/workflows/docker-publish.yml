@@ -54,8 +54,14 @@ jobs:
     name: Deploy to k8s
     needs: build-and-deploy
     runs-on: [self-hosted, k8s]
+    env:
+      VERSION: ${{ github.event.client_payload.version }}
     steps:
-      - name: Restart deployment
+      # Sets the image as well as restarting. A restart alone is a no-op here: both
+      # deployments pin an immutable version tag, so re-pulling fetches the identical
+      # image. Keel used to do the image bump, and it was decommissioned on 2026-09-28 --
+      # without this, releases build and push but never reach the cluster.
+      - name: Set image and restart deployment
         run: |
           RESTART_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
@@ -65,10 +71,10 @@ jobs:
             -H "Content-Type: application/strategic-merge-patch+json" \
             --cacert "$CA" \
             "https://kubernetes.default.svc/apis/apps/v1/namespaces/retrospekt/deployments/retrospekt-backend" \
-            -d "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"kubectl.kubernetes.io/restartedAt\":\"$RESTART_AT\"}}}}}"
+            -d "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"kubectl.kubernetes.io/restartedAt\":\"$RESTART_AT\"}},\"spec\":{\"containers\":[{\"name\":\"backend\",\"image\":\"ghcr.io/stevendejongnl/retrospekt-backend:${VERSION}\"}]}}}}"
 
 
-      - name: Restart deployment
+      - name: Set image and restart deployment
         run: |
           RESTART_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
@@ -78,4 +84,4 @@ jobs:
             -H "Content-Type: application/strategic-merge-patch+json" \
             --cacert "$CA" \
             "https://kubernetes.default.svc/apis/apps/v1/namespaces/retrospekt/deployments/retrospekt-frontend" \
-            -d "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"kubectl.kubernetes.io/restartedAt\":\"$RESTART_AT\"}}}}}"
+            -d "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"kubectl.kubernetes.io/restartedAt\":\"$RESTART_AT\"}},\"spec\":{\"containers\":[{\"name\":\"frontend\",\"image\":\"ghcr.io/stevendejongnl/retrospekt-frontend:${VERSION}\"}]}}}}"
