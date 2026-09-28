@@ -3,6 +3,11 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  # Also run on main. This workflow only triggered on pull_request, and the previous PR
+  # was June 2026, so four months of coverage drift accumulated unnoticed and surfaced on
+  # the next unrelated PR. Running on main means drift fails the commit that causes it.
+  push:
+    branches: [main]
 
 jobs:
   test:
