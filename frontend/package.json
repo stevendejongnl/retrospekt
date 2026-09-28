@@ -21,11 +21,11 @@
     "d3": "^7.9.0"
   },
   "nyc": {
-    "lines": 93,
-    "statements": 91,
-    "branches": 86,
-    "functions": 91,
-    "//": "Ratcheted down from 94 on 2026-09-28. CI only ran on pull_request and the previous PR was June 2026, so four months of coverage drift went unseen: lines 93.48, statements 91.62, functions 91.19, branches 86.09. These are floors that stop it slipping further, not a target -- 94 remains the goal."
+    "lines": 97,
+    "statements": 95,
+    "branches": 90,
+    "functions": 94,
+    "//": "Raised 2026-09-28 from the emergency floor of 93/91/86/91. Lines, statements and functions are back at or above the original 94 target. Branches is the remaining gap at 90.13: the rest sits in gif-picker, retro-column, retro-card, board-notes, stats-page, theme and api."
   },
   "devDependencies": {
     "@open-wc/testing": "^4.0.0",
