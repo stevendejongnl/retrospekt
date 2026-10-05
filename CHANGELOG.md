@@ -1,3 +1,9 @@
+## [1.45.0](https://github.com/stevendejongnl/retrospekt/compare/v1.44.1...v1.45.0) (2026-10-05)
+
+### Features
+
+* **notifications:** dock feedback and what's-new instead of blocking ([3eadf13](https://github.com/stevendejongnl/retrospekt/commit/3eadf1303dfa76846f68a235f68c63a5ff959139))
+
 ## [1.44.1](https://github.com/stevendejongnl/retrospekt/compare/v1.44.0...v1.44.1) (2026-09-21)
 
 ### Bug Fixes
