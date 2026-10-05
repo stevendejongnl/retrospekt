@@ -8,7 +8,7 @@ if (window.__SENTRY_DSN__) {
   Sentry.init({ dsn: window.__SENTRY_DSN__, tracesSampleRate: 0 })
 }
 import './components/background-blobs'
-import './components/consent-banner'
+import './components/notification-dock'
 import './pages/home-page'
 import './pages/session-page'
 import './pages/not-found-page'
@@ -20,6 +20,7 @@ import './pages/privacy-page'
 import './components/retro-board'
 import './components/retro-column'
 import './components/retro-card'
+import { notifications } from './components/notification-dock'
 import { router } from './router'
 
 initTheme()
@@ -30,7 +31,7 @@ const consent = storage.getAnalyticsConsent()
 if (consent === 'granted') {
   tagManager.init()
 } else if (consent === null) {
-  document.body.appendChild(document.createElement('consent-banner'))
+  notifications.consent()
 }
 window.addEventListener('consent-granted', () => tagManager.init())
 

@@ -41,6 +41,7 @@ A simple, self-hosted retrospective board.
 - Stats dashboard: `/stats` is fully public (session/card/vote/reaction counts, engagement funnel, reaction breakdown, session lifetime, feedback ratings); `/admin` is token-gated (Sentry health + feedback comments)
 - Brand theming: visit `/?theme=cs` to activate an alternate visual theme (stored in localStorage)
 - GDPR-friendly analytics consent: nothing is tracked until you accept a small, non-blocking banner; `/privacy` explains what's collected and why
+- No blocking pop-ups for anything the app raises on its own: the feedback prompt, the "what's new" note and the consent banner are cards in a bottom-left notification dock. They stack instead of covering each other, and the board stays usable underneath
 
 ## Stack
 

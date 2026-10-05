@@ -4,33 +4,29 @@ import { customElement } from 'lit/decorators.js'
 import { storage } from '../storage'
 
 /**
- * Bottom banner asking for analytics consent (Matomo). Nothing is tracked
- * until the visitor accepts — main.ts only calls tagManager.init() after
- * a "consent-granted" event, or immediately on boot if consent was already
+ * Card asking for analytics consent (Matomo). Nothing is tracked until the
+ * visitor accepts — main.ts only calls tagManager.init() after a
+ * "consent-granted" event, or immediately on boot if consent was already
  * stored as "granted" in a previous visit.
+ *
+ * Positioning and removal belong to <notification-dock>: this answers with
+ * "consent-closed" and the dock drops the card.
  */
 @customElement('consent-banner')
 export class ConsentBanner extends LitElement {
   static styles = css`
-    /* Non-blocking, like every other overlay in this app (board-notes,
-       feedback-dialog, retro-help, ...): the host and .bar itself never
-       capture pointer events — only the actual controls (button, a) opt
-       back in — so this can never eat a click meant for something behind
-       or beside it, no matter what else is on screen. */
+    /* Non-blocking: neither the host nor .bar captures pointer events —
+       only the actual controls (button, a) opt back in — so this can never
+       eat a click meant for something behind or beside it. The dock owns
+       where this sits; the card only sizes itself to the dock's width. */
     :host {
-      position: fixed;
-      /* Left, not right: board-notes and other panels dock to the right
-         edge (right: 0), so the right side of the viewport isn't free. */
-      left: 12px;
-      bottom: 12px;
-      z-index: 300;
+      display: block;
       pointer-events: none;
     }
     .bar {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      width: 260px;
       background: var(--retro-glass-bg-strong);
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
@@ -69,15 +65,19 @@ export class ConsentBanner extends LitElement {
     }
   `
 
+  private close(): void {
+    this.dispatchEvent(new CustomEvent('consent-closed', { bubbles: true, composed: true }))
+  }
+
   private accept(): void {
     storage.setAnalyticsConsent('granted')
     this.dispatchEvent(new CustomEvent('consent-granted', { bubbles: true, composed: true }))
-    this.remove()
+    this.close()
   }
 
   private decline(): void {
     storage.setAnalyticsConsent('denied')
-    this.remove()
+    this.close()
   }
 
   render() {

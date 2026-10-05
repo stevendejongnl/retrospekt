@@ -8,118 +8,68 @@ export class WhatsNewDialog extends LitElement {
   @property({ type: Object }) entry: ChangelogEntry | null = null
 
   static styles = css`
-    :host { display: block; }
-
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--retro-overlay-bg);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 160;
-      padding: 24px;
+    /* Non-blocking card: <notification-dock> owns where this sits, so the
+       host never positions itself and never captures pointer events — only
+       the controls inside the card do. */
+    :host {
+      display: block;
+      pointer-events: none;
     }
 
     .card {
+      pointer-events: auto;
       background: var(--retro-glass-bg-strong);
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 20px;
-      max-width: 480px;
-      width: 100%;
+      border-radius: 14px;
       overflow: hidden;
       box-shadow: var(--retro-glass-shadow);
     }
 
     .hero {
       background: linear-gradient(135deg, var(--retro-accent), var(--retro-accent-hover));
-      padding: 24px 28px 20px;
+      padding: 12px 14px 10px;
       color: white;
     }
 
     .version-badge {
       display: inline-block;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.6px;
       text-transform: uppercase;
-      background: rgba(255,255,255,0.22);
-      border-radius: 6px;
-      padding: 2px 7px;
-      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.22);
+      border-radius: 5px;
+      padding: 1px 6px;
+      margin-bottom: 6px;
     }
 
     .headline {
-      font-size: 20px;
+      font-size: 14px;
       font-weight: 800;
-      margin: 0 0 8px;
-      letter-spacing: -0.4px;
+      margin: 0 0 4px;
+      letter-spacing: -0.3px;
       line-height: 1.25;
     }
 
     .highlight-body {
-      font-size: 13px;
+      font-size: 12px;
       opacity: 0.9;
       margin: 0;
-      line-height: 1.5;
-    }
-
-    .body {
-      padding: 20px 28px 0;
-    }
-
-    .section-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-      color: var(--retro-text-muted);
-      margin: 0 0 10px;
-    }
-
-    .release-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .release-item {
-      font-size: 13px;
-      color: var(--retro-text-secondary);
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-      line-height: 1.4;
-    }
-
-    .release-item::before {
-      content: '·';
-      color: var(--retro-accent);
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-
-    .scope {
-      font-weight: 600;
-      color: var(--retro-text-primary);
+      line-height: 1.45;
     }
 
     .footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 18px 28px 22px;
+      gap: 8px;
+      padding: 10px 14px 12px;
     }
 
     .view-changelog {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--retro-text-muted);
       text-decoration: underline;
       text-underline-offset: 2px;
@@ -128,30 +78,10 @@ export class WhatsNewDialog extends LitElement {
       cursor: pointer;
       font-family: inherit;
       padding: 0;
+      text-align: left;
     }
 
-    .view-changelog:hover { color: var(--retro-text-secondary); }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .later-btn {
-      background: none;
-      border: 1px solid var(--retro-border-default);
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 13px;
-      color: var(--retro-text-muted);
-      cursor: pointer;
-      font-family: inherit;
-      transition: border-color 0.12s, color 0.12s;
-    }
-
-    .later-btn:hover {
-      border-color: var(--retro-text-muted);
+    .view-changelog:hover {
       color: var(--retro-text-secondary);
     }
 
@@ -159,22 +89,21 @@ export class WhatsNewDialog extends LitElement {
       background: var(--retro-accent);
       border: none;
       border-radius: 8px;
-      padding: 8px 18px;
-      font-size: 13px;
+      padding: 6px 14px;
+      font-size: 12px;
       font-weight: 600;
       color: white;
       cursor: pointer;
       font-family: inherit;
+      flex-shrink: 0;
       transition: background 0.12s;
-      box-shadow: 0 4px 12px rgba(217,116,38,0.3);
+      box-shadow: 0 4px 12px rgba(217, 116, 38, 0.3);
     }
 
-    .got-it-btn:hover { background: var(--retro-accent-hover); }
+    .got-it-btn:hover {
+      background: var(--retro-accent-hover);
+    }
   `
-
-  private _later(): void {
-    this.dispatchEvent(new CustomEvent('whats-new-dismissed', { bubbles: true, composed: true }))
-  }
 
   private _gotIt(): void {
     this.dispatchEvent(new CustomEvent('whats-new-acknowledged', { bubbles: true, composed: true }))
@@ -189,38 +118,17 @@ export class WhatsNewDialog extends LitElement {
     if (!this.open || !this.entry) return nothing
     const { entry } = this
 
-    const allItems = entry.groups.flatMap((g) => g.items)
-
     return html`
-      <div class="overlay" @click=${this._later}>
-        <div class="card" @click=${(e: Event) => e.stopPropagation()}>
-          <div class="hero">
-            <div class="version-badge">v${entry.version}</div>
-            <p class="headline">${entry.highlight?.title ?? `What's new in v${entry.version}`}</p>
-            ${entry.highlight?.body ? html`<p class="highlight-body">${entry.highlight.body}</p>` : ''}
-          </div>
+      <div class="card">
+        <div class="hero">
+          <div class="version-badge">v${entry.version}</div>
+          <p class="headline">${entry.highlight?.title ?? `What's new in v${entry.version}`}</p>
+          ${entry.highlight?.body ? html`<p class="highlight-body">${entry.highlight.body}</p>` : ''}
+        </div>
 
-          ${allItems.length > 0 ? html`
-            <div class="body">
-              <p class="section-label">Also in this release</p>
-              <ul class="release-list">
-                ${allItems.map((item) => html`
-                  <li class="release-item">
-                    ${item.scope ? html`<span class="scope">${item.scope}:</span>` : ''}
-                    ${item.text}
-                  </li>
-                `)}
-              </ul>
-            </div>
-          ` : ''}
-
-          <div class="footer">
-            <button class="view-changelog" @click=${this._viewChangelog}>View full changelog →</button>
-            <div class="actions">
-              <button class="later-btn" @click=${this._later}>Later</button>
-              <button class="got-it-btn" @click=${this._gotIt}>Got it</button>
-            </div>
-          </div>
+        <div class="footer">
+          <button class="view-changelog" @click=${this._viewChangelog}>View full changelog →</button>
+          <button class="got-it-btn" @click=${this._gotIt}>Got it</button>
         </div>
       </div>
     `

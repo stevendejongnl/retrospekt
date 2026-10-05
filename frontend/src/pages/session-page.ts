@@ -25,8 +25,7 @@ import {
 import '../components/retro-board'
 import '../components/session-history'
 import '../components/board-notes'
-import '../components/feedback-dialog'
-import '../components/whats-new-dialog'
+import { notifications } from '../components/notification-dock'
 import '../components/background-blobs'
 import '../components/retro-help'
 import '../components/theme-menu'
@@ -54,8 +53,11 @@ export class SessionPage extends LitElement {
   @state() private showHelp = false
   @state() private showHistory = false
   @state() private showNotes = false
-  @state() private showFeedback = false
-  @state() private showWhatsNew = false
+
+  // Not @state: the notification dock renders these, not this template.
+  // The flag only exists so the idle check doesn't keep re-asking while the
+  // feedback card is already on screen.
+  private feedbackOpen = false
 
   private sseClient: SSEClient | null = null
   private _halalListener!: EventListener
@@ -581,7 +583,7 @@ export class SessionPage extends LitElement {
       const prev = changedProps.get('session') as Session | null
       // Show feedback after session closes
       if (prev && this.session?.phase === 'closed' && prev.phase !== 'closed') {
-        setTimeout(() => { this.showFeedback = true }, FEEDBACK_CLOSE_DELAY_MS)
+        setTimeout(() => this._openFeedback(), FEEDBACK_CLOSE_DELAY_MS)
       }
       // Reset idle timer on every SSE update
       this._lastActivityAt = Date.now()
@@ -596,14 +598,29 @@ export class SessionPage extends LitElement {
     const lastSeen = storage.getMaxSeenChangelogVersion()
     const current = __APP_VERSION__
     if (!lastSeen || semverGt(current, lastSeen)) {
-      this.showWhatsNew = true
+      const entry = CHANGELOG[0]
+      if (entry) {
+        notifications.whatsNew(entry, {
+          onClose: () => storage.markChangelogSeen(this.sessionId, __APP_VERSION__),
+        })
+      }
     }
   }
 
+  private _openFeedback(): void {
+    if (this.feedbackOpen) return
+    this.feedbackOpen = true
+    notifications.feedback({
+      sessionId: this.sessionId,
+      participantName: this.participantName,
+      onClose: () => { this.feedbackOpen = false },
+    })
+  }
+
   private _checkIdle(): void {
-    if (this.showFeedback || !this.participantName) return
+    if (this.feedbackOpen || !this.participantName) return
     if (Date.now() - this._lastActivityAt > IDLE_THRESHOLD_MS) {
-      this.showFeedback = true
+      this._openFeedback()
     }
   }
 
@@ -683,24 +700,6 @@ export class SessionPage extends LitElement {
     return html`
       <background-blobs></background-blobs>
       <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
-      <feedback-dialog
-        .open=${this.showFeedback}
-        .sessionId=${this.sessionId}
-        .participantName=${this.participantName}
-        @feedback-dismissed=${() => { this.showFeedback = false }}
-      ></feedback-dialog>
-      <whats-new-dialog
-        .open=${this.showWhatsNew}
-        .entry=${CHANGELOG[0] ?? null}
-        @whats-new-dismissed=${() => {
-          storage.markChangelogSeen(this.sessionId, __APP_VERSION__)
-          this.showWhatsNew = false
-        }}
-        @whats-new-acknowledged=${() => {
-          storage.markChangelogSeen(this.sessionId, __APP_VERSION__)
-          this.showWhatsNew = false
-        }}
-      ></whats-new-dialog>
       <board-notes
         .open=${this.showNotes}
         .notes=${session.notes}
@@ -757,7 +756,7 @@ export class SessionPage extends LitElement {
           title="Stats"
         >${iconChartBar()}</button>
         <button class="icon-btn" @click=${() => { this.showNotes = true }} title="Board notes">${iconNoteSticky()}</button>
-        <button class="icon-btn feedback-btn" @click=${() => { this.showFeedback = true }} title="Give feedback">💬</button>
+        <button class="icon-btn feedback-btn" @click=${() => this._openFeedback()} title="Give feedback">💬</button>
         ${this.brand === 'cs'
           ? html`<button class="icon-btn brand-reset" @click=${clearBrand} title="Reset to default theme">${iconRotateLeft()}</button>`
           : html`<theme-menu></theme-menu>`}
