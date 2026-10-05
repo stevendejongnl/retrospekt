@@ -18,23 +18,32 @@ describe('consent-banner', () => {
     expect(el.shadowRoot!.querySelector('button:not(.accept)')?.textContent?.trim()).to.equal('Decline')
   })
 
-  it('clicking Accept stores consent, dispatches consent-granted, and removes the banner', async () => {
+  it('clicking Accept stores consent and dispatches consent-granted + consent-closed', async () => {
     const el = await fixture<ConsentBanner>(html`<consent-banner></consent-banner>`)
     let granted = false
+    let closed = false
     el.addEventListener('consent-granted', () => { granted = true })
+    el.addEventListener('consent-closed', () => { closed = true })
     el.shadowRoot!.querySelector<HTMLButtonElement>('.accept')!.click()
     expect(localStorage.getItem('retro_analytics_consent')).to.equal('granted')
     expect(granted).to.be.true
-    expect(el.isConnected).to.be.false
+    expect(closed).to.be.true
   })
 
-  it('clicking Decline stores consent and removes the banner without dispatching an event', async () => {
+  it('clicking Decline stores consent and dispatches consent-closed only', async () => {
     const el = await fixture<ConsentBanner>(html`<consent-banner></consent-banner>`)
     let granted = false
+    let closed = false
     el.addEventListener('consent-granted', () => { granted = true })
+    el.addEventListener('consent-closed', () => { closed = true })
     el.shadowRoot!.querySelector<HTMLButtonElement>('button:not(.accept)')!.click()
     expect(localStorage.getItem('retro_analytics_consent')).to.equal('denied')
     expect(granted).to.be.false
-    expect(el.isConnected).to.be.false
+    expect(closed).to.be.true
+  })
+
+  it('does not position itself - the notification dock owns the docking', async () => {
+    const el = await fixture<ConsentBanner>(html`<consent-banner></consent-banner>`)
+    expect(getComputedStyle(el).position).to.not.equal('fixed')
   })
 })

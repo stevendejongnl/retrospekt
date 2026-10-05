@@ -2,10 +2,12 @@ import { test, expect } from './playwright-fixtures'
 
 async function mount(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
   await page.goto('/')
+  // Mounted through the dock, because the dock is what removes the card when
+  // it is answered — the banner itself only reports "consent-closed".
   await page.setContent(`
-    <consent-banner></consent-banner>
     <script type="module">
-      import './src/components/consent-banner.ts'
+      import { notifications } from './src/components/notification-dock.ts'
+      notifications.consent()
     </script>
   `)
 }

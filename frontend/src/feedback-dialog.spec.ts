@@ -235,11 +235,17 @@ test.describe('feedback-dialog dismissal', () => {
     expect(hasFeedback).toBe(false)
   })
 
-  test('clicking overlay backdrop closes the dialog', async ({ page }) => {
+  test('is a docked card with no blocking backdrop', async ({ page }) => {
     await setupAndOpenDialog(page)
-    // Click the overlay area outside the card
-    await page.locator('feedback-dialog .overlay').click({ position: { x: 10, y: 10 } })
-    await expect(page.locator('feedback-dialog .card')).not.toBeVisible()
+    await expect(page.locator('feedback-dialog .overlay')).toHaveCount(0)
+  })
+
+  test('the board stays usable while the feedback card is open', async ({ page }) => {
+    await setupAndOpenDialog(page)
+    // The card docks bottom-left and never captures clicks outside itself, so
+    // a control on the board behind it still responds.
+    await page.locator('button.feedback-btn').click()
+    await expect(page.locator('feedback-dialog .card')).toBeVisible()
   })
 })
 

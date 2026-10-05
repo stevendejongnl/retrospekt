@@ -588,19 +588,20 @@ test.describe('session-page SSE updates', () => {
     await expect(page.locator('feedback-dialog .card')).toBeVisible()
   })
 
-  test('_checkIdle skips when showFeedback is already true (early return branch)', async ({ page }) => {
+  test('_checkIdle skips when the feedback card is already open (early return branch)', async ({ page }) => {
     await withName(page, 'Alice')
     await mockApi(page, BASE)
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
 
-    // Set showFeedback=true first, then call _checkIdle — should not error or change state
+    // Pretend the card is already docked, then call _checkIdle — it must bail
+    // out rather than queue a second one.
     await page.evaluate(() => {
       const el = document.querySelector('session-page') as Record<string, unknown>
-      el['showFeedback'] = true
+      el['feedbackOpen'] = true
       ;(el['_checkIdle'] as () => void).call(el)
     })
-    await expect(page.locator('feedback-dialog .card')).toBeVisible()
+    await expect(page.locator('feedback-dialog')).toHaveCount(0)
   })
 
 })
@@ -614,7 +615,7 @@ test.describe('session-page whats-new dialog', () => {
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
     // No other history entries — dialog should not appear
-    const dialog = page.locator('whats-new-dialog .overlay')
+    const dialog = page.locator('whats-new-dialog .card')
     await expect(dialog).not.toBeVisible()
   })
 
@@ -627,7 +628,7 @@ test.describe('session-page whats-new dialog', () => {
     await mockApi(page, BASE)
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
-    await expect(page.locator('whats-new-dialog .overlay')).toBeVisible()
+    await expect(page.locator('whats-new-dialog .card')).toBeVisible()
   })
 
   test('"Later" button dismisses the dialog and marks changelog seen', async ({ page }) => {
@@ -638,8 +639,8 @@ test.describe('session-page whats-new dialog', () => {
     }, SESSION_ID)
     await mockApi(page, BASE)
     await page.goto(`/session/${SESSION_ID}`)
-    await page.locator('whats-new-dialog .later-btn').click()
-    await expect(page.locator('whats-new-dialog .overlay')).not.toBeVisible()
+    await page.locator('whats-new-dialog .got-it-btn').click()
+    await expect(page.locator('whats-new-dialog .card')).not.toBeVisible()
     // seenChangelogVersion should be set — dismiss prevents popup from repeating
     const seen = await page.evaluate(() => {
       const h = JSON.parse(localStorage.getItem('retro_history') ?? '[]') as { seenChangelogVersion?: string }[]
@@ -657,7 +658,7 @@ test.describe('session-page whats-new dialog', () => {
     await mockApi(page, BASE)
     await page.goto(`/session/${SESSION_ID}`)
     await page.locator('whats-new-dialog .got-it-btn').click()
-    await expect(page.locator('whats-new-dialog .overlay')).not.toBeVisible()
+    await expect(page.locator('whats-new-dialog .card')).not.toBeVisible()
     // seenChangelogVersion should be set on the current session entry
     const seen = await page.evaluate((id) => {
       const h = JSON.parse(localStorage.getItem('retro_history') ?? '[]') as { id: string; seenChangelogVersion?: string }[]
@@ -677,7 +678,7 @@ test.describe('session-page whats-new dialog', () => {
     await mockApi(page, BASE)
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
-    await expect(page.locator('whats-new-dialog .overlay')).not.toBeVisible()
+    await expect(page.locator('whats-new-dialog .card')).not.toBeVisible()
   })
 
   test('dialog shown when current version is newer than max seen (covers semverGt true branch and reduce callback both arms)', async ({ page }) => {
@@ -698,7 +699,7 @@ test.describe('session-page whats-new dialog', () => {
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
     // Current app version > '0.0.2' → whats-new dialog should appear
-    await expect(page.locator('whats-new-dialog .overlay')).toBeVisible()
+    await expect(page.locator('whats-new-dialog .card')).toBeVisible()
   })
 })
 

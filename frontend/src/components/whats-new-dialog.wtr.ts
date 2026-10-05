@@ -26,16 +26,22 @@ describe('whats-new-dialog', () => {
     const el = await fixture<WhatsNewDialog>(
       html`<whats-new-dialog .open=${false} .entry=${makeEntry()}></whats-new-dialog>`,
     )
-    const overlay = el.shadowRoot!.querySelector('.overlay')
-    expect(overlay).to.be.null
+    expect(el.shadowRoot!.querySelector('.card')).to.be.null
   })
 
-  it('renders the dialog when open=true', async () => {
+  it('renders the card when open=true', async () => {
     const el = await fixture<WhatsNewDialog>(
       html`<whats-new-dialog .open=${true} .entry=${makeEntry()}></whats-new-dialog>`,
     )
-    const overlay = el.shadowRoot!.querySelector('.overlay')
-    expect(overlay).to.not.be.null
+    expect(el.shadowRoot!.querySelector('.card')).to.not.be.null
+  })
+
+  it('is a docked card, not a blocking full-screen overlay', async () => {
+    const el = await fixture<WhatsNewDialog>(
+      html`<whats-new-dialog .open=${true} .entry=${makeEntry()}></whats-new-dialog>`,
+    )
+    expect(el.shadowRoot!.querySelector('.overlay')).to.be.null
+    expect(getComputedStyle(el.shadowRoot!.querySelector('.card')!).position).to.not.equal('fixed')
   })
 
   it('shows the highlight title', async () => {
@@ -54,23 +60,20 @@ describe('whats-new-dialog', () => {
     expect(body?.textContent?.trim()).to.equal('Frosted panels and drifting orbs.')
   })
 
-  it('renders feature items in the release list', async () => {
+  it('does not render the full release list - the changelog page has it', async () => {
     const el = await fixture<WhatsNewDialog>(
       html`<whats-new-dialog .open=${true} .entry=${makeEntry()}></whats-new-dialog>`,
     )
-    const items = el.shadowRoot!.querySelectorAll('.release-item')
-    expect(items.length).to.equal(2)
+    expect(el.shadowRoot!.querySelectorAll('.release-item').length).to.equal(0)
+    expect(el.shadowRoot!.querySelector('.view-changelog')).to.not.be.null
   })
 
-  it('emits whats-new-dismissed when Later is clicked', async () => {
+  it('has a single acknowledge button - no redundant Later', async () => {
     const el = await fixture<WhatsNewDialog>(
       html`<whats-new-dialog .open=${true} .entry=${makeEntry()}></whats-new-dialog>`,
     )
-    let dismissed = false
-    el.addEventListener('whats-new-dismissed', () => { dismissed = true })
-    const btn = el.shadowRoot!.querySelector<HTMLButtonElement>('.later-btn')
-    btn?.click()
-    expect(dismissed).to.be.true
+    expect(el.shadowRoot!.querySelector('.later-btn')).to.be.null
+    expect(el.shadowRoot!.querySelector('.got-it-btn')).to.not.be.null
   })
 
   it('emits whats-new-acknowledged when Got it is clicked', async () => {
