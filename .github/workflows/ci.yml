@@ -42,6 +42,13 @@ jobs:
 
       - name: Upload backend coverage to Codecov
         uses: codecov/codecov-action@v4
+        # fail_ci_if_error only covers Codecov rejecting the upload. A network
+        # failure reaching Codecov at all throws before that flag is consulted,
+        # and on 2026-10-05 a TLS handshake failure to codecov.io
+        # ("write EPROTO ... ssl/tls alert handshake failure, SSL alert 40")
+        # failed the job at the first upload, skipping every test step after it
+        # and the release with them. Coverage reporting must never gate a build.
+        continue-on-error: true
         with:
           files: backend/coverage.lcov
           flags: backend
@@ -61,6 +68,7 @@ jobs:
 
       - name: Upload frontend unit coverage to Codecov
         uses: codecov/codecov-action@v4
+        continue-on-error: true
         with:
           files: frontend/coverage/lcov.info
           flags: frontend-unit
@@ -82,6 +90,7 @@ jobs:
 
       - name: Upload Playwright coverage to Codecov
         uses: codecov/codecov-action@v4
+        continue-on-error: true
         with:
           files: frontend/playwright-coverage/lcov.info
           flags: frontend-playwright
