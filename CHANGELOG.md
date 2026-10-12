@@ -1,3 +1,9 @@
+## [1.45.1](https://github.com/stevendejongnl/retrospekt/compare/v1.45.0...v1.45.1) (2026-10-12)
+
+### Bug Fixes
+
+* **cards:** move a published card to the bottom of its column ([ebdcd0b](https://github.com/stevendejongnl/retrospekt/commit/ebdcd0b7b9c3dad306a1fc70ba51b07185814c43))
+
 ## [1.45.0](https://github.com/stevendejongnl/retrospekt/compare/v1.44.1...v1.45.0) (2026-10-05)
 
 ### Features
