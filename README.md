@@ -29,7 +29,7 @@ A simple, self-hosted retrospective board.
 - Emoji picker for card text input — same searchable picker, full standard emoji set
 - Optional GIF picker for card text input (`GIPHY_API_KEY` and/or `TENOR_API_KEY`) — hidden entirely when neither is configured
 - Card text supports inline markdown (**bold**, *italic*, `code`, [links](url)); bare links are clickable, and a bare image URL embeds inline even without a recognizable extension (detected by trying to load it, not by guessing) — no uploads, only URLs already in the text
-- Card publishing: each author publishes their own cards during discussing phase
+- Card publishing: each author publishes their own cards during discussing phase; a newly published card lands at the bottom of its column
 - Action items: assign cards to participants; action items panel for quick review
 - Session timer: facilitator-controlled countdown (30 s – 2 h), with pause/resume/reset
 - Export session as Markdown (published cards, reactions, assignees)

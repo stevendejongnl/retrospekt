@@ -134,6 +134,12 @@ async def remove_vote(
     return card.model_dump()
 
 
+def move_published_cards_to_bottom(session: Session, cards: list[Card]) -> None:
+    """Move freshly published cards to the end, so they show below what's already up for discussion."""
+    ids = {c.id for c in cards}
+    session.cards = [c for c in session.cards if c.id not in ids] + cards
+
+
 @router.post("/{session_id}/cards/publish-all")
 async def publish_all_cards(
     session_id: str,
@@ -157,6 +163,7 @@ async def publish_all_cards(
             published.append(card)
 
     if published:
+        move_published_cards_to_bottom(session, published)
         session = await repo.update(session)
         await sse_manager.broadcast(session_id, _public(session))
 
@@ -186,6 +193,7 @@ async def publish_card(
         raise HTTPException(status_code=403, detail="Only the author can publish this card")
 
     card.published = True
+    move_published_cards_to_bottom(session, [card])
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
 
