@@ -50,7 +50,7 @@ function session(overrides: Partial<Session> = {}): Session {
 const md = (s: string) => s.replace(/␠␠/g, '  ')
 
 describe('sessionToMarkdown', () => {
-  it('renders the agreed layout: short lines, groups nested, assigned cards as action items', () => {
+  it('renders the agreed layout: short lines, groups nested, assigned cards also listed as action items', () => {
     const s = session({
       cards: [
         card({ id: 'c1', column: 'Went Well', author_name: 'Alice', text: 'Deploys were smooth', votes: votes(3),
@@ -90,6 +90,11 @@ Votes: 10
   - **Alice** · 1 vote␠␠
     Standups run long
 
+## Action Items
+- **Bob** · 0 votes␠␠
+  Split the e2e job␠␠
+  @Bob
+
 ## Notes
 ### Parking lot
 - [ ] Ask ops about runners␠␠
@@ -110,16 +115,23 @@ Votes: 0
 `))
   })
 
-  it('shows a grouped card on its own once the rest of its group is assigned away', () => {
+  it('keeps an assigned card in its column and its group, with the assignee as last line', () => {
     const s = session({
       cards: [
         card({ id: 'c1', text: 'Pairing helped', group_id: 'g1' }),
-        card({ id: 'c2', text: 'Keep pairing', group_id: 'g1', assignee: 'Bob' }),
+        card({ id: 'c2', text: 'Keep pairing', group_id: 'g1', assignee: 'Bob',
+          reactions: [{ emoji: '🎉', participant_name: 'Bob' }] }),
       ],
     })
-    const out = sessionToMarkdown(s)
-    expect(out).toContain(md('## Went Well\n- **Alice** · 0 votes␠␠\n  Pairing helped\n'))
-    expect(out).not.toContain('**Group**')
+    expect(sessionToMarkdown(s)).toContain(md(`## Went Well
+- **Group** · 0 votes
+  - **Alice** · 0 votes␠␠
+    Pairing helped
+  - **Alice** · 0 votes␠␠
+    Keep pairing␠␠
+    🎉 1␠␠
+    @Bob
+`))
   })
 
   it('lists several reactions on one line, most used first', () => {
