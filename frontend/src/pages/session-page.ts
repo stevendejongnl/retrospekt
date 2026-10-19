@@ -31,6 +31,7 @@ import '../components/retro-help'
 import '../components/theme-menu'
 import { CHANGELOG } from '../generated/changelog'
 import { semverGt } from '../storage'
+import { exportFilename, sessionToMarkdown } from '../export-markdown'
 
 const IDLE_THRESHOLD_MS = 10 * 60 * 1000  // 10 minutes
 const FEEDBACK_CLOSE_DELAY_MS = 1500       // delay before showing after session close
@@ -639,44 +640,13 @@ export class SessionPage extends LitElement {
   private exportSession(): void {
     if (!this.session) return
     const { session } = this
-    const date = new Date().toLocaleString('en', { dateStyle: 'medium', timeStyle: 'short' })
-    let md = `# ${session.name}\n_Exported ${date} · Phase: ${session.phase}_\n\n`
-
-    for (const column of session.columns) {
-      const cards = session.cards
-        .filter((c) => c.column === column && c.published)
-        .sort((a, b) => b.votes.length - a.votes.length)
-      if (cards.length === 0) continue
-
-      md += `## ${column}\n`
-      for (const card of cards) {
-        md += `- **${card.author_name}** · ${card.votes.length} vote${card.votes.length !== 1 ? 's' : ''}\n`
-        md += `  ${card.text}\n`
-        const reactions = card.reactions ?? []
-        if (reactions.length > 0) {
-          const counts: Record<string, number> = {}
-          for (const r of reactions) counts[r.emoji] = (counts[r.emoji] ?? 0) + 1
-          const reactionStr = Object.entries(counts).map(([e, n]) => `${e}×${n}`).join('  ')
-          md += `  Reactions: ${reactionStr}\n`
-        }
-        if (card.assignee) md += `  Assignee: ${card.assignee}\n`
-      }
-      md += '\n'
-    }
-
-    if (session.notes && session.notes.length > 0) {
-      md += `## Board Notes\n`
-      for (const note of session.notes) {
-        md += `- **${note.author_name}**: ${note.text}\n`
-      }
-      md += '\n'
-    }
+    const md = sessionToMarkdown(session)
 
     const blob = new Blob([md], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${session.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.md`
+    a.download = exportFilename(session.name)
     a.click()
     URL.revokeObjectURL(url)
     tagManager.trackEvent('Session', 'export_markdown')
