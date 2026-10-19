@@ -2,7 +2,7 @@ import type { Card, Note, Session } from './types'
 
 /**
  * Markdown export of a retro, built for reading: one fact per line, groups
- * nested, assigned cards pulled out as action items.
+ * nested, assigned cards summed up per assignee at the bottom.
  *
  * Consecutive lines inside one list item are joined with a hard break (two
  * trailing spaces); without it most renderers glue them into one long line.
@@ -16,8 +16,9 @@ function block(lines: string[]): string[] {
   return lines.map((line, i) => (i < lines.length - 1 ? line + HARD_BREAK : line))
 }
 
-// First line gets `bullet`, the rest are indented by `pad` (by default lined up under the text).
-function listItem(bullet: string, lines: string[], indent = '', pad = ' '.repeat(bullet.length)): string[] {
+// First line gets `bullet`, the rest are indented to line up under it.
+function listItem(bullet: string, lines: string[], indent = ''): string[] {
+  const pad = ' '.repeat(bullet.length)
   return block(lines).map((line, i) => indent + (i === 0 ? bullet : pad) + line)
 }
 
@@ -41,6 +42,7 @@ function cardItem(card: Card, indent = ''): string[] {
   const lines = [`**${card.author_name}** · ${voteCount(card.votes.length)}`, ...textLines(card.text)]
   const reactions = reactionLine(card)
   if (reactions) lines.push(reactions)
+  if (card.assignee) lines.push(`@${card.assignee}`)
   return listItem('- ', lines, indent)
 }
 
@@ -106,7 +108,6 @@ function assigneesSection(assigned: Card[]): string[] {
 export function sessionToMarkdown(session: Session): string {
   const published = session.cards.filter(c => c.published)
   const assigned = published.filter(c => c.assignee)
-  const unassigned = published.filter(c => !c.assignee)
   const date = new Date(session.created_at).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -122,17 +123,8 @@ export function sessionToMarkdown(session: Session): string {
 
   const sections: string[][] = [[`# ${session.name}`], block(header)]
 
-  if (assigned.length > 0) {
-    const lines = ['## Action items']
-    for (const card of assigned) {
-      // Indent by 2, not under the text: renderers read 6 spaces as a code block
-      lines.push(...listItem('- [ ] ', [...textLines(card.text), `@${card.assignee}`], '', '  '))
-    }
-    sections.push(lines)
-  }
-
   for (const column of session.columns) {
-    const cards = unassigned.filter(c => c.column === column)
+    const cards = published.filter(c => c.column === column)
     if (cards.length > 0) sections.push(columnSection(column, cards))
   }
 
