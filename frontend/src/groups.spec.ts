@@ -107,7 +107,7 @@ test.describe('card grouping — draggable attribute', () => {
     await expect(card).toHaveAttribute('draggable', 'true')
   })
 
-  test('draggable=false on card in collecting phase', async ({ page }) => {
+  test('draggable=true on own card in collecting phase (movable to another column)', async ({ page }) => {
     const session = {
       ...BASE,
       phase: 'collecting' as const,
@@ -115,7 +115,7 @@ test.describe('card grouping — draggable attribute', () => {
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     const card = page.locator('.card').first()
-    await expect(card).toHaveAttribute('draggable', 'false')
+    await expect(card).toHaveAttribute('draggable', 'true')
   })
 
   test('draggable=false on card in closed phase', async ({ page }) => {
@@ -129,7 +129,7 @@ test.describe('card grouping — draggable attribute', () => {
     await expect(card).toHaveAttribute('draggable', 'false')
   })
 
-  test('draggable=false on unpublished draft card in discussing phase', async ({ page }) => {
+  test('draggable=true on own unpublished draft card in discussing phase', async ({ page }) => {
     const session = {
       ...BASE,
       phase: 'discussing' as const,
@@ -137,7 +137,7 @@ test.describe('card grouping — draggable attribute', () => {
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
     const card = page.locator('.card').first()
-    await expect(card).toHaveAttribute('draggable', 'false')
+    await expect(card).toHaveAttribute('draggable', 'true')
   })
 })
 
@@ -475,6 +475,148 @@ test.describe('card grouping — cross-column prevention', () => {
     })
 
     expect(groupFired).toBe(false)
+  })
+})
+
+// ── Moving cards between columns ────────────────────────────────────────
+
+// Drag the first card of `fromCol` and drop it on `target` in column `toCol`.
+// target 'column' drops on the column body; 'card' drops on that column's first card.
+async function dragAcross(
+  page: Page,
+  fromCol: number,
+  toCol: number,
+  target: 'column' | 'card',
+): Promise<{ move: unknown; group: unknown }> {
+  return page.evaluate(({ fromCol, toCol, target }) => {
+    return new Promise<{ move: unknown; group: unknown }>(resolve => {
+      const board = (document.querySelector('session-page') as any)?.shadowRoot?.querySelector('retro-board')
+      const result: { move: unknown; group: unknown } = { move: null, group: null }
+      board.addEventListener('move-card', (e: Event) => { result.move = (e as CustomEvent).detail })
+      board.addEventListener('group-cards', (e: Event) => { result.group = (e as CustomEvent).detail })
+
+      const cols = board.shadowRoot.querySelectorAll('retro-column')
+      const src = cols[fromCol].shadowRoot.querySelector('retro-card').shadowRoot.querySelector('.card')
+      src.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, composed: true }))
+
+      const tgt = target === 'column'
+        ? cols[toCol].shadowRoot.querySelector('.column')
+        : cols[toCol].shadowRoot.querySelector('retro-card').shadowRoot.querySelector('.card')
+      tgt.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, composed: true }))
+      tgt.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, composed: true }))
+      src.dispatchEvent(new DragEvent('dragend', { bubbles: true, cancelable: true, composed: true }))
+
+      setTimeout(() => resolve(result), 300)
+    })
+  }, { fromCol, toCol, target })
+}
+
+test.describe('moving cards between columns', () => {
+  const TWO_COLS = { ...BASE, columns: ['Went Well', 'To Improve'] }
+
+  test('dropping own card on another column dispatches move-card', async ({ page }) => {
+    const session = {
+      ...TWO_COLS,
+      phase: 'collecting' as const,
+      cards: [makeCard({ id: 'c1', column: 'Went Well', author_name: 'Alice', published: false })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    const { move } = await dragAcross(page, 0, 1, 'column')
+    expect(move).toEqual({ cardId: 'c1', column: 'To Improve' })
+  })
+
+  test('dropping own card on a card in another column moves it instead of grouping', async ({ page }) => {
+    const session = {
+      ...TWO_COLS,
+      cards: [
+        makeCard({ id: 'c1', column: 'Went Well', author_name: 'Alice' }),
+        makeCard({ id: 'c2', column: 'To Improve', author_name: 'Bob' }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    const { move, group } = await dragAcross(page, 0, 1, 'card')
+    expect(move).toEqual({ cardId: 'c1', column: 'To Improve' })
+    expect(group).toBeNull()
+  })
+
+  test('facilitator can move someone else\'s card', async ({ page }) => {
+    const session = {
+      ...TWO_COLS,
+      cards: [makeCard({ id: 'c1', column: 'Went Well', author_name: 'Bob' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice', FAC_TOKEN)
+    const { move } = await dragAcross(page, 0, 1, 'column')
+    expect(move).toEqual({ cardId: 'c1', column: 'To Improve' })
+  })
+
+  test('participant cannot move someone else\'s card', async ({ page }) => {
+    const session = {
+      ...TWO_COLS,
+      cards: [makeCard({ id: 'c1', column: 'Went Well', author_name: 'Bob' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    const { move } = await dragAcross(page, 0, 1, 'column')
+    expect(move).toBeNull()
+  })
+
+  test('dragging a draft onto another card in the same column does not group', async ({ page }) => {
+    const session = {
+      ...BASE,
+      phase: 'collecting' as const,
+      cards: [
+        makeCard({ id: 'c1', author_name: 'Alice', published: false, text: 'Card 1' }),
+        makeCard({ id: 'c2', author_name: 'Alice', published: false, text: 'Card 2' }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    const group = await page.evaluate(() => new Promise<unknown>(resolve => {
+      const board = (document.querySelector('session-page') as any)?.shadowRoot?.querySelector('retro-board')
+      let detail: unknown = null
+      board.addEventListener('group-cards', (e: Event) => { detail = (e as CustomEvent).detail })
+      const cards = board.shadowRoot.querySelector('retro-column').shadowRoot.querySelectorAll('retro-card')
+      const src = cards[0].shadowRoot.querySelector('.card')
+      const tgt = cards[1].shadowRoot.querySelector('.card')
+      src.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, composed: true }))
+      tgt.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, composed: true }))
+      tgt.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, composed: true }))
+      setTimeout(() => resolve(detail), 300)
+    }))
+    expect(group).toBeNull()
+  })
+
+  test('grouped card is not movable', async ({ page }) => {
+    const session = {
+      ...TWO_COLS,
+      cards: [
+        makeCard({ id: 'c1', column: 'Went Well', author_name: 'Alice', group_id: 'grp-1' }),
+        makeCard({ id: 'c2', column: 'Went Well', author_name: 'Alice', group_id: 'grp-1' }),
+        makeCard({ id: 'c3', column: 'Went Well', author_name: 'Alice' }),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    // The stack tile renders first; expand it to reach the grouped cards
+    const col = page.locator('retro-column').first()
+    await col.locator('.stack-tile').click()
+    await expect(col.locator('.stack-expanded retro-card .card').first()).toHaveAttribute('draggable', 'false')
+  })
+
+  test('move-card event calls api.moveCard', async ({ page }) => {
+    const session = {
+      ...TWO_COLS,
+      cards: [makeCard({ id: 'c1', column: 'Went Well', author_name: 'Alice' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    const [req] = await Promise.all([
+      page.waitForRequest(r => r.url().includes('/cards/c1/column') && r.method() === 'PATCH'),
+      page.evaluate(() => {
+        const board = (document.querySelector('session-page') as any)?.shadowRoot?.querySelector('retro-board')
+        board.shadowRoot.querySelector('.columns').dispatchEvent(new CustomEvent('move-card', {
+          bubbles: true,
+          detail: { cardId: 'c1', column: 'To Improve' },
+        }))
+      }),
+    ])
+    expect(req.postDataJSON()).toEqual({ column: 'To Improve' })
   })
 })
 

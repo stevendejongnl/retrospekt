@@ -111,6 +111,19 @@ describe('updateCardText', () => {
   })
 })
 
+describe('moveCard', () => {
+  it('sends PATCH to /column with column body, participant name and facilitator token', async () => {
+    mockOk({ id: 'card-1', column: 'To Improve' })
+    await api.moveCard('sess-1', 'card-1', 'To Improve', 'Alice', 'tok-1')
+
+    const [url, options] = mockFetch.mock.calls[0]
+    expect(url).toBe('/api/v1/sessions/sess-1/cards/card-1/column')
+    expect(options.method).toBe('PATCH')
+    expect(options.headers).toMatchObject({ 'X-Participant-Name': 'Alice', 'X-Facilitator-Token': 'tok-1' })
+    expect(JSON.parse(options.body)).toEqual({ column: 'To Improve' })
+  })
+})
+
 describe('deleteCard', () => {
   it('sends DELETE with X-Participant-Name header', async () => {
     mockFetch.mockResolvedValueOnce({ ok: true, status: 204 })
@@ -506,6 +519,7 @@ describe('analytics events (trackEvent fired on success)', () => {
     ['addCard', () => api.addCard('sess-1', 'Went Well', 'text', 'Alice'), ['Card', 'add', 'Went Well']],
     ['deleteCard', () => api.deleteCard('sess-1', 'card-1', 'Alice'), ['Card', 'delete']],
     ['updateCardText', () => api.updateCardText('sess-1', 'card-1', 'x', 'Alice'), ['Card', 'edit']],
+    ['moveCard', () => api.moveCard('sess-1', 'card-1', 'To Improve', 'Alice', 'tok-1'), ['Card', 'move', 'To Improve']],
     ['addVote', () => api.addVote('sess-1', 'card-1', 'Alice'), ['Card', 'vote']],
     ['removeVote', () => api.removeVote('sess-1', 'card-1', 'Alice'), ['Card', 'unvote']],
     ['publishCard', () => api.publishCard('sess-1', 'card-1', 'Alice'), ['Card', 'publish']],
