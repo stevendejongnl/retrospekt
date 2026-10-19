@@ -10,9 +10,23 @@ import '../components/emoji-picker'
 // Module-level fallback for Firefox, which clears dataTransfer between events
 let _draggedCardId: string | null = null
 let _draggedCardColumn: string | null = null
+let _draggedCardCanGroup = false
+let _draggedCardCanMove = false
 
-export function getDraggedCardInfo(): { id: string | null; column: string | null } {
-  return { id: _draggedCardId, column: _draggedCardColumn }
+export function getDraggedCardInfo(): {
+  id: string | null
+  column: string | null
+  canGroup: boolean
+  canMove: boolean
+} {
+  return { id: _draggedCardId, column: _draggedCardColumn, canGroup: _draggedCardCanGroup, canMove: _draggedCardCanMove }
+}
+
+function clearDraggedCard(): void {
+  _draggedCardId = null
+  _draggedCardColumn = null
+  _draggedCardCanGroup = false
+  _draggedCardCanMove = false
 }
 
 @customElement('retro-card')
@@ -31,6 +45,7 @@ export class RetroCard extends LitElement {
 
   @property({ type: Boolean }) canEdit = false
   @property({ type: Boolean }) canGroup = false
+  @property({ type: Boolean }) canMove = false
 
   @state() private isDragOver = false
   @state() private editing = false
@@ -445,12 +460,21 @@ export class RetroCard extends LitElement {
   private _onDragStart(e: DragEvent): void {
     _draggedCardId = this.card.id
     _draggedCardColumn = this.card.column
+    _draggedCardCanGroup = this.canGroup
+    _draggedCardCanMove = this.canMove
     e.dataTransfer?.setData('text/plain', this.card.id)
+  }
+
+  // Grouping: a groupable card dropped onto another groupable card in the same column.
+  // Anything else bubbles up to retro-column, which handles moves to another column.
+  private _isGroupDrop(sourceId: string | null | undefined): boolean {
+    return !!sourceId && sourceId !== this.card.id && this.canGroup && _draggedCardCanGroup &&
+      _draggedCardColumn === this.card.column
   }
 
   private _onDragOver(e: DragEvent): void {
     const sourceId = e.dataTransfer?.getData('text/plain') || _draggedCardId
-    if (sourceId && sourceId !== this.card.id && _draggedCardColumn === this.card.column) {
+    if (this._isGroupDrop(sourceId)) {
       e.preventDefault()
       this.isDragOver = true
     }
@@ -461,18 +485,17 @@ export class RetroCard extends LitElement {
   }
 
   private _onDrop(e: DragEvent): void {
-    e.preventDefault()
     this.isDragOver = false
-    const sourceId = e.dataTransfer?.getData('text/plain') ?? _draggedCardId
-    if (sourceId && sourceId !== this.card.id && _draggedCardColumn === this.card.column) {
-      this.dispatchEvent(new CustomEvent('group-cards', {
-        bubbles: true,
-        composed: true,
-        detail: { cardId: sourceId, targetCardId: this.card.id },
-      }))
-    }
-    _draggedCardId = null
-    _draggedCardColumn = null
+    const sourceId = e.dataTransfer?.getData('text/plain') || _draggedCardId
+    if (!this._isGroupDrop(sourceId)) return
+    e.preventDefault()
+    e.stopPropagation()
+    this.dispatchEvent(new CustomEvent('group-cards', {
+      bubbles: true,
+      composed: true,
+      detail: { cardId: sourceId, targetCardId: this.card.id },
+    }))
+    clearDraggedCard()
   }
 
   render() {
@@ -481,8 +504,9 @@ export class RetroCard extends LitElement {
     return html`
       <div
         class="card ${canPublish ? 'draft' : ''} ${this.isDragOver ? 'drag-over' : ''}"
-        draggable=${this.canGroup ? 'true' : 'false'}
+        draggable=${this.canGroup || this.canMove ? 'true' : 'false'}
         @dragstart=${this._onDragStart}
+        @dragend=${clearDraggedCard}
         @dragover=${this._onDragOver}
         @dragleave=${this._onDragLeave}
         @drop=${this._onDrop}

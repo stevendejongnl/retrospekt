@@ -80,6 +80,19 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         headers: { 'X-Participant-Name': participantName },
       }, { category: 'Card', action: 'edit' }),
 
+    moveCard: (
+      sessionId: string,
+      cardId: string,
+      column: string,
+      participantName: string,
+      facilitatorToken: string,
+    ) =>
+      request<Card>(`/sessions/${sessionId}/cards/${cardId}/column`, {
+        method: 'PATCH',
+        body: JSON.stringify({ column }),
+        headers: { 'X-Participant-Name': participantName, 'X-Facilitator-Token': facilitatorToken },
+      }, { category: 'Card', action: 'move', name: column }),
+
     addVote: (sessionId: string, cardId: string, participantName: string) =>
       request<Card>(`/sessions/${sessionId}/cards/${cardId}/votes`, {
         method: 'POST',

@@ -38,6 +38,7 @@ export class RetroColumn extends LitElement {
   @state() private editTitleValue = ''
   @state() private expandedGroupId: string | null = null
   @state() private dragOverGroupId: string | null = null
+  @state() private isMoveTarget = false
 
   static styles = [faIconStyles, css`
     :host {
@@ -311,6 +312,10 @@ export class RetroColumn extends LitElement {
       color: var(--retro-text-disabled);
       margin-top: 4px;
     }
+    .column.move-target {
+      outline: 2px dashed var(--col-accent);
+      outline-offset: -2px;
+    }
     .stack-tile.drag-over {
       outline: 2px dashed var(--col-accent);
       outline-offset: 2px;
@@ -532,6 +537,35 @@ export class RetroColumn extends LitElement {
     }
   }
 
+  // A card dragged in from another column, which the dragging participant may move
+  private _isMoveDrop(): boolean {
+    const info = getDraggedCardInfo()
+    return !!info.id && info.canMove && info.column !== this.title
+  }
+
+  private _onColumnDragOver(e: DragEvent): void {
+    if (!this._isMoveDrop()) return
+    e.preventDefault()
+    this.isMoveTarget = true
+  }
+
+  private _onColumnDragLeave(e: DragEvent): void {
+    // dragleave also fires when entering a child; only reset when leaving the column itself
+    const column = e.currentTarget as HTMLElement
+    if (!column.contains(e.relatedTarget as Node | null)) this.isMoveTarget = false
+  }
+
+  private _onColumnDrop(e: DragEvent): void {
+    this.isMoveTarget = false
+    if (!this._isMoveDrop()) return
+    e.preventDefault()
+    this.dispatchEvent(new CustomEvent('move-card', {
+      bubbles: true,
+      composed: true,
+      detail: { cardId: getDraggedCardInfo().id, column: this.title },
+    }))
+  }
+
   private _dispatchUngroup(cardId: string): void {
     this.dispatchEvent(
       new CustomEvent('ungroup-card', {
@@ -604,12 +638,21 @@ export class RetroColumn extends LitElement {
         card.published &&
         (card.author_name === this.participantName || this.isFacilitator)}
         ?canGroup=${this.phase === 'discussing' && card.published}
+        ?canMove=${this.phase !== 'closed' &&
+        !card.group_id &&
+        (card.author_name === this.participantName || this.isFacilitator)}
         style="--card-accent:${this.participantColorMap[card.author_name] ?? '#6b7280'}"
       ></retro-card>
     `
 
     return html`
-      <div class="column" style=${accentStyle}>
+      <div
+        class="column ${this.isMoveTarget ? 'move-target' : ''}"
+        style=${accentStyle}
+        @dragover=${this._onColumnDragOver}
+        @dragleave=${this._onColumnDragLeave}
+        @drop=${this._onColumnDrop}
+      >
         <div class="column-header">
           <span class="column-title" style="flex:1;min-width:0;">
             ${this.isFacilitator && this.phase === 'collecting'
@@ -699,7 +742,7 @@ export class RetroColumn extends LitElement {
                       @click=${() => { this.expandedGroupId = item.groupId }}
                       @dragover=${(e: DragEvent) => {
                         const info = getDraggedCardInfo()
-                        if (info.id && info.column === this.title) {
+                        if (info.id && info.canGroup && info.column === this.title) {
                           e.preventDefault()
                           this.dragOverGroupId = item.groupId
                         }
@@ -710,7 +753,7 @@ export class RetroColumn extends LitElement {
                         e.preventDefault()
                         this.dragOverGroupId = null
                         const info = getDraggedCardInfo()
-                        if (info.id && info.column === this.title) {
+                        if (info.id && info.canGroup && info.column === this.title) {
                           this.dispatchEvent(new CustomEvent('group-cards', {
                             bubbles: true,
                             composed: true,

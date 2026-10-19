@@ -652,6 +652,11 @@ export class RetroBoard extends LitElement {
     await api.assignCard(this.session.id, cardId, null, this.participantName, this.facilitatorToken)
   }
 
+  private async onMoveCard(e: CustomEvent): Promise<void> {
+    const { cardId, column } = e.detail as { cardId: string; column: string }
+    await api.moveCard(this.session.id, cardId, column, this.participantName, this.facilitatorToken)
+  }
+
   private async onGroupCards(e: CustomEvent): Promise<void> {
     const { cardId, targetCardId } = e.detail as { cardId: string; targetCardId: string }
     await api.groupCard(this.session.id, cardId, targetCardId, this.participantName)
@@ -900,6 +905,7 @@ export class RetroBoard extends LitElement {
         @assign-card=${this.onAssignCard}
         @unassign-card=${this.onUnassignCard}
         @group-cards=${this.onGroupCards}
+        @move-card=${this.onMoveCard}
         @ungroup-card=${this.onUngroupCard}
         @group-vote=${this.onGroupVote}
         @group-unvote=${this.onGroupUnvote}

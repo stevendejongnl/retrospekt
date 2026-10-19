@@ -95,6 +95,7 @@ POST   /api/v1/sessions/{id}/cards/publish-all                  publish all own 
 POST   /api/v1/sessions/{id}/cards/{card_id}/reactions          add emoji reaction (discussing/closed)
 DELETE /api/v1/sessions/{id}/cards/{card_id}/reactions          remove emoji reaction (?emoji=...)
 PATCH  /api/v1/sessions/{id}/cards/{card_id}/assignee           set or clear assignee (author or facilitator)
+PATCH  /api/v1/sessions/{id}/cards/{card_id}/column             move card to another column (author or facilitator, not closed, not grouped)
 
 PATCH  /api/v1/sessions/{id}/timer                              set timer duration (facilitator)
 POST   /api/v1/sessions/{id}/timer/start                        start or resume timer (facilitator)

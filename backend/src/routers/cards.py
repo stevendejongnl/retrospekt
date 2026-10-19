@@ -5,6 +5,7 @@ from ..models.requests import (
     AddCardRequest,
     AddReactionRequest,
     AssignCardRequest,
+    MoveCardRequest,
     PublishAllRequest,
     UpdateCardTextRequest,
 )
@@ -12,6 +13,7 @@ from ..models.session import REACTION_EMOJI, Card, Reaction, Session, Vote
 from ..repositories.session_repo import SessionRepository
 from ..services.sse_manager import sse_manager
 from ._shared import _public
+from .sessions import _check_facilitator_auth
 
 router = APIRouter(prefix="/api/v1/sessions")
 
@@ -348,6 +350,40 @@ async def update_card_text(
         raise HTTPException(status_code=403, detail="Only the author can edit this card")
 
     card.text = body.text
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
+
+    return card.model_dump()
+
+
+@router.patch("/{session_id}/cards/{card_id}/column")
+async def move_card(
+    session_id: str,
+    card_id: str,
+    body: MoveCardRequest,
+    x_participant_name: str | None = Header(default=None),
+    x_facilitator_token: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.phase == "closed":
+        raise HTTPException(status_code=409, detail="Session is closed")
+
+    card = next((c for c in session.cards if c.id == card_id), None)
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found")
+    if not (x_participant_name and card.author_name == x_participant_name):
+        _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
+    if body.column not in session.columns:
+        raise HTTPException(status_code=400, detail="Unknown column")
+    if card.group_id is not None:
+        raise HTTPException(status_code=409, detail="Ungroup card before moving")
+
+    card.column = body.column
+    # Same as publishing: the end of session.cards is the bottom of the column
+    move_published_cards_to_bottom(session, [card])
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
 

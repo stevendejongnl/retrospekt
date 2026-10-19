@@ -52,6 +52,10 @@ class UpdateCardTextRequest(BaseModel):
     text: str
 
 
+class MoveCardRequest(BaseModel):
+    column: str
+
+
 class UpdateSessionRequest(BaseModel):
     name: str | None = None
     reactions_enabled: bool | None = None
