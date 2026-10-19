@@ -62,7 +62,33 @@ export class NotificationDock extends LitElement {
         width: auto;
       }
     }
+
+    /* The dock sits over the bottom-left of the board. pointer-events can't
+       let a drag through: the cards opt their controls back in from inside
+       their own shadow roots. So during a drag the whole dock is hidden,
+       or a card dropped on that corner of the left column lands on the dock. */
+    :host([dragging]) {
+      visibility: hidden;
+    }
   `
+
+  private onDragStart = (): void => { this.toggleAttribute('dragging', true) }
+  // drop as well as dragend: dragend never arrives if the dragged card was re-rendered away
+  private onDragEnd = (): void => { this.toggleAttribute('dragging', false) }
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    document.addEventListener('dragstart', this.onDragStart)
+    document.addEventListener('dragend', this.onDragEnd)
+    document.addEventListener('drop', this.onDragEnd)
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    document.removeEventListener('dragstart', this.onDragStart)
+    document.removeEventListener('dragend', this.onDragEnd)
+    document.removeEventListener('drop', this.onDragEnd)
+  }
 
   /** Queue a notification. A kind already on screen is never stacked twice. */
   show(item: NotificationItem): void {
