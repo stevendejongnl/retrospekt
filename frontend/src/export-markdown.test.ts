@@ -50,7 +50,12 @@ function session(overrides: Partial<Session> = {}): Session {
 const md = (s: string) => s.replace(/␠␠/g, '  ')
 
 describe('sessionToMarkdown', () => {
-  it('renders the agreed layout: short lines, groups nested, assigned cards also listed as action items', () => {
+  it('has no separate action items section', () => {
+    const s = session({ cards: [card({ text: 'Split the e2e job', assignee: 'Bob' })] })
+    expect(sessionToMarkdown(s)).not.toContain('Action items')
+  })
+
+  it('renders the agreed layout: short lines, groups nested, assignees listed at the bottom', () => {
     const s = session({
       cards: [
         card({ id: 'c1', column: 'Went Well', author_name: 'Alice', text: 'Deploys were smooth', votes: votes(3),
@@ -70,10 +75,6 @@ Date: 19 Oct 2026␠␠
 Participants: Alice, Bob, Carol␠␠
 Cards: 5␠␠
 Votes: 10
-
-## Action items
-- [ ] Split the e2e job␠␠
-  @Bob
 
 ## Went Well
 - **Alice** · 3 votes␠␠
