@@ -623,12 +623,16 @@ test.describe('moving cards between columns', () => {
     const docked = page.locator('notification-dock feedback-dialog')
     await expect(docked).toBeVisible()
     const target = (await docked.boundingBox())!
-    const column = page.locator('retro-column').first().locator('.column')
-    const colBox = (await column.boundingBox())!
-    // Drop on the part of the left column the docked card sits on top of
-    const point = { x: target.x + target.width / 2 - colBox.x, y: target.y + target.height / 2 - colBox.y }
-    expect(point.y).toBeLessThan(colBox.height)
-    await page.locator('retro-column').nth(1).locator('.card').first().dragTo(column, { targetPosition: point })
+    const src = (await page.locator('retro-column').nth(1).locator('.card').first().boundingBox())!
+    // Drop right on the docked card: that's the part of the left column it covers
+    const drop = { x: target.x + target.width / 2, y: target.y + target.height / 2 }
+    const leftColumn = (await page.locator('retro-column').first().locator('.column').boundingBox())!
+    expect(drop.x).toBeGreaterThan(leftColumn.x)
+    expect(drop.y).toBeLessThan(leftColumn.y + leftColumn.height)
+    await page.mouse.move(src.x + src.width / 2, src.y + src.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(drop.x, drop.y, { steps: 10 })
+    await page.mouse.up()
     expect(await page.evaluate(() => (window as any).moves)).toEqual([{ cardId: 'c1', column: 'Left' }])
   })
 
