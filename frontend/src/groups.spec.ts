@@ -600,6 +600,38 @@ test.describe('moving cards between columns', () => {
     await expect(col.locator('.stack-expanded retro-card .card').first()).toHaveAttribute('draggable', 'false')
   })
 
+  test('a real drag onto the left column works while the notification dock covers part of it', async ({ page }) => {
+    const session = {
+      ...BASE,
+      phase: 'collecting' as const,
+      columns: ['Left', 'Middle', 'Right'],
+      cards: [
+        makeCard({ id: 'c1', column: 'Middle', author_name: 'Alice', published: false }),
+        // Enough cards to make the left column reach down behind the bottom-left dock
+        ...Array.from({ length: 6 }, (_, i) =>
+          makeCard({ id: `l${i}`, column: 'Left', author_name: 'Alice', published: false, text: `left ${i}` })),
+      ],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.evaluate(async () => {
+      const { notifications } = await import('/src/components/notification-dock.ts')
+      notifications.feedback({ sessionId: 'x', participantName: 'Alice' })
+      const board = (document.querySelector('session-page') as any).shadowRoot.querySelector('retro-board')
+      ;(window as any).moves = []
+      board.addEventListener('move-card', (e: Event) => (window as any).moves.push((e as CustomEvent).detail))
+    })
+    const docked = page.locator('notification-dock feedback-dialog')
+    await expect(docked).toBeVisible()
+    const target = (await docked.boundingBox())!
+    const column = page.locator('retro-column').first().locator('.column')
+    const colBox = (await column.boundingBox())!
+    // Drop on the part of the left column the docked card sits on top of
+    const point = { x: target.x + target.width / 2 - colBox.x, y: target.y + target.height / 2 - colBox.y }
+    expect(point.y).toBeLessThan(colBox.height)
+    await page.locator('retro-column').nth(1).locator('.card').first().dragTo(column, { targetPosition: point })
+    expect(await page.evaluate(() => (window as any).moves)).toEqual([{ cardId: 'c1', column: 'Left' }])
+  })
+
   test('move-card event calls api.moveCard', async ({ page }) => {
     const session = {
       ...TWO_COLS,

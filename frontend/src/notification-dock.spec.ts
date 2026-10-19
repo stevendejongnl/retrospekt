@@ -128,6 +128,37 @@ test.describe('notification-dock', () => {
     expect(await page.evaluate(() => (window as Window & { __behindClicked?: boolean }).__behindClicked)).toBe(true)
   })
 
+  test('steps out of the way while something is dragged, so a drop lands on the board behind', async ({ page }) => {
+    await mount(page)
+    await page.evaluate(() => (window as unknown as Win).notifications.feedback())
+    const card = dock(page).locator('feedback-dialog')
+    await expect(card).toBeVisible()
+    const box = (await card.boundingBox())!
+    const hitIsDock = () => page.evaluate(
+      ([x, y]) => document.elementFromPoint(x, y)?.tagName === 'NOTIFICATION-DOCK',
+      [box.x + box.width / 2, box.y + box.height / 2],
+    )
+    expect(await hitIsDock()).toBe(true)
+
+    await page.evaluate(() => document.dispatchEvent(new DragEvent('dragstart', { bubbles: true })))
+    await expect(card).toBeHidden()
+    expect(await hitIsDock()).toBe(false)
+
+    await page.evaluate(() => document.dispatchEvent(new DragEvent('dragend', { bubbles: true })))
+    await expect(card).toBeVisible()
+    expect(await hitIsDock()).toBe(true)
+  })
+
+  test('comes back after a drop even if the dragged element was removed before dragend', async ({ page }) => {
+    await mount(page)
+    await page.evaluate(() => (window as unknown as Win).notifications.feedback())
+    const card = dock(page).locator('feedback-dialog')
+    await page.evaluate(() => document.dispatchEvent(new DragEvent('dragstart', { bubbles: true })))
+    await expect(card).toBeHidden()
+    await page.evaluate(() => document.dispatchEvent(new DragEvent('drop', { bubbles: true })))
+    await expect(card).toBeVisible()
+  })
+
   test('submits with no session or participant when queued bare', async ({ page }) => {
     await mount(page)
     let body: Record<string, unknown> = {}
