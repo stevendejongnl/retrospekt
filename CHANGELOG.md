@@ -1,3 +1,9 @@
+## [1.47.1](https://github.com/stevendejongnl/retrospekt/compare/v1.47.0...v1.47.1) (2026-10-19)
+
+### Bug Fixes
+
+* **export:** keep assigned cards in their own column ([7f1571b](https://github.com/stevendejongnl/retrospekt/commit/7f1571b142dd5bed4f0a085c1f9a468f391f1e45))
+
 ## [1.47.0](https://github.com/stevendejongnl/retrospekt/compare/v1.46.0...v1.47.0) (2026-10-19)
 
 ### Features
