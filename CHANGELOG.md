@@ -1,3 +1,9 @@
+## [1.46.0](https://github.com/stevendejongnl/retrospekt/compare/v1.45.1...v1.46.0) (2026-10-19)
+
+### Features
+
+* **cards:** move a card to another column by dragging it ([659776c](https://github.com/stevendejongnl/retrospekt/commit/659776c6ff88514ec8db79d4620bfeb6a25b1cf3))
+
 ## [1.45.1](https://github.com/stevendejongnl/retrospekt/compare/v1.45.0...v1.45.1) (2026-10-12)
 
 ### Bug Fixes
