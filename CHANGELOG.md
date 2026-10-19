@@ -1,3 +1,13 @@
+## [1.47.0](https://github.com/stevendejongnl/retrospekt/compare/v1.46.0...v1.47.0) (2026-10-19)
+
+### Features
+
+* **export:** clearer Markdown export with short lines, nested groups and action items ([d7c8658](https://github.com/stevendejongnl/retrospekt/commit/d7c86585da498e307af0fa2aa396c0b58f9073b6))
+
+### Bug Fixes
+
+* **notifications:** hide the dock during a drag so a card can be dropped on the left column ([094e723](https://github.com/stevendejongnl/retrospekt/commit/094e723c82934b186d314fc0c7f271254dac47f6))
+
 ## [1.46.0](https://github.com/stevendejongnl/retrospekt/compare/v1.45.1...v1.46.0) (2026-10-19)
 
 ### Features
