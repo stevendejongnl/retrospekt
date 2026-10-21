@@ -5,18 +5,19 @@ from typing import Annotated
 
 import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, Header, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from ..config import settings
 from ..dependencies import get_feedback_repo, get_redis
 from ..models.feedback import Feedback, FeedbackStatus
+from ..models.requests import RequestModel
 from ..repositories.feedback_repo import FeedbackRepository
 from ..services.apprise_client import AppriseClient
 
 router = APIRouter(prefix="/api/v1/feedback", tags=["feedback"])
 
 
-class SubmitFeedbackRequest(BaseModel):
+class SubmitFeedbackRequest(RequestModel):
     rating: int = Field(..., ge=1, le=5)
     comment: str = ""
     session_id: str | None = None
@@ -24,7 +25,7 @@ class SubmitFeedbackRequest(BaseModel):
     app_version: str = ""
 
 
-class PatchFeedbackRequest(BaseModel):
+class PatchFeedbackRequest(RequestModel):
     status: FeedbackStatus
     fixed_in_version: str | None = None
 

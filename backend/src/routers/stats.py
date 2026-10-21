@@ -7,10 +7,10 @@ import redis.asyncio as aioredis
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from fastapi import APIRouter, Depends, Header, HTTPException
-from pydantic import BaseModel
 
 from ..config import settings
 from ..dependencies import get_redis, get_repo
+from ..models.requests import RequestModel
 from ..repositories.session_repo import SessionRepository
 from ..repositories.stats_repo import AdminStats, PublicStats, SentryHealth, StatsRepository
 from ..services.sentry_service import SentryService
@@ -18,7 +18,7 @@ from ..services.sentry_service import SentryService
 router = APIRouter(prefix="/api/v1/stats", tags=["stats"])
 
 
-class AdminAuthRequest(BaseModel):
+class AdminAuthRequest(RequestModel):
     password: str
 
 

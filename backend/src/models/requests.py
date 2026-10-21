@@ -1,7 +1,34 @@
-from pydantic import BaseModel
+from typing import Any
+
+from pydantic import BaseModel, field_validator
 
 
-class CreateSessionRequest(BaseModel):
+def reject_half_emoji(value: Any) -> Any:
+    """Raise on a lone UTF-16 surrogate (half an emoji) anywhere in the value.
+
+    MongoDB stores text as UTF-8, which cannot encode a lone surrogate, so it
+    would otherwise fail later as a 500 instead of a 422 here.
+    """
+    texts = value if isinstance(value, list) else [value]
+    for text in texts:
+        if isinstance(text, str):
+            try:
+                text.encode("utf-8")
+            except UnicodeEncodeError as error:
+                raise ValueError("text contains an incomplete emoji or character") from error
+    return value
+
+
+class RequestModel(BaseModel):
+    """Base for request bodies: every text field must be valid Unicode."""
+
+    @field_validator("*")
+    @classmethod
+    def text_is_valid_unicode(cls, value: Any) -> Any:
+        return reject_half_emoji(value)
+
+
+class CreateSessionRequest(RequestModel):
     name: str
     participant_name: str = "Facilitator"
     columns: list[str] | None = None
@@ -10,73 +37,73 @@ class CreateSessionRequest(BaseModel):
     max_votes_per_participant: int | None = None
 
 
-class JoinSessionRequest(BaseModel):
+class JoinSessionRequest(RequestModel):
     participant_name: str
 
 
-class SetPhaseRequest(BaseModel):
+class SetPhaseRequest(RequestModel):
     phase: str
 
 
-class AddCardRequest(BaseModel):
+class AddCardRequest(RequestModel):
     column: str
     text: str
     author_name: str
 
 
-class PublishAllRequest(BaseModel):
+class PublishAllRequest(RequestModel):
     column: str
 
 
-class AddColumnRequest(BaseModel):
+class AddColumnRequest(RequestModel):
     name: str
 
 
-class RenameColumnRequest(BaseModel):
+class RenameColumnRequest(RequestModel):
     name: str
 
 
-class AddReactionRequest(BaseModel):
+class AddReactionRequest(RequestModel):
     emoji: str
 
 
-class AssignCardRequest(BaseModel):
+class AssignCardRequest(RequestModel):
     assignee: str | None
 
 
-class SetTimerDurationRequest(BaseModel):
+class SetTimerDurationRequest(RequestModel):
     duration_seconds: int
 
 
-class UpdateCardTextRequest(BaseModel):
+class UpdateCardTextRequest(RequestModel):
     text: str
 
 
-class MoveCardRequest(BaseModel):
+class MoveCardRequest(RequestModel):
     column: str
 
 
-class UpdateSessionRequest(BaseModel):
+class UpdateSessionRequest(RequestModel):
     name: str | None = None
     reactions_enabled: bool | None = None
     open_facilitator: bool | None = None
     max_votes_per_participant: int | None = None
 
 
-class AddNoteRequest(BaseModel):
+class AddNoteRequest(RequestModel):
     title: str | None = None
     text: str
     author_name: str
 
 
-class UpdateNoteRequest(BaseModel):
+class UpdateNoteRequest(RequestModel):
     title: str | None = None
     text: str
 
 
-class GroupCardRequest(BaseModel):
+class GroupCardRequest(RequestModel):
     target_card_id: str
 
 
-class SetColumnSortRequest(BaseModel):
+class SetColumnSortRequest(RequestModel):
     sort_by_votes: bool

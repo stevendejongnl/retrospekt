@@ -1,6 +1,7 @@
 """Retrospekt backend — FastAPI application factory."""
 
 import asyncio
+import json
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -8,7 +9,9 @@ from datetime import UTC, datetime, timedelta
 
 import redis.asyncio as aioredis
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
@@ -60,6 +63,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # type: ignore[
         await disconnect_db()
 
 
+async def validation_error_response(request: Request, exc: Exception) -> Response:
+    """Same 422 body as FastAPI's default, but ASCII-escaped.
+
+    The body echoes the rejected input. If that input holds half an emoji (a
+    lone surrogate), the default UTF-8 response cannot encode it and the 422
+    turns into a 500. ASCII escaping writes it as `\\ud83d`, which is valid JSON.
+    """
+    assert isinstance(exc, RequestValidationError)
+    body = json.dumps({"detail": jsonable_encoder(exc.errors())})
+    return Response(body, status_code=422, media_type="application/json")
+
+
 def create_app() -> FastAPI:
     if settings.sentry_dsn:
         sentry_sdk.init(
@@ -74,6 +89,8 @@ def create_app() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
     )
+
+    app.add_exception_handler(RequestValidationError, validation_error_response)
 
     app.add_middleware(
         CORSMiddleware,

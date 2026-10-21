@@ -440,7 +440,7 @@ export class RetroColumn extends LitElement {
     void this.updateComplete.then(() => {
       const newTa = this.shadowRoot?.querySelector('textarea') as HTMLTextAreaElement | null
       if (newTa) {
-        const pos = start + [...emoji].length
+        const pos = start + emoji.length
         newTa.setSelectionRange(pos, pos)
         newTa.focus()
       }
