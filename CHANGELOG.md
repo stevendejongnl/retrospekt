@@ -1,3 +1,9 @@
+## [1.47.2](https://github.com/stevendejongnl/retrospekt/compare/v1.47.1...v1.47.2) (2026-10-21)
+
+### Bug Fixes
+
+* **cards:** stop the emoji picker from splitting emoji and reject half an emoji with 422 ([d62ca4a](https://github.com/stevendejongnl/retrospekt/commit/d62ca4a374e0fcb41d77b4b7b9b84387d17b5477))
+
 ## [1.47.1](https://github.com/stevendejongnl/retrospekt/compare/v1.47.0...v1.47.1) (2026-10-19)
 
 ### Bug Fixes
