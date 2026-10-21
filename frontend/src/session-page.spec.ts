@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import type { Page } from '@playwright/test'
 import { test, expect } from './playwright-fixtures'
 
@@ -13,6 +14,7 @@ const BASE = {
   phase: 'collecting',
   participants: [{ name: 'Alice', joined_at: '2026-01-01T00:00:00Z' }],
   cards: [] as object[],
+  notes: [] as object[],
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
   facilitator_token: FAC_TOKEN,
@@ -705,6 +707,13 @@ test.describe('session-page whats-new dialog', () => {
 
 // ── Export ────────────────────────────────────────────────────────────────────
 
+async function exportedMarkdown(page: Page): Promise<string> {
+  const downloadPromise = page.waitForEvent('download')
+  await page.locator('.export-btn').click()
+  const download = await downloadPromise
+  return readFile(await download.path(), 'utf-8')
+}
+
 test.describe('session-page export', () => {
   test('clicking the export button triggers a Markdown file download', async ({ page }) => {
     await withName(page, 'Alice')
@@ -737,14 +746,21 @@ test.describe('session-page export', () => {
       phase: 'discussing',
       notes: [
         { id: 'note-1', author_name: 'Alice', text: 'Consider reducing WIP', created_at: '2026-01-01T00:00:00Z' },
+        { id: 'note-2', author_name: 'Bob', title: 'Parking lot', text: 'CI runners', created_at: '2026-01-01T00:00:00Z' },
       ],
     }
     await mockApi(page, sessionWithNotes as typeof BASE)
     await page.goto(`/session/${SESSION_ID}`)
+    expect(await exportedMarkdown(page)).toContain('## Notes\nConsider reducing WIP\n\n### Parking lot\nCI runners')
+  })
+
+  test('export falls back to retro.md when the session name has no letters or digits', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, { ...BASE, name: '🎉 🎉', phase: 'discussing' } as typeof BASE)
+    await page.goto(`/session/${SESSION_ID}`)
     const downloadPromise = page.waitForEvent('download')
     await page.locator('.export-btn').click()
-    const download = await downloadPromise
-    expect(download.suggestedFilename()).toMatch(/\.md$/)
+    expect((await downloadPromise).suggestedFilename()).toBe('retro.md')
   })
 
   test('export with cards renders card text, multiple votes, reactions, and assignee', async ({ page }) => {
@@ -782,7 +798,7 @@ test.describe('session-page export', () => {
           author_name: 'Alice',
           votes: [],
           published: true,
-          reactions: null, // covers the ?? [] fallback on line 552
+          reactions: [],
           assignee: null,
           created_at: '2026-01-01T00:00:00Z',
         },
@@ -790,10 +806,73 @@ test.describe('session-page export', () => {
     }
     await mockApi(page, sessionWithCards as typeof BASE)
     await page.goto(`/session/${SESSION_ID}`)
-    const downloadPromise = page.waitForEvent('download')
-    await page.locator('.export-btn').click()
-    const download = await downloadPromise
-    expect(download.suggestedFilename()).toMatch(/\.md$/)
+    const markdown = await exportedMarkdown(page)
+    expect(markdown).toContain('- **Alice** · 2 votes  \n  Great teamwork  \n  ❤️ 1  \n  @Bob')
+    expect(markdown).toContain('- **Bob** · 1 vote  \n  Good retrospective')
+    expect(markdown).toContain('## To Improve\n- **Alice** · 0 votes  \n  Communication')
+    expect(markdown).toContain('## Assignees\n- **Bob**\n  - Great teamwork')
+  })
+
+  test('export nests grouped cards under one group worth all their votes', async ({ page }) => {
+    await withName(page, 'Alice')
+    const card = (id: string, text: string, votes: number, group_id: string | null) => ({
+      id,
+      column: 'Went Well',
+      text,
+      author_name: 'Alice',
+      votes: Array.from({ length: votes }, (_, i) => ({ participant_name: `P${i}` })),
+      published: true,
+      reactions: [],
+      assignee: null,
+      group_id,
+      created_at: '2026-01-01T00:00:00Z',
+    })
+    const sessionWithGroup = {
+      ...BASE,
+      phase: 'discussing',
+      cards: [
+        card('c1', 'Pairing', 1, 'g1'),
+        card('c2', 'Solo card', 2, null),
+        card('c3', 'Mob sessions', 3, 'g1'),
+      ],
+    }
+    await mockApi(page, sessionWithGroup as typeof BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    const markdown = await exportedMarkdown(page)
+    expect(markdown).toContain(
+      '## Went Well\n' +
+      '- **Group** · 4 votes\n' +
+      '  - **Alice** · 3 votes  \n    Mob sessions\n' +
+      '  - **Alice** · 1 vote  \n    Pairing\n' +
+      '- **Alice** · 2 votes  \n  Solo card',
+    )
+  })
+
+  test('export lists the most-used reaction first', async ({ page }) => {
+    await withName(page, 'Alice')
+    const sessionWithReactions = {
+      ...BASE,
+      phase: 'discussing',
+      cards: [{
+        id: 'c1',
+        column: 'Went Well',
+        text: 'Demo day',
+        author_name: 'Alice',
+        votes: [],
+        published: true,
+        reactions: [
+          { emoji: '🎉', participant_name: 'Alice' },
+          { emoji: '❤️', participant_name: 'Alice' },
+          { emoji: '❤️', participant_name: 'Bob' },
+        ],
+        assignee: null,
+        group_id: null,
+        created_at: '2026-01-01T00:00:00Z',
+      }],
+    }
+    await mockApi(page, sessionWithReactions as typeof BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    expect(await exportedMarkdown(page)).toContain('Demo day  \n  ❤️ 2 · 🎉 1')
   })
 
   test('exportSession does nothing when session is null (defensive guard)', async ({ page }) => {
