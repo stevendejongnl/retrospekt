@@ -127,4 +127,23 @@ describe('retro-column', () => {
     expect(captured).to.not.be.null
     expect(captured!.detail.text).to.equal('Follow up')
   })
+
+  it('picking two emoji in a row keeps both whole (no half-emoji in the text)', async () => {
+    const el = await fixture<RetroColumn>(
+      html`<retro-column .title=${'Went Well'} .phase=${'collecting'} .participantName=${'Alice'}></retro-column>`,
+    )
+    el.shadowRoot!.querySelector<HTMLButtonElement>('.add-btn')!.click()
+    await el.updateComplete
+    const pick = async (emoji: string) => {
+      el.shadowRoot!.querySelector('emoji-picker')!.dispatchEvent(
+        new CustomEvent('pick-emoji', { detail: { emoji }, bubbles: true, composed: true }),
+      )
+      await el.updateComplete
+      await el.updateComplete
+    }
+    await pick('🥹')
+    await pick('🫡')
+    const textarea = el.shadowRoot!.querySelector<HTMLTextAreaElement>('textarea')!
+    expect(textarea.value).to.equal('🥹🫡')
+  })
 })
