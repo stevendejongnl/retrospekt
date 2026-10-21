@@ -1,3 +1,9 @@
+## [1.47.3](https://github.com/stevendejongnl/retrospekt/compare/v1.47.2...v1.47.3) (2026-10-21)
+
+### Code Refactoring
+
+* **export:** drop fallbacks for fields the API always sends ([6c01c28](https://github.com/stevendejongnl/retrospekt/commit/6c01c28bbab2b0c854dd5aa950607c09b04efd5e))
+
 ## [1.47.2](https://github.com/stevendejongnl/retrospekt/compare/v1.47.1...v1.47.2) (2026-10-21)
 
 ### Bug Fixes
