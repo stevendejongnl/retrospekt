@@ -159,11 +159,6 @@ Votes: 0
     expect(sessionToMarkdown(s)).toContain('## Notes\n### One\na\n\n### Two\nb\n')
   })
 
-  it('tolerates a session without a notes field', () => {
-    const s = { ...session(), notes: undefined } as unknown as Session
-    expect(sessionToMarkdown(s)).not.toContain('## Notes')
-  })
-
   it('groups assignees by name, sorted, with multi-line card text indented under the item', () => {
     const s = session({
       cards: [

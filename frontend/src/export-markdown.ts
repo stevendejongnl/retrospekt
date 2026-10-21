@@ -17,7 +17,7 @@ function block(lines: string[]): string[] {
 }
 
 // First line gets `bullet`, the rest are indented to line up under it.
-function listItem(bullet: string, lines: string[], indent = ''): string[] {
+function listItem(bullet: string, lines: string[], indent: string): string[] {
   const pad = ' '.repeat(bullet.length)
   return block(lines).map((line, i) => indent + (i === 0 ? bullet : pad) + line)
 }
@@ -30,7 +30,7 @@ const voteCount = (n: number) => `${n} vote${n === 1 ? '' : 's'}`
 
 function reactionLine(card: Card): string | null {
   const counts = new Map<string, number>()
-  for (const r of card.reactions ?? []) counts.set(r.emoji, (counts.get(r.emoji) ?? 0) + 1)
+  for (const r of card.reactions) counts.set(r.emoji, (counts.get(r.emoji) ?? 0) + 1)
   if (counts.size === 0) return null
   return [...counts]
     .sort((a, b) => b[1] - a[1])
@@ -92,15 +92,11 @@ function noteLines(note: Note): string[] {
 }
 
 function assigneesSection(assigned: Card[]): string[] {
-  const byName = new Map<string, Card[]>()
-  for (const card of assigned) {
-    const name = card.assignee as string
-    byName.set(name, [...(byName.get(name) ?? []), card])
-  }
+  const names = [...new Set(assigned.map(card => card.assignee as string))].sort((a, b) => a.localeCompare(b))
   const lines = ['## Assignees']
-  for (const name of [...byName.keys()].sort((a, b) => a.localeCompare(b))) {
+  for (const name of names) {
     lines.push(`- **${name}**`)
-    for (const card of byName.get(name) ?? []) lines.push(...listItem('- ', textLines(card.text), '  '))
+    for (const card of assigned.filter(c => c.assignee === name)) lines.push(...listItem('- ', textLines(card.text), '  '))
   }
   return lines
 }
@@ -128,8 +124,7 @@ export function sessionToMarkdown(session: Session): string {
     if (cards.length > 0) sections.push(columnSection(column, cards))
   }
 
-  // Sessions from before notes existed have no notes field
-  const notes = (session.notes ?? []).map(noteLines)
+  const notes = session.notes.map(noteLines)
   if (notes.length > 0) {
     sections.push(['## Notes', ...notes.flatMap((lines, i) => (i === 0 ? lines : ['', ...lines]))])
   }
