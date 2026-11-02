@@ -306,15 +306,28 @@ test.describe('retro-card delete button', () => {
 // ── Reactions row ─────────────────────────────────────────────────────────────
 
 test.describe('retro-card reactions', () => {
-  test('reactions row is shown for published card in discussing phase, with an add-reaction control and no buttons yet', async ({ page }) => {
+  test('a card without reactions has no reactions row; the add-reaction control sits in the footer', async ({ page }) => {
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Bob', published: true })],
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
-    await expect(page.locator('.reactions-row')).toBeVisible()
-    await expect(page.locator('.reaction-btn')).toHaveCount(0)
-    await expect(page.locator('emoji-picker .trigger')).toBeVisible()
+    await expect(page.locator('.card-actions emoji-picker .trigger')).toBeVisible()
+    await expect(page.locator('.reactions-row')).toHaveCount(0)
+  })
+
+  test('once a card has reactions, the add-reaction control moves into the reactions row', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({
+        author_name: 'Bob',
+        published: true,
+        reactions: [{ emoji: '❤️', participant_name: 'Carol' }],
+      })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('.reactions-row emoji-picker .trigger')).toBeVisible()
+    await expect(page.locator('.card-actions emoji-picker')).toHaveCount(0)
   })
 
   test('existing reactions render as buttons with their emoji and count', async ({ page }) => {
@@ -389,13 +402,26 @@ test.describe('retro-card reactions', () => {
 // ── Assignee ──────────────────────────────────────────────────────────────────
 
 test.describe('retro-card assignee', () => {
-  test('assign select is shown when canAssign and card has no assignee', async ({ page }) => {
+  test('an unassigned card shows only an assign button in the footer, no assignee row', async ({ page }) => {
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Alice', published: true, assignee: null })],
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('.card-actions .assign-btn')).toBeVisible()
+    await expect(page.locator('.assignee-row')).toHaveCount(0)
+    await expect(page.locator('.assign-select')).toHaveCount(0)
+  })
+
+  test('clicking the assign button reveals the assign select', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ author_name: 'Alice', published: true, assignee: null })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.assign-btn').click()
     await expect(page.locator('.assign-select')).toBeVisible()
+    await expect(page.locator('.assign-select')).toBeFocused()
   })
 
   test('selecting an option from assign-select calls PATCH /assignee', async ({ page }) => {
@@ -404,9 +430,32 @@ test.describe('retro-card assignee', () => {
       cards: [makeCard({ author_name: 'Alice', published: true, assignee: null })],
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.assign-btn').click()
     const req = page.waitForRequest(r => r.url().includes('/assignee') && r.method() === 'PATCH')
     await page.locator('.assign-select').selectOption('Bob')
     await req
+  })
+
+  test('leaving the assign select without choosing hides it again', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ author_name: 'Alice', published: true, assignee: null })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.assign-btn').click()
+    await expect(page.locator('.assign-select')).toBeFocused()
+    await page.locator('.assign-select').blur()
+    await expect(page.locator('.assign-select')).toHaveCount(0)
+  })
+
+  test('the assign button is not shown when the card already has an assignee', async ({ page }) => {
+    const session = {
+      ...BASE,
+      cards: [makeCard({ author_name: 'Alice', published: true, assignee: 'Bob' })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('.assignee-chip')).toBeVisible()
+    await expect(page.locator('.assign-btn')).toHaveCount(0)
   })
 
   test('assignee chip is shown when card.assignee is set', async ({ page }) => {
@@ -465,30 +514,41 @@ test.describe('retro-card reactions_enabled', () => {
     await expect(page.locator('.reactions-row')).not.toBeVisible()
   })
 
-  test('reactions row is shown when reactions_enabled=true', async ({ page }) => {
+  test('add-reaction control is hidden when reactions_enabled=false', async ({ page }) => {
+    const session = {
+      ...BASE,
+      reactions_enabled: false,
+      cards: [makeCard({ author_name: 'Bob', published: true })],
+    }
+    await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await expect(page.locator('retro-card')).toBeVisible()
+    await expect(page.locator('emoji-picker')).toHaveCount(0)
+  })
+
+  test('add-reaction control is shown when reactions_enabled=true', async ({ page }) => {
     const session = {
       ...BASE,
       reactions_enabled: true,
       cards: [makeCard({ author_name: 'Bob', published: true })],
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
-    await expect(page.locator('.reactions-row')).toBeVisible()
+    await expect(page.locator('emoji-picker .trigger')).toBeVisible()
   })
 })
 
 // ── Reactions empty array ──────────────────────────────────────────────────────
 
 test.describe('retro-card reactions empty handling', () => {
-  test('renders reactions row when card.reactions is empty', async ({ page }) => {
+  test('renders no reactions row when card.reactions is empty', async ({ page }) => {
     const session = {
       ...BASE,
       cards: [makeCard({ author_name: 'Bob', published: true, reactions: [] })],
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
-    // canReact=true (discussing, published, not own card) — row shown via the
-    // add-reaction picker even though there are no reaction buttons yet
-    await expect(page.locator('.reactions-row')).toBeVisible()
-    await expect(page.locator('.reaction-btn')).toHaveCount(0)
+    // canReact=true (discussing, published, not own card) — the add-reaction
+    // picker lives in the footer, so an empty row doesn't add height
+    await expect(page.locator('.card-actions emoji-picker .trigger')).toBeVisible()
+    await expect(page.locator('.reactions-row')).toHaveCount(0)
   })
 })
 
@@ -501,6 +561,7 @@ test.describe('retro-card assign select empty option', () => {
       cards: [makeCard({ author_name: 'Alice', published: true, assignee: null })],
     }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice')
+    await page.locator('.assign-btn').click()
     await expect(page.locator('.assign-select')).toBeVisible()
 
     // Trigger onAssignChange with empty value — hits the `if (!assignee) return` guard (line 274)
