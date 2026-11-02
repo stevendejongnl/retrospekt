@@ -1,3 +1,13 @@
+## [1.48.0](https://github.com/stevendejongnl/retrospekt/compare/v1.47.3...v1.48.0) (2026-11-02)
+
+### Features
+
+* **cards:** move empty reaction and assign controls into the card footer ([c923832](https://github.com/stevendejongnl/retrospekt/commit/c923832e65327dc73ca861cf8d229daa84508d1a))
+
+### Bug Fixes
+
+* **cards:** let open-facilitator participants assign any card ([269c183](https://github.com/stevendejongnl/retrospekt/commit/269c18321ab56aa850b36811362f38633490d362))
+
 ## [1.47.3](https://github.com/stevendejongnl/retrospekt/compare/v1.47.2...v1.47.3) (2026-10-21)
 
 ### Code Refactoring
