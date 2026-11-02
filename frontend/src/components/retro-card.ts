@@ -2,7 +2,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Card } from '../types'
-import { faIconStyles, iconThumbsUp } from '../icons'
+import { faIconStyles, iconThumbsUp, iconUser } from '../icons'
 import { bacon } from '../theme'
 import { renderCardText } from '../linkify'
 import '../components/emoji-picker'
@@ -50,6 +50,7 @@ export class RetroCard extends LitElement {
   @state() private isDragOver = false
   @state() private editing = false
   @state() private editText = ''
+  @state() private assigning = false
 
   private _halalListener!: EventListener
 
@@ -210,6 +211,25 @@ export class RetroCard extends LitElement {
     .assign-select:focus {
       outline: none;
       border-color: var(--retro-accent);
+    }
+    /* Matches emoji-picker's .trigger, its neighbour in the footer */
+    .assign-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1px dashed var(--retro-border-default);
+      background: none;
+      color: var(--retro-text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .assign-btn:hover {
+      border-color: var(--retro-accent);
+      color: var(--retro-accent);
     }
     .card-footer {
       display: flex;
@@ -445,6 +465,14 @@ export class RetroCard extends LitElement {
       }),
     )
       ; (e.target as HTMLSelectElement).value = ''
+    this.assigning = false
+  }
+
+  private onAssignClick(): void {
+    this.assigning = true
+    void this.updateComplete.then(() => {
+      (this.shadowRoot?.querySelector('.assign-select') as HTMLElement | null)?.focus()
+    })
   }
 
   private onUnassignClick(): void {
@@ -525,7 +553,7 @@ export class RetroCard extends LitElement {
               @click=${this.onTextClick}
             >${renderCardText(card.text)}</p>`}
 
-        ${this.reactionsEnabled && (groups.length > 0 || this.canReact)
+        ${this.reactionsEnabled && groups.length > 0
         ? html`
               <div class="reactions-row">
                 ${groups.map(
@@ -547,7 +575,7 @@ export class RetroCard extends LitElement {
             `
         : ''}
 
-        ${this.canAssign || card.assignee
+        ${card.assignee || (this.canAssign && this.assigning)
         ? html`
               <div class="assignee-row">
                 ${card.assignee
@@ -560,7 +588,11 @@ export class RetroCard extends LitElement {
                       </span>
                     `
             : html`
-                      <select class="assign-select" @change=${this.onAssignChange}>
+                      <select
+                        class="assign-select"
+                        @change=${this.onAssignChange}
+                        @blur=${() => { this.assigning = false }}
+                      >
                         <option value="">Assign to…</option>
                         ${this.participantNames.map(
               (name) => html`<option value="${name}">${name}</option>`,
@@ -577,6 +609,14 @@ export class RetroCard extends LitElement {
             ${canPublish ? html`<span class="draft-badge">draft</span>` : ''}
           </div>
           <div class="card-actions">
+            ${this.reactionsEnabled && this.canReact && groups.length === 0
+        ? html`<emoji-picker @pick-emoji=${this.onPickEmoji}></emoji-picker>`
+        : ''}
+            ${this.canAssign && !card.assignee && !this.assigning
+        ? html`<button class="assign-btn" @click=${this.onAssignClick} title="Assign to…">
+                  ${iconUser()}
+                </button>`
+        : ''}
             ${canPublish
         ? html`
                   <button class="publish-btn" @click=${this.onPublishClick} title="Publish card">
