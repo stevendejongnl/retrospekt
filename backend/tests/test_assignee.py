@@ -128,3 +128,19 @@ async def test_assign_unknown_card_returns_404(client: AsyncClient):
         headers={"X-Participant-Name": "Alice"},
     )
     assert response.status_code == 404
+
+
+async def test_any_participant_can_assign_any_card_in_open_facilitator_mode(client: AsyncClient):
+    session_id, facilitator_token, card_id = await _published_card(client)
+    await client.patch(
+        f"/api/v1/sessions/{session_id}",
+        json={"open_facilitator": True},
+        headers={"X-Facilitator-Token": facilitator_token},
+    )
+    response = await client.patch(
+        f"/api/v1/sessions/{session_id}/cards/{card_id}/assignee",
+        json={"assignee": "Carol"},
+        headers={"X-Participant-Name": "Bob"},
+    )
+    assert response.status_code == 200
+    assert response.json()["assignee"] == "Carol"
