@@ -314,10 +314,8 @@ async def assign_card(
     if not card.published:
         raise HTTPException(status_code=409, detail="Card must be published to assign")
 
-    is_facilitator = session.facilitator_token == x_facilitator_token
-    is_author = card.author_name == x_participant_name
-    if not (is_facilitator or is_author):
-        raise HTTPException(status_code=403, detail="Only the author or facilitator can assign this card")
+    if not (x_participant_name and card.author_name == x_participant_name):
+        _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
 
     card.assignee = body.assignee
     session = await repo.update(session)
