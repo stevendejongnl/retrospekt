@@ -824,6 +824,13 @@ export class RetroBoard extends LitElement {
                 : ''}
               <button class="settings-btn" title="Session settings" @click=${this.openSettings}>${iconGear()}</button>
               ${participantCountBtn}
+              <retro-timer
+                .timer=${session.timer ?? null}
+                .sessionId=${session.id}
+                isFacilitator
+                .facilitatorToken=${this.facilitatorToken}
+                .participantName=${this.participantName}
+              ></retro-timer>
               <button class="help-btn" @click=${() => (this.showHelp = true)}>?</button>
               ${session.phase !== 'closed'
                 ? html`
@@ -846,13 +853,11 @@ export class RetroBoard extends LitElement {
             </div>
           `}
 
-      ${this.isFacilitator || session.timer
+      ${!this.isFacilitator && session.timer
         ? html`
             <retro-timer
-              .timer=${session.timer ?? null}
+              .timer=${session.timer}
               .sessionId=${session.id}
-              ?isFacilitator=${this.isFacilitator}
-              .facilitatorToken=${this.facilitatorToken}
               .participantName=${this.participantName}
             ></retro-timer>
           `

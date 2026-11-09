@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 
 import type { TimerState } from '../types'
 import { api } from '../api'
-import { faIconStyles, iconClock, iconPlay, iconPause, iconRotateLeft, iconVolumeHigh, iconVolumeXmark } from '../icons'
+import { faIconStyles, iconChevronDown, iconClock, iconPlay, iconPause, iconRotateLeft, iconVolumeHigh, iconVolumeXmark } from '../icons'
 
 /**
  * Pure function: compute how many seconds remain on the timer at a given `now` timestamp.
@@ -28,12 +28,13 @@ const PRESETS = [
 export class RetroTimer extends LitElement {
   @property({ type: Object }) timer: TimerState | null = null
   @property({ type: String }) sessionId = ''
-  @property({ type: Boolean }) isFacilitator = false
+  @property({ type: Boolean, reflect: true }) isFacilitator = false
   @property({ type: String }) facilitatorToken = ''
   @property({ type: String }) participantName = ''
 
   @state() private displaySeconds = 0
   @state() private customMinutes = ''
+  @state() private open = false
 
   private _interval: number | null = null
   private _muted = localStorage.getItem('retro_timer_muted') === 'true'
@@ -43,6 +44,43 @@ export class RetroTimer extends LitElement {
     :host {
       display: block;
       margin-bottom: 16px;
+    }
+    :host([isfacilitator]) {
+      display: inline-block;
+      position: relative;
+      margin-bottom: 0;
+    }
+    .timer-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
+      border-radius: var(--retro-radius-sm);
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--retro-text-primary);
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .timer-chip:hover {
+      background: var(--retro-bg-hover);
+    }
+    .timer-chip .timer-display {
+      font-size: 12px;
+    }
+    :host([isfacilitator]) .timer-panel {
+      position: absolute;
+      bottom: calc(100% + 18px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      width: max-content;
+      max-width: calc(100vw - 24px);
+      background: var(--retro-glass-bg-strong);
+      box-shadow: var(--retro-shadow-float);
     }
     .timer-panel {
       background: var(--retro-bg-subtle);
@@ -231,9 +269,25 @@ export class RetroTimer extends LitElement {
     }
   }
 
+  connectedCallback(): void {
+    super.connectedCallback()
+    document.addEventListener('keydown', this.onKeydown)
+    document.addEventListener('click', this.onOutsideClick)
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback()
+    document.removeEventListener('keydown', this.onKeydown)
+    document.removeEventListener('click', this.onOutsideClick)
     this.clearTimer()
+  }
+
+  private onKeydown = (e: KeyboardEvent): void => {
+    if (e.key === 'Escape') this.open = false
+  }
+
+  private onOutsideClick = (e: MouseEvent): void => {
+    if (!e.composedPath().includes(this)) this.open = false
   }
 
   private clearTimer(): void {
@@ -368,17 +422,25 @@ export class RetroTimer extends LitElement {
     const isPreset = this.activePreset
 
     return html`
-      <div class="timer-panel">
-        <span class="timer-heading">${iconClock()} Timer</span>
-
+      <button
+        class="timer-chip"
+        aria-expanded=${this.open ? 'true' : 'false'}
+        title="Timer"
+        @click=${() => { this.open = !this.open }}
+      >
+        ${iconClock()}
         ${this.timer
-          ? html`
-              <span class="timer-display ${this.colorClass}">
-                ${this.formatTime(this.displaySeconds)}
-              </span>
-            `
-          : ''}
+          ? html`<span class="timer-display ${this.colorClass}">${this.formatTime(this.displaySeconds)}</span>`
+          : html`<span>Timer</span>`}
+        ${iconChevronDown()}
+      </button>
+      ${this.open ? this.renderPanel(canStart, isPreset) : ''}
+    `
+  }
 
+  private renderPanel(canStart: boolean, isPreset: number | null) {
+    return html`
+      <div class="timer-panel">
         <div class="presets">
           ${PRESETS.map(
             (p) => html`

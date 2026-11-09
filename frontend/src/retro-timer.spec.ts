@@ -78,6 +78,14 @@ async function withName(page: Page, name: string, token = '') {
   )
 }
 
+
+async function openTimer(page: Page) {
+  const chip = page.locator('.timer-chip')
+  await chip.waitFor()
+  if ((await chip.getAttribute('aria-expanded')) !== 'true') await chip.click()
+  await expect(chip).toHaveAttribute('aria-expanded', 'true')
+}
+
 // ── Preset buttons ────────────────────────────────────────────────────────────
 
 test.describe('retro-timer preset buttons', () => {
@@ -86,6 +94,7 @@ test.describe('retro-timer preset buttons', () => {
     await mockApi(page, BASE as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-timer')).toBeVisible()
+    await openTimer(page)
   })
 
   test('5m preset button calls PATCH /timer with 300 seconds', async ({ page }) => {
@@ -124,6 +133,7 @@ test.describe('retro-timer preset buttons', () => {
     const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: null } }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     await expect(page.locator('.preset-btn.active')).toBeVisible()
     await expect(page.locator('.preset-btn.active')).toContainText('5m')
   })
@@ -136,6 +146,7 @@ test.describe('retro-timer custom input', () => {
     await withName(page, 'Alice', FAC_TOKEN)
     await mockApi(page, BASE as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
   })
 
   test('Set button is disabled when input is empty', async ({ page }) => {
@@ -183,6 +194,7 @@ test.describe('retro-timer start button', () => {
     await withName(page, 'Alice', FAC_TOKEN)
     await mockApi(page, BASE as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     await expect(page.locator('.timer-btn').filter({ hasText: 'Start' })).toBeDisabled()
   })
 
@@ -191,6 +203,7 @@ test.describe('retro-timer start button', () => {
     const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: null } }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     await expect(page.locator('.timer-btn').filter({ hasText: 'Start' })).toBeEnabled()
   })
 
@@ -199,6 +212,7 @@ test.describe('retro-timer start button', () => {
     const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: null } }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     const req = page.waitForRequest(r => r.url().includes('/timer/start') && r.method() === 'POST')
     await page.locator('.timer-btn').filter({ hasText: 'Start' }).click()
     await req
@@ -216,6 +230,7 @@ test.describe('retro-timer start button', () => {
     }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     await expect(page.locator('.timer-btn').filter({ hasText: 'Pause' })).toBeVisible()
   })
 
@@ -231,6 +246,7 @@ test.describe('retro-timer start button', () => {
     }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     const req = page.waitForRequest(r => r.url().includes('/timer/pause') && r.method() === 'POST')
     await page.locator('.timer-btn').filter({ hasText: 'Pause' }).click()
     await req
@@ -244,6 +260,7 @@ test.describe('retro-timer start button', () => {
     }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     await expect(page.locator('.timer-btn').filter({ hasText: 'Resume' })).toBeVisible()
   })
 
@@ -251,6 +268,7 @@ test.describe('retro-timer start button', () => {
     await withName(page, 'Alice', FAC_TOKEN)
     await mockApi(page, BASE as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     await expect(page.locator('.timer-btn.secondary').filter({ hasText: 'Reset' })).toBeDisabled()
   })
 
@@ -259,6 +277,7 @@ test.describe('retro-timer start button', () => {
     const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: null } }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     const req = page.waitForRequest(r => r.url().includes('/timer/reset') && r.method() === 'POST')
     await page.locator('.timer-btn.secondary').filter({ hasText: 'Reset' }).click()
     await req
@@ -273,6 +292,7 @@ test.describe('retro-timer display', () => {
     const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: null } }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     await expect(page.locator('.timer-display')).toBeVisible()
     await expect(page.locator('.timer-display')).toContainText('5:00')
   })
@@ -282,6 +302,7 @@ test.describe('retro-timer display', () => {
     const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: null } }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     await expect(page.locator('.timer-display.green')).toBeVisible()
   })
 
@@ -291,6 +312,7 @@ test.describe('retro-timer display', () => {
     const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: 50 } }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     await expect(page.locator('.timer-display.amber')).toBeVisible()
   })
 
@@ -300,6 +322,7 @@ test.describe('retro-timer display', () => {
     const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: 20 } }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     await expect(page.locator('.timer-display.red')).toBeVisible()
   })
 })
@@ -317,6 +340,7 @@ test.describe('retro-timer interval callback', () => {
     await withName(page, 'Alice', FAC_TOKEN)
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     await expect(page.locator('.timer-display')).toBeVisible()
     // Capture the initial rendered value
     const firstText = await page.locator('.timer-display').textContent()
@@ -337,6 +361,7 @@ test.describe('retro-timer interval callback', () => {
     await withName(page, 'Alice', FAC_TOKEN)
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     await expect(page.locator('.timer-display')).toBeVisible()
     // Wait for the interval to fire and hit remaining <= 0 → clearTimer (line 224)
     await page.waitForTimeout(1500)
@@ -361,6 +386,7 @@ test.describe('retro-timer disconnectedCallback', () => {
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-timer')).toBeVisible()
+    await openTimer(page)
     // Navigate home — triggers disconnectedCallback → clearTimer (lines 197-205)
     await page.locator('.brand').click()
     await expect(page).toHaveURL('/')
@@ -399,6 +425,7 @@ test.describe('retro-timer mute toggle (facilitator)', () => {
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-timer')).toBeVisible()
+    await openTimer(page)
   })
 
   test('mute button is visible in facilitator timer panel', async ({ page }) => {
@@ -437,6 +464,7 @@ test('retro-timer mute button shows muted state when retro_timer_muted pre-set i
   await mockApi(page, session as unknown as Record<string, unknown>)
   await page.addInitScript(() => localStorage.setItem('retro_timer_muted', 'true'))
   await page.goto(`/session/${SESSION_ID}`)
+  await openTimer(page)
   await expect(page.locator('.mute-btn')).toHaveClass(/muted/)
   await expect(page.locator('.mute-btn')).toHaveAttribute('title', 'Unmute timer sound')
 })
@@ -486,6 +514,7 @@ test.describe('retro-timer ding sound', () => {
     }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
     // Wait for the countdown to show — confirms displaySeconds is set before advancing
     await expect(page.locator('retro-timer')).toContainText('0:0')
     await page.clock.fastForward(6000) // advance past expiry; triggers interval callbacks
@@ -494,4 +523,31 @@ test.describe('retro-timer ding sound', () => {
     expect(created).toBe(true)
   })
 
+})
+
+
+test.describe('retro-timer compact dock chip', () => {
+  test.beforeEach(async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
+    await mockApi(page, BASE as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+  })
+
+  test('the facilitator timer sits in the dock as a collapsed chip', async ({ page }) => {
+    await expect(page.locator('.facilitator-dock retro-timer .timer-chip')).toBeVisible()
+    await expect(page.locator('.preset-btn').first()).not.toBeVisible()
+  })
+
+  test('clicking the chip opens and closes the controls', async ({ page }) => {
+    await openTimer(page)
+    await expect(page.locator('.preset-btn').first()).toBeVisible()
+    await page.locator('.timer-chip').click()
+    await expect(page.locator('.preset-btn').first()).not.toBeVisible()
+  })
+
+  test('Escape closes the controls', async ({ page }) => {
+    await openTimer(page)
+    await page.keyboard.press('Escape')
+    await expect(page.locator('.preset-btn').first()).not.toBeVisible()
+  })
 })

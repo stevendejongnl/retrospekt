@@ -1315,7 +1315,7 @@ test('vote indicator shows used/max votes in column header when limit is set', a
   await withName(page, 'Alice')
   await mockApi(page, session as typeof BASE)
   await page.goto(`/session/${SESSION_ID}`)
-  await expect(page.locator('.vote-indicator').first()).toContainText('1 / 5')
+  await expect(page.locator('.vote-indicator').first()).toContainText('1/5 votes')
 })
 
 test('vote indicator is not shown when no limit is set', async ({ page }) => {
