@@ -234,3 +234,25 @@ def test_banner_with_a_call_to_action_differs_from_one_without():
     with_cta = render_banner("Sprint 42 Retro", "Collecting · 3 participants", cta="Join the retro")
 
     assert plain != with_cta
+
+
+def banner_pixel(x: int, y: int) -> str:
+    png = render_banner("Sprint 42 Retro", "Discussing · 5 participants", cta="Join the retro")
+    r, g, b = Image.open(io.BytesIO(png)).convert("RGB").getpixel((x, y))
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def test_banner_uses_the_slate_and_soft_palette():
+    assert banner_pixel(1100, 20) == "#f3f5f8"  # page: cool slate, not warm cream
+
+
+def test_banner_edge_bar_is_the_amber_accent():
+    assert banner_pixel(10, 300) == "#b45309"
+
+
+def test_banner_subtitle_pill_is_the_accent_tint():
+    assert banner_pixel(106, 540) == "#fff1dc"
+
+
+def test_banner_call_to_action_is_a_flat_accent_fill():
+    assert banner_pixel(1094, 540) == "#b45309"
