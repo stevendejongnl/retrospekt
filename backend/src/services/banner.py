@@ -14,6 +14,7 @@ FONT_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 BACKGROUND = "#fdfcf9"
 ACCENT = "#d97426"
 ACCENT_TINT = "#fdf3e8"
+ON_ACCENT = "#ffffff"
 TEXT_PRIMARY = "#1c1a17"
 TEXT_SECONDARY = "#5a534b"
 
@@ -67,7 +68,7 @@ def wrap_title(text: str, font: ImageFont.FreeTypeFont, max_width: int, max_line
     return [*lines[: max_lines - 1], f"{last.rstrip()}…"]
 
 
-def render_banner(title: str, subtitle: str | None = None) -> bytes:
+def render_banner(title: str, subtitle: str | None = None, cta: str | None = None) -> bytes:
     title_font = load_font("DejaVuSans-Bold.ttf", TITLE_SIZE)
     brand_font = load_font("DejaVuSans-Bold.ttf", 40)
     subtitle_font = load_font("DejaVuSans.ttf", 38)
@@ -93,6 +94,14 @@ def render_banner(title: str, subtitle: str | None = None) -> bytes:
                 (LEFT_MARGIN, 506, LEFT_MARGIN + pill_width, 574), radius=34, fill=ACCENT_TINT
             )
             draw.text((LEFT_MARGIN + 28, 515), pill_text, font=subtitle_font, fill=TEXT_SECONDARY)
+
+    if cta:
+        button_text = drop_unsupported_characters(cta, brand_font)
+        if button_text:
+            button_width = int(brand_font.getlength(button_text)) + 64
+            right = WIDTH - LEFT_MARGIN
+            draw.rounded_rectangle((right - button_width, 506, right, 574), radius=34, fill=ACCENT)
+            draw.text((right - button_width + 32, 518), button_text, font=brand_font, fill=ON_ACCENT)
 
     buffer = io.BytesIO()
     image.save(buffer, format="PNG", optimize=True)

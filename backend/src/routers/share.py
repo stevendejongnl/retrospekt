@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse, Response
 
 from ..config import settings
 from ..dependencies import get_repo
-from ..models.session import Session
+from ..models.session import Session, SessionPhase
 from ..repositories.session_repo import SessionRepository
 from ..services.banner import HEIGHT, WIDTH, render_banner
 
@@ -21,7 +21,25 @@ router = APIRouter(prefix="/api/v1")
 
 CACHE_CONTROL = "public, max-age=300"
 SITE_NAME = "Retrospekt"
-HOME_DESCRIPTION = "A self-hosted, real-time retrospective board."
+HOME_TITLE = f"{SITE_NAME} — self-hosted real-time retrospective board"
+HOME_DESCRIPTION = (
+    "Run team retrospectives in real time: collect cards privately, then discuss and vote together. "
+    "Self-hosted, with no accounts or sign-up."
+)
+HOME_CTA = "Start a retro →"
+MAX_NAME_IN_TITLE = 50
+MAX_NAME_IN_DESCRIPTION = 30
+
+PHASE_INVITATIONS = {
+    SessionPhase.COLLECTING: "add your thoughts privately before the discussion starts",
+    SessionPhase.DISCUSSING: "vote on the cards and talk through what matters",
+    SessionPhase.CLOSED: "read back what the team came up with",
+}
+PHASE_CALLS_TO_ACTION = {
+    SessionPhase.COLLECTING: "Join the retro →",
+    SessionPhase.DISCUSSING: "Join the retro →",
+    SessionPhase.CLOSED: "Read the retro →",
+}
 
 
 def public_base_url(request: Request) -> str:
@@ -33,15 +51,29 @@ def public_base_url(request: Request) -> str:
     return f"{scheme}://{host}"
 
 
-def session_description(session: Session) -> str:
+def shorten(text: str, limit: int) -> str:
+    return text if len(text) <= limit else f"{text[: limit - 1].rstrip()}…"
+
+
+def participant_count(session: Session) -> str:
     count = len(session.participants)
-    people = f"{count} participant{'' if count == 1 else 's'}"
-    return f"Join the retrospective — {session.phase.value} · {people}"
+    return f"{count} participant{'' if count == 1 else 's'}"
+
+
+def session_title(session: Session) -> str:
+    return f"{shorten(session.name, MAX_NAME_IN_TITLE)} — Retrospective board | {SITE_NAME}"
+
+
+def session_description(session: Session) -> str:
+    name = shorten(session.name, MAX_NAME_IN_DESCRIPTION)
+    return (
+        f"Join “{name}” on {SITE_NAME}: {PHASE_INVITATIONS[session.phase]}. "
+        f"{participant_count(session).capitalize()} so far — no account needed."
+    )
 
 
 def banner_subtitle(session: Session) -> str:
-    count = len(session.participants)
-    return f"{session.phase.value.capitalize()} · {count} participant{'' if count == 1 else 's'}"
+    return f"{session.phase.value.capitalize()} · {participant_count(session)}"
 
 
 def preview_tags(*, title: str, description: str, page_url: str, image_url: str) -> str:
@@ -81,12 +113,12 @@ def preview_page(*, title: str, description: str, page_url: str, image_url: str)
 def preview_fragment(*, title: str, description: str, page_url: str, image_url: str) -> HTMLResponse:
     """Just the tags — nginx splices them into the SPA's index.html (SSI) so every client sees them."""
     tags = preview_tags(title=title, description=description, page_url=page_url, image_url=image_url)
-    return HTMLResponse(tags, headers={"Cache-Control": CACHE_CONTROL})
+    return HTMLResponse(f"<title>{escape(title)}</title>\n{tags}", headers={"Cache-Control": CACHE_CONTROL})
 
 
-def banner_response(title: str, subtitle: str | None) -> Response:
+def banner_response(title: str, subtitle: str | None, cta: str | None) -> Response:
     return Response(
-        render_banner(title, subtitle), media_type="image/png", headers={"Cache-Control": CACHE_CONTROL}
+        render_banner(title, subtitle, cta), media_type="image/png", headers={"Cache-Control": CACHE_CONTROL}
     )
 
 
@@ -101,7 +133,7 @@ async def find_session(session_id: str, repo: SessionRepository) -> Session:
 async def home_preview(request: Request) -> HTMLResponse:
     base = public_base_url(request)
     return preview_page(
-        title=SITE_NAME,
+        title=HOME_TITLE,
         description=HOME_DESCRIPTION,
         page_url=f"{base}/",
         image_url=f"{base}/api/v1/og.png",
@@ -112,7 +144,7 @@ async def home_preview(request: Request) -> HTMLResponse:
 async def home_meta(request: Request) -> HTMLResponse:
     base = public_base_url(request)
     return preview_fragment(
-        title=SITE_NAME,
+        title=HOME_TITLE,
         description=HOME_DESCRIPTION,
         page_url=f"{base}/",
         image_url=f"{base}/api/v1/og.png",
@@ -121,7 +153,7 @@ async def home_meta(request: Request) -> HTMLResponse:
 
 @router.get("/og.png")
 async def home_banner() -> Response:
-    return banner_response(SITE_NAME, "Retrospective board")
+    return banner_response(SITE_NAME, "Retrospective board", HOME_CTA)
 
 
 @router.get("/sessions/{session_id}/preview")
@@ -134,7 +166,7 @@ async def session_preview(
     base = public_base_url(request)
     slug = quote(session.id, safe="")
     return preview_page(
-        title=f"{session.name} — {SITE_NAME}",
+        title=session_title(session),
         description=session_description(session),
         page_url=f"{base}/session/{slug}",
         image_url=f"{base}/api/v1/sessions/{slug}/og.png",
@@ -151,7 +183,7 @@ async def session_meta(
     base = public_base_url(request)
     slug = quote(session.id, safe="")
     return preview_fragment(
-        title=f"{session.name} — {SITE_NAME}",
+        title=session_title(session),
         description=session_description(session),
         page_url=f"{base}/session/{slug}",
         image_url=f"{base}/api/v1/sessions/{slug}/og.png",
@@ -161,4 +193,4 @@ async def session_meta(
 @router.get("/sessions/{session_id}/og.png")
 async def session_banner(session_id: str, repo: SessionRepository = Depends(get_repo)) -> Response:
     session = await find_session(session_id, repo)
-    return banner_response(session.name, banner_subtitle(session))
+    return banner_response(session.name, banner_subtitle(session), PHASE_CALLS_TO_ACTION[session.phase])
