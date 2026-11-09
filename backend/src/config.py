@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     apprise_key: str = ""
     giphy_api_key: str = ""
     tenor_api_key: str = ""
+    public_url: str = ""  # e.g. https://retro.example.com; empty = derive from request headers
 
     @property
     def sentry_api_configured(self) -> bool:

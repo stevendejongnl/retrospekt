@@ -20,7 +20,7 @@ from . import database as _database
 from .config import settings
 from .database import connect_db, disconnect_db
 from .repositories.session_repo import SessionRepository
-from .routers import cards, feedback, gifs, groups, health, notes, sessions, stats
+from .routers import cards, feedback, gifs, groups, health, notes, sessions, share, stats
 from .services.sse_manager import sse_manager
 
 logger = logging.getLogger(__name__)
@@ -107,6 +107,7 @@ def create_app() -> FastAPI:
     app.include_router(stats.router)
     app.include_router(feedback.router)
     app.include_router(gifs.router)
+    app.include_router(share.router)
 
     return app
 
