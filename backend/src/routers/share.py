@@ -44,14 +44,9 @@ def banner_subtitle(session: Session) -> str:
     return f"{session.phase.value.capitalize()} · {count} participant{'' if count == 1 else 's'}"
 
 
-def preview_page(*, title: str, description: str, page_url: str, image_url: str) -> HTMLResponse:
+def preview_tags(*, title: str, description: str, page_url: str, image_url: str) -> str:
     values = {key: escape(value, quote=True) for key, value in locals().items()}
-    html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>{values["title"]}</title>
-<meta name="description" content="{values["description"]}">
+    return f"""<meta name="description" content="{values["description"]}">
 <link rel="canonical" href="{values["page_url"]}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="{SITE_NAME}">
@@ -66,11 +61,27 @@ def preview_page(*, title: str, description: str, page_url: str, image_url: str)
 <meta name="twitter:title" content="{values["title"]}">
 <meta name="twitter:description" content="{values["description"]}">
 <meta name="twitter:image" content="{values["image_url"]}">
-</head>
-<body><a href="{values["page_url"]}">{values["title"]}</a></body>
+"""
+
+
+def preview_page(*, title: str, description: str, page_url: str, image_url: str) -> HTMLResponse:
+    tags = preview_tags(title=title, description=description, page_url=page_url, image_url=image_url)
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{escape(title)}</title>
+{tags}</head>
+<body><a href="{escape(page_url, quote=True)}">{escape(title)}</a></body>
 </html>
 """
     return HTMLResponse(html, headers={"Cache-Control": CACHE_CONTROL})
+
+
+def preview_fragment(*, title: str, description: str, page_url: str, image_url: str) -> HTMLResponse:
+    """Just the tags — nginx splices them into the SPA's index.html (SSI) so every client sees them."""
+    tags = preview_tags(title=title, description=description, page_url=page_url, image_url=image_url)
+    return HTMLResponse(tags, headers={"Cache-Control": CACHE_CONTROL})
 
 
 def banner_response(title: str, subtitle: str | None) -> Response:
@@ -97,6 +108,17 @@ async def home_preview(request: Request) -> HTMLResponse:
     )
 
 
+@router.get("/meta")
+async def home_meta(request: Request) -> HTMLResponse:
+    base = public_base_url(request)
+    return preview_fragment(
+        title=SITE_NAME,
+        description=HOME_DESCRIPTION,
+        page_url=f"{base}/",
+        image_url=f"{base}/api/v1/og.png",
+    )
+
+
 @router.get("/og.png")
 async def home_banner() -> Response:
     return banner_response(SITE_NAME, "Retrospective board")
@@ -112,6 +134,23 @@ async def session_preview(
     base = public_base_url(request)
     slug = quote(session.id, safe="")
     return preview_page(
+        title=f"{session.name} — {SITE_NAME}",
+        description=session_description(session),
+        page_url=f"{base}/session/{slug}",
+        image_url=f"{base}/api/v1/sessions/{slug}/og.png",
+    )
+
+
+@router.get("/sessions/{session_id}/meta")
+async def session_meta(
+    session_id: str,
+    request: Request,
+    repo: SessionRepository = Depends(get_repo),
+) -> HTMLResponse:
+    session = await find_session(session_id, repo)
+    base = public_base_url(request)
+    slug = quote(session.id, safe="")
+    return preview_fragment(
         title=f"{session.name} — {SITE_NAME}",
         description=session_description(session),
         page_url=f"{base}/session/{slug}",

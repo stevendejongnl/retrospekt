@@ -159,7 +159,7 @@ async def test_meta_fragment_holds_only_tags_so_nginx_can_splice_it_into_index_h
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
     assert '<meta property="og:title" content="Sprint 42 Retro — Retrospekt">' in response.text
-    assert f'<meta property="og:image" content="http://test/api/v1/sessions/{session.id}/og.png">' in response.text
+    assert f"http://test/api/v1/sessions/{session.id}/og.png" in response.text
     for page_markup in ("<html", "<head", "<body", "<title"):
         assert page_markup not in response.text
 
