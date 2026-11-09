@@ -286,7 +286,7 @@ export class AdminPage extends LitElement {
       }
 
       .back-link {
-        color: var(--retro-accent);
+        color: var(--retro-accent-ink);
         text-decoration: none;
         font-size: 13px;
         white-space: nowrap;
@@ -362,6 +362,7 @@ export class AdminPage extends LitElement {
         border-radius: var(--retro-radius-md);
         background: var(--retro-bg-surface);
         color: var(--retro-text-primary);
+        font-family: inherit;
         font-size: 14px;
         outline: none;
       }
@@ -376,8 +377,9 @@ export class AdminPage extends LitElement {
         padding: 9px 18px;
         background: var(--retro-accent);
         color: var(--retro-accent-contrast);
-        border: none;
+        border: 1px solid var(--retro-accent-border);
         border-radius: var(--retro-radius-sm);
+        font-family: inherit;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
