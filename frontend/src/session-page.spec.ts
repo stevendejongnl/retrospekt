@@ -323,6 +323,39 @@ test.describe('session-page board (participant)', () => {
   })
 })
 
+// ── Header: phase stepper ─────────────────────────────────────────────────────
+
+test.describe('session-page phase stepper', () => {
+  test('a participant only reads the phase: no buttons in the stepper', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, { ...BASE, phase: 'discussing' } as typeof BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('header phase-stepper .step.active')).toContainText('Discussing')
+    await expect(page.locator('header phase-stepper button')).toHaveCount(0)
+  })
+
+  test('the facilitator moves the phase from the stepper', async ({ page }) => {
+    let body: unknown = null
+    await withName(page, 'Alice', FAC_TOKEN)
+    await mockApi(page, { ...BASE, phase: 'discussing' } as typeof BASE)
+    await page.route(`/api/v1/sessions/${SESSION_ID}/phase`, async (route) => {
+      body = JSON.parse(route.request().postData() ?? '{}')
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...BASE, phase: 'closed' }) })
+    })
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('header phase-stepper button')).toHaveCount(3)
+    await page.locator('header phase-stepper button', { hasText: 'Closed' }).click()
+    await expect.poll(() => body).toEqual({ phase: 'closed' })
+  })
+
+  test('in open facilitator mode everybody can use the stepper', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, { ...BASE, phase: 'discussing', open_facilitator: true } as typeof BASE)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('header phase-stepper button')).toHaveCount(3)
+  })
+})
+
 // ── Board: phase banners ──────────────────────────────────────────────────────
 
 test.describe('session-page discussing phase', () => {
@@ -333,9 +366,13 @@ test.describe('session-page discussing phase', () => {
     await expect(page.locator('retro-board')).toBeVisible()
   })
 
-  test('shows the discussing phase banner', async ({ page }) => {
-    await expect(page.locator('.banner-discussing')).toBeVisible()
-    await expect(page.getByText(/vote on the cards that matter most/)).toBeVisible()
+  test('shows the phase once, in the header stepper, with no banner', async ({ page }) => {
+    await expect(page.locator('.phase-banner')).toHaveCount(0)
+    await expect(page.locator('header phase-stepper .step.active')).toContainText('Discussing')
+  })
+
+  test('the active step carries the hint the banner used to show', async ({ page }) => {
+    await expect(page.locator('header phase-stepper .step.active')).toHaveAttribute('title', 'Vote on the cards that matter most')
   })
 
   test('export button is visible in discussing phase', async ({ page }) => {
@@ -352,9 +389,9 @@ test.describe('session-page closed phase', () => {
     await expect(page.locator('retro-board')).toBeVisible()
   })
 
-  test('shows the closed phase banner', async ({ page }) => {
-    await expect(page.locator('.banner-closed')).toBeVisible()
-    await expect(page.getByText(/This session is closed/)).toBeVisible()
+  test('shows the closed phase in the header stepper, with no banner', async ({ page }) => {
+    await expect(page.locator('.phase-banner')).toHaveCount(0)
+    await expect(page.locator('header phase-stepper .step.active')).toContainText('Closed')
   })
 
   test('export button is visible in closed phase', async ({ page }) => {
