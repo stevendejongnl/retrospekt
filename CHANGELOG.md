@@ -1,3 +1,9 @@
+## [1.49.0](https://github.com/stevendejongnl/retrospekt/compare/v1.48.0...v1.49.0) (2026-11-09)
+
+### Features
+
+* **share:** banner and Open Graph tags when a board URL is shared ([03e45fe](https://github.com/stevendejongnl/retrospekt/commit/03e45fec66c6842b760cd5df1c507f4dfebdef92))
+
 ## [1.48.0](https://github.com/stevendejongnl/retrospekt/compare/v1.47.3...v1.48.0) (2026-11-02)
 
 ### Features
