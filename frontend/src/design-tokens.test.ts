@@ -36,7 +36,7 @@ const isHex = (value: string | undefined): value is string => !!value && /^#[0-9
 const THEMED = [
   'bg-page', 'bg-surface', 'bg-subtle', 'border-default',
   'text-primary', 'text-secondary', 'text-muted',
-  'accent', 'accent-ink', 'accent-contrast', 'accent-tint',
+  'accent', 'accent-ink', 'accent-contrast', 'accent-tint', 'accent-border',
   'col-1', 'col-2', 'col-3', 'col-ink', 'strong-bg', 'shadow-float',
 ]
 
