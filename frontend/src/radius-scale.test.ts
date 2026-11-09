@@ -21,7 +21,7 @@ function hardcodedRadii(): string[] {
   for (const directory of ['components', 'pages']) {
     for (const file of sourceFiles(join(SOURCE, directory))) {
       const text = readFileSync(file, 'utf8')
-      for (const [declaration, value] of text.matchAll(/border-radius:\s*([^;]+);/g).map((m) => [m[0], m[1]])) {
+      for (const [declaration, value] of Array.from(text.matchAll(/border-radius:\s*([^;]+);/g), (m): [string, string] => [m[0], m[1]])) {
         const sizes = [...value.matchAll(/(\d+)px/g)].map((m) => Number(m[1]))
         if (sizes.some((n) => n >= SCALE_FROM && n <= SCALE_TO)) offenders.push(`${file.replace(SOURCE, 'src')}: ${declaration}`)
       }
