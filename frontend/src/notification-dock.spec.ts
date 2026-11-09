@@ -174,7 +174,7 @@ test.describe('notification-dock', () => {
       })
     })
     await page.evaluate(() => (window as unknown as Win).notifications.feedback())
-    await page.locator('feedback-dialog .emoji-btn').last().click()
+    await page.locator('feedback-dialog .rating-btn').last().click()
     await page.locator('feedback-dialog .submit-btn').click()
     await expect(page.locator('feedback-dialog .thank-you')).toBeVisible()
     // The empty defaults are sent as absent, not as empty strings.

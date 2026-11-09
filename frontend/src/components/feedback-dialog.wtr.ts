@@ -19,9 +19,9 @@ describe('feedback-dialog', () => {
     expect(getComputedStyle(el.shadowRoot!.querySelector('.card')!).position).to.not.equal('fixed')
   })
 
-  it('still offers the five-point emoji scale', async () => {
+  it('still offers the five-point rating, as stars', async () => {
     const el = await fixture<FeedbackDialog>(html`<feedback-dialog .open=${true}></feedback-dialog>`)
-    expect(el.shadowRoot!.querySelectorAll('.emoji-btn').length).to.equal(5)
+    expect(el.shadowRoot!.querySelector('rating-stars')!.shadowRoot!.querySelectorAll('.rating-btn').length).to.equal(5)
   })
 
   it('emits feedback-dismissed from "Not now"', async () => {

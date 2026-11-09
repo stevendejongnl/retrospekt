@@ -1,19 +1,19 @@
 import { test, expect } from './playwright-fixtures'
 
 test.describe('feedback-page rendering', () => {
-  test('renders emoji rating buttons', async ({ page }) => {
+  test('renders the star rating buttons', async ({ page }) => {
     await page.route('/api/v1/feedback', route =>
       route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({
         id: 'fb-1', rating: 4, comment: '', session_id: null, participant_name: null, app_version: '1.0.0', created_at: '2026-01-01T00:00:00Z',
       }) }))
     await page.goto('/feedback')
-    await expect(page.locator('feedback-page .emoji-btn')).toHaveCount(5)
+    await expect(page.locator('feedback-page .rating-btn')).toHaveCount(5)
   })
 
   test('submit button disabled until rating selected', async ({ page }) => {
     await page.goto('/feedback')
     await expect(page.locator('feedback-page .submit-btn')).toBeDisabled()
-    await page.locator('feedback-page .emoji-btn').nth(3).click()
+    await page.locator('feedback-page .rating-btn').nth(3).click()
     await expect(page.locator('feedback-page .submit-btn')).toBeEnabled()
   })
 
@@ -35,7 +35,7 @@ test.describe('feedback-page submission', () => {
       })
     })
     await page.goto('/feedback')
-    await page.locator('feedback-page .emoji-btn').nth(4).click()
+    await page.locator('feedback-page .rating-btn').nth(4).click()
     await page.locator('feedback-page .submit-btn').click()
     await expect(async () => {
       expect(capturedBody).not.toBeNull()
@@ -49,7 +49,7 @@ test.describe('feedback-page submission', () => {
         id: 'fb-1', rating: 3, comment: '', session_id: null, participant_name: null, app_version: '1.0.0', created_at: '2026-01-01T00:00:00Z',
       }) }))
     await page.goto('/feedback')
-    await page.locator('feedback-page .emoji-btn').nth(2).click()
+    await page.locator('feedback-page .rating-btn').nth(2).click()
     await page.locator('feedback-page .submit-btn').click()
     await expect(page.locator('feedback-page .thank-you')).toBeVisible()
   })

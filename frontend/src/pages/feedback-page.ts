@@ -5,7 +5,7 @@ import { customElement, state } from 'lit/decorators.js'
 import { api } from '../api'
 import { storage } from '../storage'
 import { faIconStyles } from '../icons'
-import { EMOJI_SCALE } from '../components/feedback-dialog'
+import '../components/rating-stars'
 import { bacon } from '../theme'
 
 @customElement('feedback-page')
@@ -77,32 +77,6 @@ export class FeedbackPage extends LitElement {
         text-align: center;
       }
 
-      .emoji-row {
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-      }
-
-      .emoji-btn {
-        background: none;
-        border: 2px solid transparent;
-        border-radius: var(--retro-radius-md);
-        font-size: 28px;
-        cursor: pointer;
-        padding: 6px 8px;
-        line-height: 1;
-        transition: transform 0.1s, border-color 0.1s;
-      }
-
-      .emoji-btn:hover {
-        transform: scale(1.15);
-      }
-
-      .emoji-btn.selected {
-        border-color: var(--retro-accent);
-        background: color-mix(in srgb, var(--retro-accent) 10%, transparent);
-      }
-
       textarea {
         width: 100%;
         box-sizing: border-box;
@@ -147,11 +121,17 @@ export class FeedbackPage extends LitElement {
         color: var(--retro-text-secondary);
       }
 
-      .thank-you .big {
-        font-size: 36px;
-        display: block;
-        margin-bottom: 8px;
-      }
+      .thanks-check {
+      display: block;
+      margin: 0 auto 6px;
+      width: 30px;
+      height: 30px;
+      stroke: var(--retro-accent-ink);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
 
       .back-link {
         margin-top: 20px;
@@ -190,22 +170,17 @@ export class FeedbackPage extends LitElement {
           ${this.submitted
             ? html`
                 <div class="thank-you">
-                  <span class="big">🎉</span>
+                  <svg class="thanks-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12" /></svg>
                   Thanks for your feedback!
                 </div>
               `
             : html`
                 <p class="headline">How's Retrospekt working for you?</p>
-                <div class="emoji-row">
-                  ${EMOJI_SCALE.map(
-                    (emoji, i) => html`
-                      <button
-                        class="emoji-btn ${this.selectedRating === i + 1 ? 'selected' : ''}"
-                        @click=${() => { this.selectedRating = i + 1 }}
-                      >${emoji}</button>
-                    `,
-                  )}
-                </div>
+                <rating-stars
+                  size="40"
+                  .value=${this.selectedRating}
+                  @rating-change=${(e: CustomEvent<number>) => { this.selectedRating = e.detail }}
+                ></rating-stars>
                 <textarea
                   placeholder="Anything you'd like to share? (optional)"
                   .value=${this.comment}

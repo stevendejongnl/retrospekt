@@ -93,7 +93,7 @@ test.describe('feedback-dialog rendering', () => {
 
   test('dialog shows emoji scale with 5 buttons', async ({ page }) => {
     await setupAndOpenDialog(page)
-    await expect(page.locator('feedback-dialog .emoji-btn')).toHaveCount(5)
+    await expect(page.locator('feedback-dialog .rating-btn')).toHaveCount(5)
   })
 
   test('submit button is disabled until emoji is selected', async ({ page }) => {
@@ -103,14 +103,14 @@ test.describe('feedback-dialog rendering', () => {
 
   test('submit button enables after selecting a rating', async ({ page }) => {
     await setupAndOpenDialog(page)
-    await page.locator('feedback-dialog .emoji-btn').nth(3).click()
+    await page.locator('feedback-dialog .rating-btn').nth(3).click()
     await expect(page.locator('feedback-dialog .submit-btn')).toBeEnabled()
   })
 
   test('selected emoji gets .selected class', async ({ page }) => {
     await setupAndOpenDialog(page)
-    await page.locator('feedback-dialog .emoji-btn').first().click()
-    await expect(page.locator('feedback-dialog .emoji-btn.selected')).toHaveCount(1)
+    await page.locator('feedback-dialog .rating-btn').first().click()
+    await expect(page.locator('feedback-dialog .rating-btn.selected')).toHaveCount(1)
   })
 })
 
@@ -132,7 +132,7 @@ test.describe('feedback-dialog submission', () => {
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
     await page.locator('button.feedback-btn').click()
-    await page.locator('feedback-dialog .emoji-btn').nth(4).click()
+    await page.locator('feedback-dialog .rating-btn').nth(4).click()
     await page.locator('feedback-dialog .submit-btn').click()
 
     await expect(async () => {
@@ -158,7 +158,7 @@ test.describe('feedback-dialog submission', () => {
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
     await page.locator('button.feedback-btn').click()
-    await page.locator('feedback-dialog .emoji-btn').nth(4).click()
+    await page.locator('feedback-dialog .rating-btn').nth(4).click()
     await page.locator('feedback-dialog .submit-btn').click()
 
     await expect(async () => {
@@ -187,7 +187,7 @@ test.describe('feedback-dialog submission', () => {
     await expect(page.locator('retro-board')).toBeVisible()
     await page.locator('button.feedback-btn').click()
     await expect(page.locator('feedback-dialog .card')).toBeVisible()
-    await page.locator('feedback-dialog .emoji-btn').nth(2).click()
+    await page.locator('feedback-dialog .rating-btn').nth(2).click()
     await expect(page.locator('feedback-dialog .submit-btn')).toBeEnabled()
     // Wait for the feedback POST to complete before asserting
     const [,] = await Promise.all([

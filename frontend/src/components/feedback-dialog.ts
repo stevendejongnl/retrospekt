@@ -2,8 +2,7 @@ import { LitElement, css, html, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import { api } from '../api'
-
-export const EMOJI_SCALE = ['😞', '😕', '😐', '🙂', '😍'] as const
+import './rating-stars'
 
 // Exported for unit tests
 export function isValidRating(rating: number): boolean {
@@ -53,42 +52,6 @@ export class FeedbackDialog extends LitElement {
       font-size: 12px;
       color: var(--retro-text-muted);
       margin: 0 0 12px;
-    }
-
-    .emoji-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
-      margin-bottom: 12px;
-    }
-
-    .emoji-btn {
-      background: var(--retro-glass-bg-light);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid var(--retro-glass-border);
-      border-radius: var(--retro-radius-md);
-      flex: 1;
-      aspect-ratio: 1;
-      font-size: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.12s, border-color 0.12s, background 0.12s, box-shadow 0.12s;
-      padding: 0;
-    }
-
-    .emoji-btn:hover {
-      transform: scale(1.1);
-      border-color: color-mix(in srgb, var(--retro-accent) 40%, transparent);
-    }
-
-    .emoji-btn.selected {
-      border-color: var(--retro-accent);
-      background: color-mix(in srgb, var(--retro-accent) 12%, var(--retro-glass-bg-light));
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--retro-accent) 15%, transparent);
-      transform: scale(1.05);
     }
 
     textarea {
@@ -167,10 +130,16 @@ export class FeedbackDialog extends LitElement {
       padding: 8px 0;
     }
 
-    .thank-you .emoji {
-      font-size: 28px;
+    .thanks-check {
       display: block;
-      margin-bottom: 6px;
+      margin: 0 auto 6px;
+      width: 30px;
+      height: 30px;
+      stroke: var(--retro-accent-ink);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
     }
 
     .thank-you p {
@@ -206,7 +175,7 @@ export class FeedbackDialog extends LitElement {
           ${this.submitted
             ? html`
                 <div class="thank-you">
-                  <span class="emoji">🙏</span>
+                  <svg class="thanks-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12" /></svg>
                   <p>Thanks for your feedback!</p>
                 </div>
               `
@@ -214,18 +183,10 @@ export class FeedbackDialog extends LitElement {
                 <p class="headline">How's Retrospekt working for you?</p>
                 <p class="subtext">Your feedback helps improve the app.</p>
 
-                <div class="emoji-row">
-                  ${EMOJI_SCALE.map(
-                    (emoji, i) => html`
-                      <button
-                        class="emoji-btn ${this.selectedRating === i + 1 ? 'selected' : ''}"
-                        aria-label="Rate ${i + 1} out of 5"
-                        aria-pressed=${this.selectedRating === i + 1}
-                        @click=${() => { this.selectedRating = i + 1 }}
-                      >${emoji}</button>
-                    `,
-                  )}
-                </div>
+                <rating-stars
+                  .value=${this.selectedRating}
+                  @rating-change=${(e: CustomEvent<number>) => { this.selectedRating = e.detail }}
+                ></rating-stars>
 
                 <textarea
                   placeholder="Anything you'd like to add? (optional)"
