@@ -50,6 +50,7 @@ export class SessionPage extends LitElement {
   @state() private loading = true
   @state() private showNamePrompt = false
   @state() private copied = false
+  @state() private shareOpen = false
   @state() private brand = getBrand()
   @state() private showHelp = false
   @state() private showHistory = false
@@ -259,60 +260,100 @@ export class SessionPage extends LitElement {
       padding: 20px 24px 40px;
     }
 
-    /* ── Share bar ── */
-    .share-bar {
+    /* ── Share popover ── */
+    .share-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+    .share-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
+      border-radius: var(--retro-radius-sm);
+      color: var(--retro-text-primary);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .share-btn[aria-expanded='true'] {
+      border-color: var(--retro-accent-border);
+      color: var(--retro-accent-ink);
+    }
+    .share-popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 30;
+      width: 340px;
+      padding: 12px;
+      background: var(--retro-glass-bg-strong);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: var(--retro-radius-md);
+      box-shadow: var(--retro-shadow-float);
+    }
+    .share-eyebrow {
+      margin-bottom: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--retro-text-muted);
+    }
+    .share-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 9px 14px;
-      background: var(--retro-share-bg);
-      border: 1px solid var(--retro-share-border);
-      border-radius: var(--retro-radius-md);
-      margin-bottom: 16px;
-    }
-    .share-icon {
-      font-size: 14px;
-      flex-shrink: 0;
+      gap: 8px;
+      padding: 6px 8px;
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
+      border-radius: var(--retro-radius-sm);
     }
     .share-url {
       flex: 1;
-      font-size: 12px;
-      color: var(--retro-share-text);
-      font-family: 'SF Mono', 'Fira Code', monospace;
+      min-width: 0;
+      font-size: 11px;
+      color: var(--retro-text-secondary);
+      font-family: var(--retro-font-mono);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .copy-btn {
-      background: none;
-      border: 1px solid var(--retro-share-border);
-      border-radius: var(--retro-radius-sm);
-      padding: 4px 10px;
-      cursor: pointer;
-      font-size: 12px;
-      color: var(--retro-share-text);
-      font-family: inherit;
-      transition: background 0.12s;
-      flex-shrink: 0;
-    }
-    .copy-btn:hover {
-      background: color-mix(in srgb, var(--retro-share-border) 25%, var(--retro-share-bg));
-    }
-    .export-btn {
-      background: none;
-      border: 1px solid var(--retro-share-border);
-      border-radius: var(--retro-radius-sm);
-      padding: 4px 8px;
-      cursor: pointer;
-      font-size: 14px;
-      color: var(--retro-share-text);
       display: inline-flex;
       align-items: center;
-      transition: background 0.12s;
+      gap: 6px;
       flex-shrink: 0;
+      padding: 5px 12px;
+      background: var(--retro-accent);
+      border: 1px solid var(--retro-accent-border);
+      border-radius: var(--retro-radius-sm);
+      color: var(--retro-accent-contrast);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
     }
-    .export-btn:hover {
-      background: color-mix(in srgb, var(--retro-share-border) 25%, var(--retro-share-bg));
+    .export-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      margin-top: 8px;
+      padding: 5px 12px;
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
+      border-radius: var(--retro-radius-sm);
+      color: var(--retro-text-primary);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
     }
 
     /* ── Phase banner ── */
@@ -468,6 +509,8 @@ export class SessionPage extends LitElement {
     window.removeEventListener('retro-brand-change', this._brandListener)
     window.removeEventListener('pointermove', this._onActivity)
     window.removeEventListener('keydown', this._onActivity)
+    document.removeEventListener('keydown', this._onShareKeydown)
+    document.removeEventListener('click', this._onShareOutsideClick, true)
     if (this._idleCheckInterval !== null) clearInterval(this._idleCheckInterval)
   }
 
@@ -558,6 +601,32 @@ export class SessionPage extends LitElement {
     this.renameTakenError = false
     await api.joinSession(this.sessionId, name)
     if (this.session) this.saveToHistory(this.session, name)
+  }
+
+  private toggleShare(): void {
+    if (this.shareOpen) this.closeShare()
+    else this.openShare()
+  }
+
+  private openShare(): void {
+    this.shareOpen = true
+    document.addEventListener('keydown', this._onShareKeydown)
+    document.addEventListener('click', this._onShareOutsideClick, true)
+  }
+
+  private closeShare(): void {
+    this.shareOpen = false
+    document.removeEventListener('keydown', this._onShareKeydown)
+    document.removeEventListener('click', this._onShareOutsideClick, true)
+  }
+
+  private _onShareKeydown = (e: KeyboardEvent): void => {
+    if (e.key === 'Escape') this.closeShare()
+  }
+
+  private _onShareOutsideClick = (e: MouseEvent): void => {
+    const wrap = this.renderRoot.querySelector('.share-wrap')
+    if (wrap && !e.composedPath().includes(wrap)) this.closeShare()
   }
 
   private async copyUrl(): Promise<void> {
@@ -715,6 +784,34 @@ export class SessionPage extends LitElement {
         <span class="session-title">
           ${session.name}<span class="session-date">· ${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
         </span>
+        <div class="share-wrap">
+          <button
+            class="share-btn"
+            aria-haspopup="dialog"
+            aria-expanded=${this.shareOpen}
+            @click=${this.toggleShare}
+          >${iconLink()} Share</button>
+          ${this.shareOpen
+            ? html`
+                <div class="share-popover" role="dialog" aria-label="Share this board">
+                  <div class="share-eyebrow">Share this board</div>
+                  <div class="share-row">
+                    <span class="share-url">${window.location.href}</span>
+                    <button class="copy-btn" @click=${this.copyUrl}>
+                      ${this.copied ? html`${iconCheck()} Copied` : 'Copy link'}
+                    </button>
+                  </div>
+                  ${session.phase !== 'collecting'
+                    ? html`
+                        <button class="export-btn" @click=${() => { this.exportSession(); this.closeShare() }}>
+                          ${iconFileArrowDown()} Export to Markdown
+                        </button>
+                      `
+                    : ''}
+                </div>
+              `
+            : ''}
+        </div>
         <button class="icon-btn" @click=${() => { this.showHistory = true }} title="Your sessions">${iconClockRotateLeft()}</button>
         <button
           class="icon-btn"
@@ -767,21 +864,6 @@ export class SessionPage extends LitElement {
       </header>
 
       <main>
-        <div class="share-bar">
-          <span class="share-icon">${iconLink()}</span>
-          <span class="share-url">${window.location.href}</span>
-          <button class="copy-btn" @click=${this.copyUrl}>
-            ${this.copied ? html`${iconCheck()} Copied` : 'Copy link'}
-          </button>
-          ${session.phase !== 'collecting'
-            ? html`
-                <button class="export-btn" @click=${this.exportSession} title="Export to Markdown">
-                  ${iconFileArrowDown()}
-                </button>
-              `
-            : ''}
-        </div>
-
         ${session.phase === 'discussing'
           ? html`<div class="phase-banner banner-discussing">
               ${iconCommentDots()} Discussion phase — vote on the cards that matter most
