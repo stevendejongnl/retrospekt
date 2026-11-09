@@ -51,6 +51,11 @@ async function mockApi(page: Page, session: typeof BASE) {
  * Seed localStorage with a participant name (and optionally a facilitator token)
  * before the page loads, using addInitScript.
  */
+// Sharing lives in a popover behind the header's Share button, not in a bar that is always there.
+async function openShare(page: Page) {
+  await page.getByRole('button', { name: 'Share' }).click()
+}
+
 async function withName(page: Page, name: string, token = '') {
   await page.addInitScript(
     ({ id, n, t }: { id: string; n: string; t: string }) => {
@@ -216,8 +221,26 @@ test.describe('session-page board (participant)', () => {
     await expect(page.getByText('Sprint Retro')).toBeVisible()
   })
 
-  test('shows the share URL bar with a Copy link button', async ({ page }) => {
+  test('has no permanent share bar, only a Share button', async ({ page }) => {
+    await expect(page.locator('.share-bar')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Share' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Copy link' })).not.toBeVisible()
+  })
+
+  test('the Share popover shows the link and a Copy link button', async ({ page }) => {
+    await openShare(page)
+    await expect(page.locator('.share-popover')).toBeVisible()
+    await expect(page.locator('.share-popover .share-url')).toContainText(`/session/${SESSION_ID}`)
     await expect(page.getByRole('button', { name: 'Copy link' })).toBeVisible()
+  })
+
+  test('the Share popover closes on Escape and on a click outside it', async ({ page }) => {
+    await openShare(page)
+    await page.keyboard.press('Escape')
+    await expect(page.locator('.share-popover')).not.toBeVisible()
+    await openShare(page)
+    await page.locator('.session-title').click()
+    await expect(page.locator('.share-popover')).not.toBeVisible()
   })
 
   test('renders all three columns', async ({ page }) => {
@@ -270,17 +293,20 @@ test.describe('session-page board (participant)', () => {
   })
 
   test('export button is hidden in collecting phase', async ({ page }) => {
+    await openShare(page)
     await expect(page.locator('.export-btn')).not.toBeVisible()
   })
 
   test('"Copy link" button shows "Copied" feedback', async ({ page }) => {
     await page.context().grantPermissions(['clipboard-write'])
+    await openShare(page)
     await page.getByRole('button', { name: 'Copy link' }).click()
     await expect(page.getByText(/Copied/)).toBeVisible()
   })
 
   test('"Copy link" button fires a Session/copy_link trackEvent', async ({ page }) => {
     await page.context().grantPermissions(['clipboard-write'])
+    await openShare(page)
     await page.getByRole('button', { name: 'Copy link' }).click()
     // copyUrl() is async (awaits navigator.clipboard.writeText) — wait for its
     // completion signal before reading window._mtm, or this races and flakes.
@@ -313,6 +339,7 @@ test.describe('session-page discussing phase', () => {
   })
 
   test('export button is visible in discussing phase', async ({ page }) => {
+    await openShare(page)
     await expect(page.locator('.export-btn')).toBeVisible()
   })
 })
@@ -331,6 +358,7 @@ test.describe('session-page closed phase', () => {
   })
 
   test('export button is visible in closed phase', async ({ page }) => {
+    await openShare(page)
     await expect(page.locator('.export-btn')).toBeVisible()
   })
 })
@@ -557,7 +585,9 @@ test.describe('session-page SSE updates', () => {
       route.fulfill({ status: 201, contentType: 'application/json', body: '{}' }),
     )
     await page.goto(`/session/${SESSION_ID}`)
+    await openShare(page)
     await expect(page.locator('.export-btn')).toBeVisible()
+    await page.keyboard.press('Escape')
 
     // Simulate SSE: session transitions from discussing → closed
     const closedSession = { ...BASE, phase: 'closed' }
@@ -708,6 +738,7 @@ test.describe('session-page whats-new dialog', () => {
 // ── Export ────────────────────────────────────────────────────────────────────
 
 async function exportedMarkdown(page: Page): Promise<string> {
+  await openShare(page)
   const downloadPromise = page.waitForEvent('download')
   await page.locator('.export-btn').click()
   const download = await downloadPromise
@@ -719,8 +750,9 @@ test.describe('session-page export', () => {
     await withName(page, 'Alice')
     await mockApi(page, { ...BASE, phase: 'discussing' } as typeof BASE)
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('.export-btn')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Share' })).toBeVisible()
     const downloadPromise = page.waitForEvent('download')
+    await openShare(page)
     await page.locator('.export-btn').click()
     const download = await downloadPromise
     expect(download.suggestedFilename()).toMatch(/sprint-retro.*\.md/)
@@ -731,6 +763,7 @@ test.describe('session-page export', () => {
     await mockApi(page, { ...BASE, phase: 'discussing' } as typeof BASE)
     await page.goto(`/session/${SESSION_ID}`)
     const downloadPromise = page.waitForEvent('download')
+    await openShare(page)
     await page.locator('.export-btn').click()
     await downloadPromise
     const events = await page.evaluate(() => window._mtm ?? [])
@@ -759,6 +792,7 @@ test.describe('session-page export', () => {
     await mockApi(page, { ...BASE, name: '🎉 🎉', phase: 'discussing' } as typeof BASE)
     await page.goto(`/session/${SESSION_ID}`)
     const downloadPromise = page.waitForEvent('download')
+    await openShare(page)
     await page.locator('.export-btn').click()
     expect((await downloadPromise).suggestedFilename()).toBe('retro.md')
   })
@@ -879,7 +913,7 @@ test.describe('session-page export', () => {
     await withName(page, 'Alice')
     await mockApi(page, { ...BASE, phase: 'discussing' } as typeof BASE)
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('.export-btn')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Share' })).toBeVisible()
 
     // Set session to null then call exportSession — should return early without error
     const didError = await page.evaluate(() => {
