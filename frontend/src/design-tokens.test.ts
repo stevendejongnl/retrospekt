@@ -56,6 +56,10 @@ describe('design tokens (Slate + Soft)', () => {
     expect(light['--retro-font-body']).toMatch(/Inter/)
   })
 
+  it('has a mono font token for timers, urls and numbers', () => {
+    expect(light['--retro-font-mono']).toMatch(/JetBrains Mono/)
+  })
+
   it('uses the amber accent and the cool slate page', () => {
     expect(light['--retro-accent']).toBe('#b45309')
     expect(dark['--retro-accent']).toBe('#f59e0b')
