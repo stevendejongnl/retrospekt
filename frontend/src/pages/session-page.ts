@@ -3,7 +3,7 @@ import { LitElement, PropertyValues, css, html, nothing } from 'lit'
 import { baseStyles } from '../styles'
 import { customElement, property, state } from 'lit/decorators.js'
 
-import type { Session } from '../types'
+import type { Session, SessionPhase } from '../types'
 import { buildParticipantColorMap } from '../types'
 import { api } from '../api'
 import { SSEClient } from '../sse'
@@ -12,8 +12,6 @@ import { getBrand, clearBrand, bacon } from '../theme'
 import { tagManager } from '../analytics'
 import {
   faIconStyles,
-  iconCommentDots,
-  iconLock,
   iconLink,
   iconCheck,
   iconClockRotateLeft,
@@ -24,6 +22,7 @@ import {
   csLogo,
 } from '../icons'
 import '../components/retro-board'
+import '../components/phase-stepper'
 import '../components/session-history'
 import '../components/board-notes'
 import { notifications } from '../components/notification-dock'
@@ -121,14 +120,24 @@ export class SessionPage extends LitElement {
       flex-shrink: 0;
       vertical-align: middle;
     }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+    }
+    .header-tools {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
     .session-title {
       font-size: 14px;
       color: var(--retro-text-secondary);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      flex: 1;
-      text-align: center;
+      min-width: 0;
     }
     .session-date {
       color: var(--retro-text-disabled);
@@ -245,6 +254,9 @@ export class SessionPage extends LitElement {
       .session-title {
         display: none;
       }
+      phase-stepper {
+        display: none;
+      }
       .avatar-name {
         display: none;
       }
@@ -354,26 +366,6 @@ export class SessionPage extends LitElement {
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-    }
-
-    /* ── Phase banner ── */
-    .phase-banner {
-      text-align: center;
-      padding: 9px 16px;
-      margin-bottom: 16px;
-      border-radius: var(--retro-radius-md);
-      font-size: 14px;
-      font-weight: 500;
-    }
-    .banner-discussing {
-      background: var(--retro-phase-discussing-bg);
-      color: var(--retro-phase-discussing-text);
-      border: 1px solid var(--retro-facilitator-border);
-    }
-    .banner-closed {
-      background: var(--retro-phase-closed-bg);
-      color: var(--retro-phase-closed-text);
-      border: 1px solid color-mix(in srgb, var(--retro-phase-closed-text) 25%, transparent);
     }
 
     /* ── States ── */
@@ -603,6 +595,15 @@ export class SessionPage extends LitElement {
     if (this.session) this.saveToHistory(this.session, name)
   }
 
+  private get isFacilitator(): boolean {
+    return !!this.session && (storage.isFacilitator(this.session.id) || !!this.session.open_facilitator)
+  }
+
+  private async onPhaseSelect(e: CustomEvent<SessionPhase>): Promise<void> {
+    if (!this.session || !this.isFacilitator) return
+    await api.setPhase(this.session.id, e.detail, storage.getFacilitatorToken(this.session.id) ?? '', this.participantName)
+  }
+
   private toggleShare(): void {
     if (this.shareOpen) this.closeShare()
     else this.openShare()
@@ -780,10 +781,18 @@ export class SessionPage extends LitElement {
         : ''}
 
       <header>
+        <div class="header-left">
         <span class="brand" @click=${this.goHome}>${bacon()} Retro<em>spekt</em>${getBrand() === 'cs' ? html`<span class="cs-collab">× ${csLogo()}</span>` : nothing}</span>
         <span class="session-title">
           ${session.name}<span class="session-date">· ${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
         </span>
+        </div>
+        <phase-stepper
+          .phase=${session.phase}
+          ?interactive=${this.isFacilitator}
+          @phase-select=${this.onPhaseSelect}
+        ></phase-stepper>
+        <div class="header-tools">
         <div class="share-wrap">
           <button
             class="share-btn"
@@ -861,19 +870,10 @@ export class SessionPage extends LitElement {
               </div>
             `
           : ''}
+        </div>
       </header>
 
       <main>
-        ${session.phase === 'discussing'
-          ? html`<div class="phase-banner banner-discussing">
-              ${iconCommentDots()} Discussion phase — vote on the cards that matter most
-            </div>`
-          : session.phase === 'closed'
-            ? html`<div class="phase-banner banner-closed">
-                ${iconLock()} This session is closed
-              </div>`
-            : ''}
-
         <retro-board .session=${session} .participantName=${this.participantName}></retro-board>
       </main>
     `
