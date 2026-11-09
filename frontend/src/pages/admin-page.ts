@@ -210,7 +210,8 @@ export class AdminPage extends LitElement {
             ${this.adminPhase === 'loading'
               ? html`<p class="muted">Loading…</p>`
               : html`
-                  <p class="muted">Enter your admin password to continue.</p>
+                  <h3 class="unlock-title">Unlock admin</h3>
+                  <p class="unlock-copy">Enter your admin password to see service health and feedback comments.</p>
                   <div class="unlock-form">
                     <input
                       type="password"
@@ -267,10 +268,15 @@ export class AdminPage extends LitElement {
         overflow: hidden;
       }
 
+      /* shadow DOM does not inherit the page-level box-sizing reset */
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+
       .page {
-        max-width: 900px;
+        max-width: 1100px;
         margin: 0 auto;
-        padding: 32px 24px 64px;
+        padding: 32px 80px 64px;
         position: relative;
         z-index: 1;
       }
@@ -278,14 +284,14 @@ export class AdminPage extends LitElement {
       .page-header {
         display: flex;
         align-items: center;
-        gap: 16px;
-        margin-bottom: 32px;
+        gap: 14px;
+        margin-bottom: 16px;
       }
 
       .back-link {
         color: var(--retro-accent);
         text-decoration: none;
-        font-size: 14px;
+        font-size: 13px;
         white-space: nowrap;
       }
       .back-link:hover {
@@ -293,8 +299,9 @@ export class AdminPage extends LitElement {
       }
 
       .page-title {
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 800;
+        letter-spacing: -0.02em;
         margin: 0;
         color: var(--retro-text-primary);
       }
@@ -312,9 +319,30 @@ export class AdminPage extends LitElement {
         -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
         border: 1px solid var(--retro-glass-border);
         border-radius: var(--retro-radius-md);
-        padding: 20px 24px;
+        padding: 22px;
         margin-bottom: 24px;
+        max-width: 520px;
         box-shadow: var(--retro-glass-shadow);
+      }
+
+      .unlock-title {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin: 0 0 4px;
+        color: var(--retro-text-primary);
+      }
+
+      .unlock-copy {
+        font-size: 12px;
+        margin: 0 0 14px;
+        color: var(--retro-text-secondary);
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          padding: 24px 16px 48px;
+        }
       }
 
       .muted {
@@ -332,35 +360,36 @@ export class AdminPage extends LitElement {
       .password-input {
         flex: 1;
         min-width: 180px;
-        padding: 8px 12px;
-        border: 1.5px solid var(--retro-border-default);
-        border-radius: var(--retro-radius-sm);
-        background: var(--retro-bg-page);
+        padding: 10px 12px;
+        border: 1px solid var(--retro-border-default);
+        border-radius: var(--retro-radius-md);
+        background: var(--retro-bg-surface);
         color: var(--retro-text-primary);
         font-size: 14px;
         outline: none;
+      }
+      .password-input::placeholder {
+        color: var(--retro-text-muted);
       }
       .password-input:focus {
         border-color: var(--retro-accent);
       }
 
       .unlock-btn {
-        padding: 8px 20px;
+        padding: 9px 18px;
         background: var(--retro-accent);
-        color: #fff;
+        color: var(--retro-accent-contrast);
         border: none;
         border-radius: var(--retro-radius-sm);
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         transition: background 0.12s;
-        box-shadow: 0 4px 12px rgba(217, 116, 38, 0.25);
       }
       .unlock-btn:hover:not(:disabled) {
         opacity: 0.85;
       }
       .unlock-btn:disabled {
-        opacity: 0.4;
         cursor: default;
       }
 
