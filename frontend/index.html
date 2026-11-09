@@ -19,13 +19,9 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: var(--retro-font-body);
       -webkit-font-smoothing: antialiased;
-      background: #ffffff;
-    }
-
-    [data-theme='dark'] body, body[data-theme='dark'] {
-      background: #161410;
+      background: var(--retro-bg-page);
     }
 
     @keyframes drift-0 {
@@ -47,94 +43,126 @@
 
     :root {
       color-scheme: light;
-      --retro-bg-page: #fdfcf9;
-      --retro-bg-surface: #ffffff;
-      --retro-bg-subtle: #f4f4f2;
-      --retro-bg-hover: #fef3e8;
-      --retro-text-primary: #1c1a17;
-      --retro-text-secondary: #5a534b;
-      --retro-text-muted: #8a8378;
-      --retro-text-disabled: #b8b0a7;
-      --retro-border-default: #e8e4dd;
-      --retro-border-subtle: #f0ede8;
-      --retro-border-strong: #ccc5bc;
-      --retro-accent: #d97426;
-      --retro-accent-hover: #c5651e;
-      --retro-accent-tint: #fdf3e8;
-      --retro-phase-collecting-bg: #dbeafe;
-      --retro-phase-collecting-text: #1d4ed8;
-      --retro-phase-discussing-bg: #ffedd5;
-      --retro-phase-discussing-text: #c2410c;
-      --retro-phase-closed-bg: #f3e8ff;
-      --retro-phase-closed-text: #7e22ce;
-      --retro-error: #ef4444;
-      --retro-share-bg: #f0f9ff;
-      --retro-share-border: #bae6fd;
-      --retro-share-text: #0369a1;
-      --retro-facilitator-bg: #fff8f0;
-      --retro-facilitator-border: #fed7aa;
-      --retro-facilitator-text: #9a6a3a;
-      --retro-overlay-bg: rgba(40, 30, 20, 0.18);
-      --retro-card-shadow: rgba(120, 80, 40, 0.08);
+      --retro-font-body: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-      /* Glass system */
-      --retro-glass-bg-light: rgba(255, 255, 255, 0.92);
-      --retro-glass-bg-medium: rgba(255, 255, 255, 0.96);
-      --retro-glass-bg-strong: rgba(255, 255, 255, 0.88);
+      /* Shape scale: three radii with a job. Pills (999px) are only for state: phase, counts, votes. */
+      --retro-radius-sm: 10px;  /* buttons, inputs, small controls */
+      --retro-radius-md: 14px;  /* cards, panels, popovers */
+      --retro-radius-lg: 20px;  /* columns, dialogs */
+
+      --retro-bg-page: #f3f5f8;
+      --retro-bg-surface: #ffffff;
+      --retro-bg-subtle: #eef1f5;
+      --retro-bg-hover: #e8ecf2;
+      --retro-text-primary: #141a24;
+      --retro-text-secondary: #465068;
+      --retro-text-muted: #5a6479;
+      --retro-text-disabled: #9aa3b4;
+      --retro-border-default: #dde2ea;
+      --retro-border-subtle: #e8ecf2;
+      --retro-border-strong: #c4cbd6;
+      --retro-accent: #b45309;
+      --retro-accent-hover: #9a4a07;
+      --retro-accent-ink: #9a4a07;       /* the accent used as text */
+      --retro-accent-contrast: #ffffff;  /* label on an accent fill */
+      --retro-accent-tint: #fff1dc;
+      --retro-phase-collecting-bg: #e7f1fb;
+      --retro-phase-collecting-text: #141a24;
+      --retro-phase-discussing-bg: #fff1dc;
+      --retro-phase-discussing-text: #9a4a07;
+      --retro-phase-closed-bg: #eef1f5;
+      --retro-phase-closed-text: #465068;
+      --retro-error: #dc2626;
+      --retro-share-bg: #eef1f5;
+      --retro-share-border: #dde2ea;
+      --retro-share-text: #465068;
+      --retro-facilitator-bg: #fff1dc;
+      --retro-facilitator-border: #f0c88e;
+      --retro-facilitator-text: #9a4a07;
+      --retro-overlay-bg: rgba(20, 26, 36, 0.28);
+      --retro-card-shadow: rgba(20, 26, 36, 0.06);
+
+      /* Column colours (pastel, never used for text) and the ink for labels on them */
+      --retro-col-1: #8fd3b0;
+      --retro-col-2: #f3c98a;
+      --retro-col-3: #9cc3f0;
+      --retro-col-ink: #141a24;
+      --retro-col-tint: 12%;
+      --retro-strong-bg: #141a24;        /* dark button, e.g. Close session */
+      --retro-strong-ink: #ffffff;
+
+      /* Surfaces: flat, with a hairline. Only things that float carry --retro-shadow-float. */
+      --retro-glass-bg-light: #f7f8fb;
+      --retro-glass-bg-medium: #ffffff;
+      --retro-glass-bg-strong: #ffffff;
       --retro-glass-blur-light: 0px;
       --retro-glass-blur-medium: 0px;
-      --retro-glass-blur-strong: 24px;
-      --retro-glass-border: rgba(0, 0, 0, 0.06);
-      --retro-glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.06);
+      --retro-glass-blur-strong: 0px;
+      --retro-glass-border: #dde2ea;
+      --retro-glass-shadow: 0 4px 14px rgba(20, 26, 36, 0.06);
+      --retro-shadow-float: 0 14px 36px rgba(20, 26, 36, 0.18);
     }
 
     [data-theme='dark'] {
       color-scheme: dark;
-      --retro-bg-page: #161410;
-      --retro-bg-surface: #1c1b18;
-      --retro-bg-subtle: #252420;
-      --retro-bg-hover: #2a1f10;
-      --retro-text-primary: #f0ede8;
-      --retro-text-secondary: #a89f94;
-      --retro-text-muted: #6b6560;
-      --retro-text-disabled: #4a4540;
-      --retro-border-default: #38352f;
-      --retro-border-subtle: #2a2720;
-      --retro-border-strong: #4a4540;
-      --retro-accent: #f08746;
-      --retro-accent-hover: #e07030;
-      --retro-accent-tint: #2a1500;
-      --retro-phase-collecting-bg: #0f1e3a;
-      --retro-phase-collecting-text: #93c5fd;
-      --retro-phase-discussing-bg: #2a0f00;
-      --retro-phase-discussing-text: #fb923c;
-      --retro-phase-closed-bg: #1a0a2e;
-      --retro-phase-closed-text: #c084fc;
+      --retro-bg-page: #0e1218;
+      --retro-bg-surface: #171d28;
+      --retro-bg-subtle: #1d2431;
+      --retro-bg-hover: #232b3a;
+      --retro-text-primary: #e8ecf3;
+      --retro-text-secondary: #a9b3c4;
+      --retro-text-muted: #8f9aae;
+      --retro-text-disabled: #5d687c;
+      --retro-border-default: #263040;
+      --retro-border-subtle: #1c2331;
+      --retro-border-strong: #3a465a;
+      --retro-accent: #f59e0b;
+      --retro-accent-hover: #fbbf24;
+      --retro-accent-ink: #fbbf24;
+      --retro-accent-contrast: #14181f;
+      --retro-accent-tint: rgba(245, 158, 11, 0.15);
+      --retro-phase-collecting-bg: #1c2a3d;
+      --retro-phase-collecting-text: #e8ecf3;
+      --retro-phase-discussing-bg: #2b2312;
+      --retro-phase-discussing-text: #fbbf24;
+      --retro-phase-closed-bg: #1d2431;
+      --retro-phase-closed-text: #a9b3c4;
       --retro-error: #f87171;
-      --retro-share-bg: #0a1929;
-      --retro-share-border: #1e3a5f;
-      --retro-share-text: #60a5fa;
-      --retro-facilitator-bg: #1a0e03;
-      --retro-facilitator-border: #92400e;
-      --retro-facilitator-text: #d97706;
-      --retro-overlay-bg: rgba(0, 0, 0, 0.5);
-      --retro-card-shadow: rgba(0, 0, 0, 0.4);
+      --retro-share-bg: #1d2431;
+      --retro-share-border: #263040;
+      --retro-share-text: #a9b3c4;
+      --retro-facilitator-bg: #2b2312;
+      --retro-facilitator-border: #6b4a10;
+      --retro-facilitator-text: #fbbf24;
+      --retro-overlay-bg: rgba(0, 0, 0, 0.55);
+      --retro-card-shadow: rgba(0, 0, 0, 0.35);
 
-      /* Glass system — dark */
-      --retro-glass-bg-light: rgba(32, 30, 27, 0.92);
-      --retro-glass-bg-medium: rgba(32, 30, 27, 0.96);
-      --retro-glass-bg-strong: rgba(32, 30, 27, 0.85);
+      --retro-col-1: #6fd0a0;
+      --retro-col-2: #f0c070;
+      --retro-col-3: #7fb2ee;
+      --retro-col-ink: #0e1218;
+      --retro-strong-bg: #e8ecf3;
+      --retro-strong-ink: #141a24;
+
+      --retro-glass-bg-light: #131822;
+      --retro-glass-bg-medium: #171d28;
+      --retro-glass-bg-strong: #121721;
       --retro-glass-blur-light: 0px;
       --retro-glass-blur-medium: 0px;
-      --retro-glass-blur-strong: 24px;
-      --retro-glass-border: rgba(255, 255, 255, 0.06);
-      --retro-glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.4);
+      --retro-glass-blur-strong: 0px;
+      --retro-glass-border: #263040;
+      --retro-glass-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      --retro-shadow-float: 0 14px 36px rgba(0, 0, 0, 0.55);
     }
 
     [data-brand='cs'] {
       --retro-accent: #2f3f5b;
       --retro-accent-hover: #51678c;
+      --retro-accent-ink: #2f3f5b;
+      --retro-accent-contrast: #ffffff;
       --retro-accent-tint: #edf0f4;
+      --retro-strong-bg: #2f3f5b;
+      --retro-strong-ink: #ffffff;
 
       --retro-bg-page: #f2f5f7;
       --retro-bg-surface: #ffffff;
