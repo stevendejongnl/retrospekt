@@ -23,6 +23,7 @@ import {
 } from '../icons'
 import '../components/retro-board'
 import '../components/phase-stepper'
+import '../components/retro-timer'
 import '../components/session-history'
 import '../components/board-notes'
 import { notifications } from '../components/notification-dock'
@@ -793,6 +794,11 @@ export class SessionPage extends LitElement {
           @phase-select=${this.onPhaseSelect}
         ></phase-stepper>
         <div class="header-tools">
+        ${session.timer && (session.timer.started_at || !this.isFacilitator)
+          ? html`<div class="header-countdown">
+              <retro-timer .timer=${session.timer} .sessionId=${session.id} .participantName=${this.participantName}></retro-timer>
+            </div>`
+          : nothing}
         <div class="share-wrap">
           <button
             class="share-btn"

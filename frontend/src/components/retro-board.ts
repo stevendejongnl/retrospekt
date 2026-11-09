@@ -853,16 +853,6 @@ export class RetroBoard extends LitElement {
             </div>
           `}
 
-      ${!this.isFacilitator && session.timer
-        ? html`
-            <retro-timer
-              .timer=${session.timer}
-              .sessionId=${session.id}
-              .participantName=${this.participantName}
-            ></retro-timer>
-          `
-        : ''}
-
       ${this.voteLimitMessage
         ? html`<div class="vote-limit-msg">${this.voteLimitMessage}</div>`
         : ''}

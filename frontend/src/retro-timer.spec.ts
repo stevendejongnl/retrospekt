@@ -341,12 +341,12 @@ test.describe('retro-timer interval callback', () => {
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
     await openTimer(page)
-    await expect(page.locator('.timer-display')).toBeVisible()
+    await expect(page.locator('.timer-chip .timer-display')).toBeVisible()
     // Capture the initial rendered value
-    const firstText = await page.locator('.timer-display').textContent()
+    const firstText = await page.locator('.timer-chip .timer-display').textContent()
     // Wait for the setInterval callback to fire and update displaySeconds (lines 222-223)
     await expect(async () => {
-      const current = await page.locator('.timer-display').textContent()
+      const current = await page.locator('.timer-chip .timer-display').textContent()
       expect(current).not.toBe(firstText)
     }).toPass({ timeout: 3000 })
   })
@@ -362,10 +362,10 @@ test.describe('retro-timer interval callback', () => {
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
     await openTimer(page)
-    await expect(page.locator('.timer-display')).toBeVisible()
+    await expect(page.locator('.timer-chip .timer-display')).toBeVisible()
     // Wait for the interval to fire and hit remaining <= 0 → clearTimer (line 224)
     await page.waitForTimeout(1500)
-    await expect(page.locator('.timer-display')).toContainText('0:00')
+    await expect(page.locator('.timer-chip .timer-display')).toContainText('0:00')
   })
 
 })
@@ -385,7 +385,7 @@ test.describe('retro-timer disconnectedCallback', () => {
     await withName(page, 'Alice', FAC_TOKEN)
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('retro-timer')).toBeVisible()
+    await expect(page.locator('.facilitator-dock retro-timer')).toBeVisible()
     await openTimer(page)
     // Navigate home — triggers disconnectedCallback → clearTimer (lines 197-205)
     await page.locator('.brand').click()
@@ -516,7 +516,7 @@ test.describe('retro-timer ding sound', () => {
     await page.goto(`/session/${SESSION_ID}`)
     await openTimer(page)
     // Wait for the countdown to show — confirms displaySeconds is set before advancing
-    await expect(page.locator('retro-timer')).toContainText('0:0')
+    await expect(page.locator('.facilitator-dock retro-timer')).toContainText('0:0')
     await page.clock.fastForward(6000) // advance past expiry; triggers interval callbacks
      
     const created = await page.evaluate(() => (window as any).__audioCtxCreated as boolean)
@@ -549,5 +549,34 @@ test.describe('retro-timer compact dock chip', () => {
     await openTimer(page)
     await page.keyboard.press('Escape')
     await expect(page.locator('.preset-btn').first()).not.toBeVisible()
+  })
+})
+
+test.describe('retro-timer header countdown', () => {
+  const running = {
+    ...BASE,
+    timer: { duration_seconds: 300, started_at: new Date().toISOString(), paused_remaining: null },
+  }
+
+  test('a running timer shows a countdown pill in the header for a participant', async ({ page }) => {
+    await withName(page, 'Alice')
+    await mockApi(page, running as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.header-countdown .timer-pill')).toBeVisible()
+  })
+
+  test('and for the facilitator', async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
+    await mockApi(page, running as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.header-countdown .timer-pill')).toBeVisible()
+  })
+
+  test('the facilitator has no pill while the timer is not running (the chip shows it)', async ({ page }) => {
+    const idle = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: null } }
+    await withName(page, 'Alice', FAC_TOKEN)
+    await mockApi(page, idle as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.header-countdown')).toHaveCount(0)
   })
 })
