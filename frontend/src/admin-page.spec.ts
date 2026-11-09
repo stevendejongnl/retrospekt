@@ -32,7 +32,7 @@ test.describe('admin-page', () => {
   test('shows unlock form when no token stored', async ({ page }) => {
     await page.goto('/admin')
     await expect(page.locator('admin-page').getByPlaceholder('Admin password')).toBeVisible()
-    await expect(page.locator('admin-page').getByText('Feedback Comments')).not.toBeVisible()
+    await expect(page.locator('admin-page').getByText('Feedback Comments', { exact: true })).not.toBeVisible()
   })
 
   test('unlocking with correct password shows admin content', async ({ page }) => {
@@ -41,7 +41,7 @@ test.describe('admin-page', () => {
     await page.goto('/admin')
     await page.locator('admin-page').getByPlaceholder('Admin password').fill('pw')
     await page.locator('admin-page').getByRole('button', { name: /Unlock/ }).click()
-    await expect(page.locator('admin-page').getByText('Feedback Comments')).toBeVisible()
+    await expect(page.locator('admin-page').getByText('Feedback Comments', { exact: true })).toBeVisible()
     await expect(page.locator('admin-page').getByText('Great tool!')).toBeVisible()
   })
 

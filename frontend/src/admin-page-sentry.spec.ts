@@ -154,7 +154,7 @@ test.describe('admin-page — token handling', () => {
     await page.goto('/admin')
 
     const admin = page.locator('admin-page')
-    await expect(admin.getByText('Feedback Comments')).toBeVisible()
+    await expect(admin.getByText('Feedback Comments', { exact: true })).toBeVisible()
     await expect(admin.getByPlaceholder('Admin password')).not.toBeVisible()
   })
 
@@ -193,7 +193,7 @@ test.describe('admin-page — token handling', () => {
     const admin = page.locator('admin-page')
     await admin.getByPlaceholder('Admin password').fill('pw')
     await admin.getByPlaceholder('Admin password').press('Enter')
-    await expect(admin.getByText('Feedback Comments')).toBeVisible()
+    await expect(admin.getByText('Feedback Comments', { exact: true })).toBeVisible()
   })
 
   test('a key other than Enter does not submit', async ({ page }) => {
@@ -204,7 +204,7 @@ test.describe('admin-page — token handling', () => {
     const admin = page.locator('admin-page')
     await admin.getByPlaceholder('Admin password').fill('pw')
     await admin.getByPlaceholder('Admin password').press('a')
-    await expect(admin.getByText('Feedback Comments')).not.toBeVisible()
+    await expect(admin.getByText('Feedback Comments', { exact: true })).not.toBeVisible()
   })
 })
 
