@@ -259,8 +259,8 @@ test('capture all screens', async ({ browser }) => {
     await page.locator('retro-board').waitFor({ state: 'attached' })
     await page.waitForFunction(() => {
       const sp = document.querySelector('session-page') as any
-      const board = sp?.shadowRoot?.querySelector('retro-board') as any
-      const badge = board?.shadowRoot?.querySelector('.phase-badge')
+      const stepper = sp?.shadowRoot?.querySelector('phase-stepper') as any
+      const badge = stepper?.shadowRoot?.querySelector('.step.active')
       return badge?.textContent?.includes('Collecting')
     }, { timeout: 8000 })
     await page.waitForTimeout(800) // let cards render
@@ -277,8 +277,8 @@ test('capture all screens', async ({ browser }) => {
     await page.locator('retro-board').waitFor({ state: 'attached' })
     await page.waitForFunction(() => {
       const sp = document.querySelector('session-page') as any
-      const board = sp?.shadowRoot?.querySelector('retro-board') as any
-      const badge = board?.shadowRoot?.querySelector('.phase-badge')
+      const stepper = sp?.shadowRoot?.querySelector('phase-stepper') as any
+      const badge = stepper?.shadowRoot?.querySelector('.step.active')
       return badge?.textContent?.includes('Collecting')
     }, { timeout: 8000 })
     await page.waitForTimeout(800)
@@ -320,8 +320,8 @@ test('capture all screens', async ({ browser }) => {
     await page.locator('retro-board').waitFor({ state: 'attached' })
     await page.waitForFunction(() => {
       const sp = document.querySelector('session-page') as any
-      const board = sp?.shadowRoot?.querySelector('retro-board') as any
-      const badge = board?.shadowRoot?.querySelector('.phase-badge')
+      const stepper = sp?.shadowRoot?.querySelector('phase-stepper') as any
+      const badge = stepper?.shadowRoot?.querySelector('.step.active')
       return badge?.textContent?.includes('Discussing')
     }, { timeout: 8000 })
     await page.waitForTimeout(800)
@@ -338,8 +338,8 @@ test('capture all screens', async ({ browser }) => {
     await page.locator('retro-board').waitFor({ state: 'attached' })
     await page.waitForFunction(() => {
       const sp = document.querySelector('session-page') as any
-      const board = sp?.shadowRoot?.querySelector('retro-board') as any
-      const badge = board?.shadowRoot?.querySelector('.phase-badge')
+      const stepper = sp?.shadowRoot?.querySelector('phase-stepper') as any
+      const badge = stepper?.shadowRoot?.querySelector('.step.active')
       return badge?.textContent?.includes('Discussing')
     }, { timeout: 8000 })
     await page.waitForTimeout(800)
@@ -356,8 +356,8 @@ test('capture all screens', async ({ browser }) => {
     await page.locator('retro-board').waitFor({ state: 'attached' })
     await page.waitForFunction(() => {
       const sp = document.querySelector('session-page') as any
-      const board = sp?.shadowRoot?.querySelector('retro-board') as any
-      const badge = board?.shadowRoot?.querySelector('.phase-badge')
+      const stepper = sp?.shadowRoot?.querySelector('phase-stepper') as any
+      const badge = stepper?.shadowRoot?.querySelector('.step.active')
       return badge?.textContent?.includes('Discussing')
     }, { timeout: 8000 })
     await page.waitForTimeout(500)
@@ -393,8 +393,8 @@ test('capture all screens', async ({ browser }) => {
     await page.locator('retro-board').waitFor({ state: 'attached' })
     await page.waitForFunction(() => {
       const sp = document.querySelector('session-page') as any
-      const board = sp?.shadowRoot?.querySelector('retro-board') as any
-      const badge = board?.shadowRoot?.querySelector('.phase-badge')
+      const stepper = sp?.shadowRoot?.querySelector('phase-stepper') as any
+      const badge = stepper?.shadowRoot?.querySelector('.step.active')
       return badge?.textContent?.includes('Discussing')
     }, { timeout: 8000 })
     await page.waitForTimeout(400)
@@ -425,8 +425,8 @@ test('capture all screens', async ({ browser }) => {
     await page.locator('retro-board').waitFor({ state: 'attached' })
     await page.waitForFunction(() => {
       const sp = document.querySelector('session-page') as any
-      const board = sp?.shadowRoot?.querySelector('retro-board') as any
-      const badge = board?.shadowRoot?.querySelector('.phase-badge')
+      const stepper = sp?.shadowRoot?.querySelector('phase-stepper') as any
+      const badge = stepper?.shadowRoot?.querySelector('.step.active')
       return badge?.textContent?.includes('Closed')
     }, { timeout: 8000 })
     await page.waitForTimeout(800)

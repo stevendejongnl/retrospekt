@@ -410,8 +410,9 @@ test.describe('session-page board (facilitator, collecting)', () => {
     await expect(page.locator('.facilitator-dock')).toBeVisible()
   })
 
-  test('shows the collecting phase badge', async ({ page }) => {
-    await expect(page.locator('.badge-collecting')).toBeVisible()
+  test('shows the collecting phase in the header stepper, not in the dock', async ({ page }) => {
+    await expect(page.locator('header phase-stepper .step.active')).toContainText('Collecting')
+    await expect(page.locator('.phase-badge')).toHaveCount(0)
   })
 
   test('"Start discussion" button calls the phase API', async ({ page }) => {
@@ -1070,9 +1071,9 @@ test.describe('session-page board (facilitator, closed)', () => {
     await expect(page.locator('.facilitator-dock')).toBeVisible()
   })
 
-  test('shows the Closed phase badge in facilitator bar', async ({ page }) => {
-    await expect(page.locator('.badge-closed')).toBeVisible()
-    await expect(page.locator('.badge-closed')).toContainText('Closed')
+  test('shows Closed in the header stepper, and Reopen in the dock', async ({ page }) => {
+    await expect(page.locator('header phase-stepper .step.active')).toContainText('Closed')
+    await expect(page.locator('.facilitator-dock .back-btn')).toHaveText('← Reopen')
   })
 
   test('clicking the help overlay backdrop in facilitator bar closes it', async ({ page }) => {

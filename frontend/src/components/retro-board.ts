@@ -7,9 +7,6 @@ import { api, countParticipantVotes } from '../api'
 import { storage } from '../storage'
 import {
   faIconStyles,
-  iconPencil,
-  iconCommentDots,
-  iconLock,
   iconUsers,
   iconCircleCheck,
   iconGear,
@@ -43,86 +40,67 @@ export class RetroBoard extends LitElement {
     :host {
       display: block;
     }
-    .facilitator-bar {
+    .facilitator-dock {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      z-index: 20;
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      padding: 12px 14px;
+      gap: 10px;
+      max-width: calc(100vw - 24px);
+      padding: 8px 12px;
       background: var(--retro-glass-bg-strong);
-      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: var(--retro-radius-md);
-      margin-bottom: 16px;
-      box-shadow: var(--retro-glass-shadow);
+      border-radius: 999px;
+      box-shadow: var(--retro-shadow-float);
     }
-    .bar-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--retro-facilitator-text);
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-    }
-    .phase-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 12px;
-      border-radius: var(--retro-radius-lg);
-      font-size: 13px;
-      font-weight: 500;
-    }
-    .badge-collecting {
-      background: var(--retro-phase-collecting-bg);
-      color: var(--retro-phase-collecting-text);
-    }
-    .badge-discussing {
-      background: var(--retro-phase-discussing-bg);
-      color: var(--retro-phase-discussing-text);
-    }
-    .badge-closed {
-      background: var(--retro-phase-closed-bg);
-      color: var(--retro-phase-closed-text);
+    .dock-sep {
+      width: 1px;
+      height: 22px;
+      background: var(--retro-border-default);
     }
     .phase-btn {
       background: var(--retro-accent);
-      color: white;
-      border: none;
+      color: var(--retro-accent-contrast);
+      border: 1px solid var(--retro-accent-border);
       border-radius: var(--retro-radius-sm);
-      padding: 6px 14px;
-      font-size: 13px;
+      padding: 5px 12px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
+      white-space: nowrap;
       transition: background 0.12s;
-      box-shadow: 0 4px 12px rgba(217, 116, 38, 0.25);
     }
     .phase-btn:hover {
       background: var(--retro-accent-hover);
     }
     .phase-btn.close-btn {
-      background: rgba(28, 28, 30, 0.9);
-      border-color: rgba(0, 0, 0, 0.2);
-      box-shadow: none;
+      background: var(--retro-strong-bg);
+      color: var(--retro-strong-ink);
+      border-color: var(--retro-strong-bg);
     }
     .phase-btn.close-btn:hover {
       opacity: 0.85;
     }
     .participant-count {
-      margin-left: auto;
+      white-space: nowrap;
       font-size: 12px;
       color: var(--retro-facilitator-text);
     }
     .back-btn {
-      background: none;
-      border: 1px solid var(--retro-facilitator-border);
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
       border-radius: var(--retro-radius-sm);
-      padding: 7px 14px;
-      font-size: 13px;
+      padding: 5px 12px;
+      font-size: 12px;
       font-weight: 500;
-      color: var(--retro-facilitator-text);
+      color: var(--retro-text-primary);
       cursor: pointer;
       font-family: inherit;
+      white-space: nowrap;
       transition: background 0.12s;
     }
     .back-btn:hover {
@@ -285,12 +263,13 @@ export class RetroBoard extends LitElement {
 
     .add-column-btn {
       background: none;
-      border: 1.5px dashed var(--retro-facilitator-border);
+      border: 1px dashed var(--retro-border-strong);
       border-radius: var(--retro-radius-sm);
-      padding: 7px 16px;
-      font-size: 13px;
+      padding: 5px 12px;
+      font-size: 12px;
       font-weight: 500;
-      color: var(--retro-facilitator-text);
+      white-space: nowrap;
+      color: var(--retro-text-secondary);
       cursor: pointer;
       font-family: inherit;
       transition: all 0.12s;
@@ -304,6 +283,7 @@ export class RetroBoard extends LitElement {
       gap: 16px;
       align-items: flex-start;
       overflow-x: auto;
+      padding-bottom: 96px; /* the facilitator dock floats over the bottom edge */
     }
     @media (max-width: 800px) {
       .columns {
@@ -834,22 +814,22 @@ export class RetroBoard extends LitElement {
 
       ${this.isFacilitator
         ? html`
-            <div class="facilitator-bar">
-              <span class="bar-label">Phase</span>
-              <span class="phase-badge badge-${session.phase}">
-                ${session.phase === 'collecting'
-                  ? html`${iconPencil()} Collecting`
-                  : session.phase === 'discussing'
-                    ? html`${iconCommentDots()} Discussing`
-                    : html`${iconLock()} Closed`}
-              </span>
+            <div class="facilitator-dock" role="toolbar" aria-label="Facilitator controls">
               ${session.phase !== 'collecting'
                 ? html`
-                    <button class="back-btn" @click=${this.goBackPhase}>← Back</button>
+                    <button class="back-btn" @click=${this.goBackPhase}>${session.phase === 'closed' ? '← Reopen' : '← Back'}</button>
+                    <span class="dock-sep" aria-hidden="true"></span>
                   `
                 : ''}
+              ${session.phase === 'collecting'
+                ? html`<button class="add-column-btn" @click=${this.onAddColumn}>+ Add column</button>`
+                : ''}
+              <button class="settings-btn" title="Session settings" @click=${this.openSettings}>${iconGear()}</button>
+              ${participantCountBtn}
+              <button class="help-btn" @click=${() => (this.showHelp = true)}>?</button>
               ${session.phase !== 'closed'
                 ? html`
+                    <span class="dock-sep" aria-hidden="true"></span>
                     <button
                       class="phase-btn ${session.phase === 'discussing' ? 'close-btn' : ''}"
                       @click=${this.transitionPhase}
@@ -860,12 +840,6 @@ export class RetroBoard extends LitElement {
                     </button>
                   `
                 : ''}
-              ${session.phase === 'collecting'
-                ? html`<button class="add-column-btn" @click=${this.onAddColumn}>+ Add column</button>`
-                : ''}
-              ${participantCountBtn}
-              <button class="settings-btn" title="Session settings" @click=${this.openSettings}>${iconGear()}</button>
-              <button class="help-btn" @click=${() => (this.showHelp = true)}>?</button>
             </div>
           `
         : html`
