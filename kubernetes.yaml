@@ -106,6 +106,10 @@ spec:
                   name: retrospekt-gif-secret
                   key: tenor-api-key
                   optional: true
+            # Origin used in link-preview (Open Graph) tags. Needed when TLS is terminated
+            # in front of the ingress (e.g. Cloudflare), otherwise the tags say http://.
+            - name: PUBLIC_URL
+              value: "https://your.domain.example"  # TODO: replace with your domain
           resources:
             requests:
               memory: "128Mi"
