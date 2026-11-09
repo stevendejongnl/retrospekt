@@ -1,3 +1,35 @@
+## [1.51.0](https://github.com/stevendejongnl/retrospekt/compare/v1.50.1...v1.51.0) (2026-11-09)
+
+### Features
+
+* **design:** 404 page matches the design ([bf75fd3](https://github.com/stevendejongnl/retrospekt/commit/bf75fd31ba026f3cc03590483ae0f05b3a62671e))
+* **design:** every page starts from shared base styles ([c00e7ac](https://github.com/stevendejongnl/retrospekt/commit/c00e7ac5eaf03e9f2b389b0a91a283ccd3189b8c))
+* **design:** flat pages, without the drifting colour blobs ([8185f8c](https://github.com/stevendejongnl/retrospekt/commit/8185f8c5eba514dc8eaa43cdd3b445ca8942515f))
+* **design:** locked admin page follows the design ([b737e63](https://github.com/stevendejongnl/retrospekt/commit/b737e63c800838b77886d84e5d63d77423c9fe4e))
+* **design:** locked admin page matches the design ([3f7a34d](https://github.com/stevendejongnl/retrospekt/commit/3f7a34dcdf57b35afa7ae96a627f6a747592934e))
+* **design:** privacy page matches the design ([f462aad](https://github.com/stevendejongnl/retrospekt/commit/f462aad7151c6f771729a2be02bbe19b8338b797))
+* **design:** self-host Inter and JetBrains Mono ([33d5585](https://github.com/stevendejongnl/retrospekt/commit/33d5585bfa35932e8cf9d0563b1c7b7bcf734bc6))
+* **design:** Slate + Soft colour tokens, shape scale and body font token ([41c2ef9](https://github.com/stevendejongnl/retrospekt/commit/41c2ef9a26d2509caae586dcc19d93f4089e7d2c))
+* **design:** take every radius from the shape scale ([1428661](https://github.com/stevendejongnl/retrospekt/commit/1428661491e70c17ddbd9ea5b6b25cfa0fcf32d8))
+* **feedback:** feedback page matches the design ([1b229ff](https://github.com/stevendejongnl/retrospekt/commit/1b229ff806fa533cfa48fceeeb925ea3628a3d29))
+* **feedback:** stars instead of face emoji, in the page and the docked card ([365a8e0](https://github.com/stevendejongnl/retrospekt/commit/365a8e081c1fa64b054efbf742a25485c40d1b12))
+* **parity:** compare every screen with the design ([2d8f2f7](https://github.com/stevendejongnl/retrospekt/commit/2d8f2f703df095ea175787f42d062aa13a633775))
+* **parity:** pixel comparison with the Hoard rules ([4aee489](https://github.com/stevendejongnl/retrospekt/commit/4aee48926d87f966b54c73485468875cd1a6c048))
+* **parity:** render the design's artboards as reference images ([f301ee1](https://github.com/stevendejongnl/retrospekt/commit/f301ee1274ae5d9019a790edf62467ec37add691))
+* **parity:** screen table, fixtures and browser conditions ([ca581ba](https://github.com/stevendejongnl/retrospekt/commit/ca581bababd9162e798814d6084584f5ce4a53ae))
+* **share:** draw the link banner in the Slate + Soft palette ([d39ce14](https://github.com/stevendejongnl/retrospekt/commit/d39ce145ae2ebc4b39b6793ad244556353df1c12))
+
+### Bug Fixes
+
+* **deps:** regenerate the frontend lockfile with npm 11.19 ([d70b249](https://github.com/stevendejongnl/retrospekt/commit/d70b24910602970b91dc74eca5abece42c41f49e))
+* **design:** declare stylesheet side-effect imports for the type check ([a4d592d](https://github.com/stevendejongnl/retrospekt/commit/a4d592d5a39d2e450ab569c55f0091e216ca226e))
+* **design:** type the radius scale test ([86b296b](https://github.com/stevendejongnl/retrospekt/commit/86b296b03173452b875d704cb7f89353f4f0b677))
+* **parity:** commit the reference images ([2b20e14](https://github.com/stevendejongnl/retrospekt/commit/2b20e145805274a3b03f6486158f7351b5f43934))
+
+### Documentation
+
+* **design:** radius scale and flat pages are done ([27d9655](https://github.com/stevendejongnl/retrospekt/commit/27d9655eab315a7250059430ed244f9f32726d72))
+
 ## [1.50.1](https://github.com/stevendejongnl/retrospekt/compare/v1.50.0...v1.50.1) (2026-11-09)
 
 ### Bug Fixes
