@@ -1,3 +1,9 @@
+## [1.49.1](https://github.com/stevendejongnl/retrospekt/compare/v1.49.0...v1.49.1) (2026-11-09)
+
+### Bug Fixes
+
+* **share:** proxy link-preview requests to the backend Service port ([c4289d1](https://github.com/stevendejongnl/retrospekt/commit/c4289d1f21433e558e681993adc8fb37a3238c00))
+
 ## [1.49.0](https://github.com/stevendejongnl/retrospekt/compare/v1.48.0...v1.49.0) (2026-11-09)
 
 ### Features
