@@ -17,6 +17,6 @@
     "experimentalDecorators": true,
     "types": ["mocha", "node"]
   },
-  "include": ["src"],
+  "include": ["src", "parity"],
   "exclude": ["src/**/*.spec.ts"]
 }
