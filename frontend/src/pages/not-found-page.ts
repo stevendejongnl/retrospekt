@@ -28,12 +28,16 @@ export class NotFoundPage extends LitElement {
       align-items: center;
       gap: 14px;
     }
+    h2, p {
+      margin: 0;
+    }
     .emoji {
       font-size: 64px;
+      line-height: 1;
       filter: drop-shadow(0 8px 24px rgba(217, 116, 38, 0.35));
     }
     h2 {
-      font-size: 26px;
+      font-size: 28px;
       color: var(--retro-text-primary);
       font-weight: 800;
       letter-spacing: -0.02em;
@@ -52,10 +56,8 @@ export class NotFoundPage extends LitElement {
       padding: 10px 22px;
       border-radius: 999px;
       background: var(--retro-glass-bg-strong);
-      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      box-shadow: var(--retro-glass-shadow);
+      box-shadow: var(--retro-shadow-float);
       font-size: 13px;
       font-weight: 600;
       color: var(--retro-accent);
@@ -67,15 +69,14 @@ export class NotFoundPage extends LitElement {
       opacity: 0.85;
     }
     .github-link {
-      margin-top: 4px;
       font-size: 11px;
-      font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+      font-family: var(--retro-font-mono);
     }
     .github-link a {
       font-size: 11px;
       color: var(--retro-text-muted);
       text-decoration: underline;
-      text-decoration-color: rgba(0, 0, 0, 0.2);
+      text-decoration-color: var(--retro-border-strong);
       text-underline-offset: 3px;
     }
   `
