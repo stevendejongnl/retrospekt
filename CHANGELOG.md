@@ -1,3 +1,9 @@
+## [1.50.1](https://github.com/stevendejongnl/retrospekt/compare/v1.50.0...v1.50.1) (2026-11-09)
+
+### Bug Fixes
+
+* **share:** keep a literal title tag out of the index.html comment ([24821e7](https://github.com/stevendejongnl/retrospekt/commit/24821e756ddbef01fb105f936fbfb60d9cb355f6))
+
 ## [1.50.0](https://github.com/stevendejongnl/retrospekt/compare/v1.49.2...v1.50.0) (2026-11-09)
 
 ### Features
