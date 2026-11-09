@@ -82,19 +82,19 @@ test.describe('open facilitator — facilitator bar visibility', () => {
   test('facilitator bar is hidden for participant when open_facilitator=false', async ({ page }) => {
     const session = { ...BASE, open_facilitator: false }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Bob')
-    await expect(page.locator('.facilitator-bar')).not.toBeVisible()
+    await expect(page.locator('.facilitator-dock')).not.toBeVisible()
   })
 
   test('facilitator bar is visible for participant when open_facilitator=true', async ({ page }) => {
     const session = { ...BASE, open_facilitator: true }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Bob')
-    await expect(page.locator('.facilitator-bar')).toBeVisible()
+    await expect(page.locator('.facilitator-dock')).toBeVisible()
   })
 
   test('actual facilitator still sees facilitator bar when open_facilitator=false', async ({ page }) => {
     const session = { ...BASE, open_facilitator: false }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Alice', FAC_TOKEN)
-    await expect(page.locator('.facilitator-bar')).toBeVisible()
+    await expect(page.locator('.facilitator-dock')).toBeVisible()
   })
 
   test('phase button is visible to participant when open_facilitator=true', async ({ page }) => {
@@ -171,7 +171,7 @@ test.describe('open facilitator — SSE reactivity', () => {
   test('SSE update changing open_facilitator to true shows facilitator bar to participant', async ({ page }) => {
     const session = { ...BASE, open_facilitator: false }
     await loadSession(page, session as unknown as Record<string, unknown>, 'Bob')
-    await expect(page.locator('.facilitator-bar')).not.toBeVisible()
+    await expect(page.locator('.facilitator-dock')).not.toBeVisible()
 
     // Simulate SSE push: update session to open_facilitator=true
     const updated = { ...BASE, open_facilitator: true }
@@ -180,6 +180,6 @@ test.describe('open facilitator — SSE reactivity', () => {
       if (el) (el as unknown as Record<string, unknown>)['session'] = updatedSession
     }, updated)
 
-    await expect(page.locator('.facilitator-bar')).toBeVisible()
+    await expect(page.locator('.facilitator-dock')).toBeVisible()
   })
 })

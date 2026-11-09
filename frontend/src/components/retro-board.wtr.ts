@@ -61,7 +61,7 @@ describe('retro-board', () => {
     const el = await fixture<RetroBoard>(
       html`<retro-board .session=${makeSession()} .participantName=${'Alice'}></retro-board>`,
     )
-    expect(el.shadowRoot!.querySelector('.facilitator-bar')).to.be.null
+    expect(el.shadowRoot!.querySelector('.facilitator-dock')).to.be.null
   })
 
   it('facilitator bar is present with a phase button when user is the facilitator', async () => {
@@ -70,8 +70,65 @@ describe('retro-board', () => {
     const el = await fixture<RetroBoard>(
       html`<retro-board .session=${makeSession()} .participantName=${'Alice'}></retro-board>`,
     )
-    expect(el.shadowRoot!.querySelector('.facilitator-bar')).to.not.be.null
+    expect(el.shadowRoot!.querySelector('.facilitator-dock')).to.not.be.null
     expect(el.shadowRoot!.querySelector('.phase-btn')).to.not.be.null
+  })
+
+  describe('facilitator dock', () => {
+    const dockOf = async (phase: Session['phase']) => {
+      storage.isFacilitator = () => true
+      storage.getFacilitatorToken = () => 'tok-abc'
+      const el = await fixture<RetroBoard>(
+        html`<retro-board .session=${makeSession({ phase })} .participantName=${'Alice'}></retro-board>`,
+      )
+      return el.shadowRoot!
+    }
+    const text = (root: ShadowRoot, selector: string) => root.querySelector(selector)?.textContent?.trim()
+
+    it('floats over the board instead of taking a row above the columns', async () => {
+      const root = await dockOf('collecting')
+      const dock = root.querySelector('.facilitator-dock')!
+      expect(getComputedStyle(dock).position).to.equal('fixed')
+    })
+
+    it('does not repeat the phase, the header stepper shows it', async () => {
+      const root = await dockOf('discussing')
+      expect(root.querySelector('.phase-badge')).to.be.null
+      expect(root.querySelector('.bar-label')).to.be.null
+    })
+
+    it('collecting: Start discussion, Add column and Settings, no Back', async () => {
+      const root = await dockOf('collecting')
+      expect(text(root, '.phase-btn')).to.equal('Start discussion →')
+      expect(root.querySelector('.add-column-btn')).to.not.be.null
+      expect(root.querySelector('.settings-btn')).to.not.be.null
+      expect(root.querySelector('.back-btn')).to.be.null
+    })
+
+    it('discussing: Back and Close session, no Add column', async () => {
+      const root = await dockOf('discussing')
+      expect(text(root, '.back-btn')).to.equal('← Back')
+      expect(text(root, '.phase-btn.close-btn')).to.equal('Close session')
+      expect(root.querySelector('.add-column-btn')).to.be.null
+    })
+
+    it('closed: Reopen instead of Back, and no phase button', async () => {
+      const root = await dockOf('closed')
+      expect(text(root, '.back-btn')).to.equal('← Reopen')
+      expect(root.querySelector('.phase-btn')).to.be.null
+    })
+
+    it('Reopen goes back one phase', async () => {
+      let setPhaseArgs: unknown[] | null = null
+      api.setPhase = (...args: unknown[]) => {
+        setPhaseArgs = args
+        return Promise.resolve(makeSession({ phase: 'discussing' }))
+      }
+      const root = await dockOf('closed')
+      root.querySelector<HTMLButtonElement>('.back-btn')!.click()
+      await new Promise((r) => setTimeout(r, 0))
+      expect(setPhaseArgs![1]).to.equal('discussing')
+    })
   })
 
   it('phase transition button calls api.setPhase() with the next phase', async () => {

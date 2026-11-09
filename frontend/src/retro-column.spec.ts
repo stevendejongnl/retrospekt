@@ -221,7 +221,7 @@ test.describe('retro-column title editing', () => {
     await withName(page, 'Alice', FAC_TOKEN)
     await mockApi(page, BASE as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('.facilitator-bar')).toBeVisible()
+    await expect(page.locator('.facilitator-dock')).toBeVisible()
 
     // Click on the "Went Well" column title text
     const col = page.locator('retro-column').first()

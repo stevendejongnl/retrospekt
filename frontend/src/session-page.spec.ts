@@ -319,7 +319,7 @@ test.describe('session-page board (participant)', () => {
 
   test('participant bar (not facilitator bar) is rendered', async ({ page }) => {
     await expect(page.locator('.participant-bar')).toBeVisible()
-    await expect(page.locator('.facilitator-bar')).not.toBeVisible()
+    await expect(page.locator('.facilitator-dock')).not.toBeVisible()
   })
 })
 
@@ -407,7 +407,7 @@ test.describe('session-page board (facilitator, collecting)', () => {
     await withName(page, 'Alice', FAC_TOKEN)
     await mockApi(page, BASE)
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('.facilitator-bar')).toBeVisible()
+    await expect(page.locator('.facilitator-dock')).toBeVisible()
   })
 
   test('shows the collecting phase badge', async ({ page }) => {
@@ -454,12 +454,12 @@ test.describe('session-page board (facilitator, collecting)', () => {
   })
 
   test('"?" button in facilitator bar opens the help overlay', async ({ page }) => {
-    await page.locator('.facilitator-bar .help-btn').click()
+    await page.locator('.facilitator-dock .help-btn').click()
     await expect(page.locator('.help-overlay')).toBeVisible()
   })
 
   test('help overlay in facilitator bar closes via "Got it"', async ({ page }) => {
-    await page.locator('.facilitator-bar .help-btn').click()
+    await page.locator('.facilitator-dock .help-btn').click()
     await page.locator('.help-close-btn').click()
     await expect(page.locator('.help-overlay')).not.toBeVisible()
   })
@@ -470,7 +470,7 @@ test.describe('session-page board (facilitator, discussing)', () => {
     await withName(page, 'Alice', FAC_TOKEN)
     await mockApi(page, { ...BASE, phase: 'discussing' } as typeof BASE)
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('.facilitator-bar')).toBeVisible()
+    await expect(page.locator('.facilitator-dock')).toBeVisible()
   })
 
   test('shows "← Back" and "Close session" buttons', async ({ page }) => {
@@ -1067,7 +1067,7 @@ test.describe('session-page board (facilitator, closed)', () => {
     await withName(page, 'Alice', FAC_TOKEN)
     await mockApi(page, { ...BASE, phase: 'closed' } as typeof BASE)
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('.facilitator-bar')).toBeVisible()
+    await expect(page.locator('.facilitator-dock')).toBeVisible()
   })
 
   test('shows the Closed phase badge in facilitator bar', async ({ page }) => {
@@ -1076,7 +1076,7 @@ test.describe('session-page board (facilitator, closed)', () => {
   })
 
   test('clicking the help overlay backdrop in facilitator bar closes it', async ({ page }) => {
-    await page.locator('.facilitator-bar .help-btn').click()
+    await page.locator('.facilitator-dock .help-btn').click()
     await expect(page.locator('.help-overlay')).toBeVisible()
     await page.locator('.help-overlay').click({ position: { x: 5, y: 5 } })
     await expect(page.locator('.help-overlay')).not.toBeVisible()
@@ -1184,7 +1184,7 @@ test.describe('session-page settings dialog', () => {
     await withName(page, 'Alice', FAC_TOKEN)
     await mockApi(page, { ...BASE, reactions_enabled: true })
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('.facilitator-bar')).toBeVisible()
+    await expect(page.locator('.facilitator-dock')).toBeVisible()
   })
 
   test('⚙ settings button is visible in the facilitator bar', async ({ page }) => {
@@ -1421,7 +1421,7 @@ test.describe('retro-board add column deduplication', () => {
     }
     await mockApi(page, sessionWithNewCol as typeof BASE)
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('.facilitator-bar')).toBeVisible()
+    await expect(page.locator('.facilitator-dock')).toBeVisible()
     const req = page.waitForRequest(
       (r) => r.url().includes('/columns') && r.method() === 'POST',
     )
