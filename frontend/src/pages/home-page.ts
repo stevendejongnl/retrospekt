@@ -1,4 +1,5 @@
 import { LitElement, css, html } from 'lit'
+import { baseStyles } from '../styles'
 import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
@@ -55,7 +56,7 @@ export class HomePage extends LitElement {
     window.removeEventListener('retro-halal-change', this._halalListener)
   }
 
-  static styles = [faIconStyles, css`
+  static styles = [ baseStyles, faIconStyles, css`
     :host {
       display: flex;
       align-items: center;

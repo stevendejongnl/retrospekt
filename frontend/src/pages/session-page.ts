@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/browser'
 import { LitElement, PropertyValues, css, html, nothing } from 'lit'
+import { baseStyles } from '../styles'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Session } from '../types'
@@ -66,7 +67,7 @@ export class SessionPage extends LitElement {
   private _lastActivityAt = Date.now()
   private _onActivity = (): void => { this._lastActivityAt = Date.now() }
 
-  static styles = [faIconStyles, css`
+  static styles = [ baseStyles, faIconStyles, css`
     :host {
       display: block;
       min-height: 100vh;

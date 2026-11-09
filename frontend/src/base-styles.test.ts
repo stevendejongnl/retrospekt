@@ -18,6 +18,6 @@ describe('base styles', () => {
   it.each(pageFiles)('%s starts from the base styles', (file) => {
     const source = readFileSync(join(PAGES, file), 'utf8')
     expect(source).toMatch(/import \{ baseStyles \} from '\.\.\/styles'/)
-    expect(source).toMatch(/static styles = \[baseStyles, css`/)
+    expect(source).toMatch(/static styles = \[\s*baseStyles,/)
   })
 })

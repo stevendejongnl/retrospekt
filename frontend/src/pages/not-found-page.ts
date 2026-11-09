@@ -1,11 +1,12 @@
 import { LitElement, css, html } from 'lit'
+import { baseStyles } from '../styles'
 import { customElement } from 'lit/decorators.js'
 
 import { bacon } from '../theme'
 
 @customElement('not-found-page')
 export class NotFoundPage extends LitElement {
-  static styles = css`
+  static styles = [baseStyles, css`
     :host {
       display: flex;
       align-items: center;
@@ -79,7 +80,7 @@ export class NotFoundPage extends LitElement {
       text-decoration-color: var(--retro-border-strong);
       text-underline-offset: 3px;
     }
-  `
+  `]
 
   render() {
     return html`

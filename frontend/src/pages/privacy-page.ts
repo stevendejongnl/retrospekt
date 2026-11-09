@@ -1,11 +1,12 @@
 import { LitElement, css, html } from 'lit'
+import { baseStyles } from '../styles'
 import { customElement } from 'lit/decorators.js'
 
 import { bacon } from '../theme'
 
 @customElement('privacy-page')
 export class PrivacyPage extends LitElement {
-  static styles = css`
+  static styles = [baseStyles, css`
     :host {
       display: flex;
       justify-content: center;
@@ -76,7 +77,7 @@ export class PrivacyPage extends LitElement {
     .back-pill:hover {
       opacity: 0.85;
     }
-  `
+  `]
 
   render() {
     return html`

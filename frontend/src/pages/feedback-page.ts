@@ -1,4 +1,5 @@
 import { LitElement, css, html } from 'lit'
+import { baseStyles } from '../styles'
 import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
@@ -19,6 +20,7 @@ export class FeedbackPage extends LitElement {
   }
 
   static styles = [
+    baseStyles,
     faIconStyles,
     css`
       :host {

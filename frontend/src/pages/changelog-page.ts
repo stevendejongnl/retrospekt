@@ -1,4 +1,5 @@
 import { LitElement, css, html } from 'lit'
+import { baseStyles } from '../styles'
 import { customElement } from 'lit/decorators.js'
 import { CHANGELOG } from '../generated/changelog'
 import type { ChangelogEntry, ChangelogKind } from '../generated/changelog'
@@ -13,7 +14,7 @@ const KIND_LABEL: Record<ChangelogKind, string> = {
 
 @customElement('changelog-page')
 export class ChangelogPage extends LitElement {
-  static styles = css`
+  static styles = [baseStyles, css`
     :host {
       display: block;
       min-height: 100vh;
@@ -194,7 +195,7 @@ export class ChangelogPage extends LitElement {
       font-weight: 600;
       color: var(--retro-text-primary);
     }
-  `
+  `]
 
   connectedCallback(): void {
     super.connectedCallback()
