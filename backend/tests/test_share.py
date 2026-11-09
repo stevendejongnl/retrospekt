@@ -149,3 +149,30 @@ async def test_home_banner_is_a_png(client: AsyncClient):
 
     assert response.status_code == 200
     assert Image.open(io.BytesIO(response.content)).size == (1200, 630)
+
+
+async def test_meta_fragment_holds_only_tags_so_nginx_can_splice_it_into_index_html(client: AsyncClient):
+    session = await make_session(client, name="Sprint 42 Retro")
+
+    response = await client.get(f"/api/v1/sessions/{session.id}/meta")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert '<meta property="og:title" content="Sprint 42 Retro — Retrospekt">' in response.text
+    assert f'<meta property="og:image" content="http://test/api/v1/sessions/{session.id}/og.png">' in response.text
+    for page_markup in ("<html", "<head", "<body", "<title"):
+        assert page_markup not in response.text
+
+
+async def test_meta_fragment_of_unknown_session_is_404(client: AsyncClient):
+    response = await client.get("/api/v1/sessions/nope/meta")
+
+    assert response.status_code == 404
+
+
+async def test_home_meta_fragment_describes_the_app(client: AsyncClient):
+    response = await client.get("/api/v1/meta")
+
+    assert response.status_code == 200
+    assert '<meta property="og:title" content="Retrospekt">' in response.text
+    assert "<html" not in response.text
