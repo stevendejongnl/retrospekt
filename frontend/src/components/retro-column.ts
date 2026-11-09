@@ -48,22 +48,22 @@ export class RetroColumn extends LitElement {
       min-width: 280px;
     }
     .column {
-      background: var(--retro-glass-bg-light);
-      backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
+      /* tinted by the column's own colour, flat, no shadow */
+      background: color-mix(in srgb, var(--col-accent) var(--retro-col-tint), var(--retro-glass-bg-light));
       border: 1px solid var(--retro-glass-border);
-      border-radius: var(--retro-radius-md);
+      border-radius: var(--retro-radius-lg);
       padding: 12px;
       height: 100%;
       display: flex;
       flex-direction: column;
-      box-shadow: var(--retro-glass-shadow);
     }
     .column-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
+      padding: 0 4px;
+      gap: 8px;
     }
     .column-title {
       display: flex;
@@ -72,7 +72,9 @@ export class RetroColumn extends LitElement {
       font-size: 14px;
       font-weight: 700;
       color: var(--retro-text-primary);
-      letter-spacing: 0.1px;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .header-right {
       display: flex;
@@ -81,29 +83,29 @@ export class RetroColumn extends LitElement {
     }
     .count-badge {
       font-size: 11px;
-      font-weight: 600;
-      color: white;
-      border-radius: var(--retro-radius-md);
-      padding: 1px 7px;
-      min-width: 20px;
+      font-weight: 700;
+      color: var(--retro-col-ink);
+      border-radius: 999px;
+      padding: 2px 8px;
+      min-width: 22px;
       text-align: center;
     }
     .publish-all-btn {
-      background: none;
-      border: 1.5px solid var(--col-accent);
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
       border-radius: var(--retro-radius-sm);
-      padding: 2px 9px;
+      padding: 2px 8px;
       font-size: 11px;
-      font-weight: 600;
-      color: var(--col-accent);
+      font-weight: 500;
+      color: var(--retro-accent-ink);
       cursor: pointer;
       font-family: inherit;
       transition: all 0.12s;
       white-space: nowrap;
     }
     .publish-all-btn:hover {
-      background: var(--col-accent);
-      color: white;
+      border-color: var(--retro-accent-border);
+      background: var(--retro-accent-tint);
     }
     .cards-list {
       flex: 1;
@@ -225,29 +227,30 @@ export class RetroColumn extends LitElement {
       color: var(--retro-accent);
     }
     .sort-votes-btn {
-      background: none;
+      background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);
       border-radius: var(--retro-radius-sm);
-      padding: 2px 7px;
+      padding: 2px 8px;
       font-size: 11px;
-      font-weight: 600;
-      color: var(--retro-text-disabled);
+      font-weight: 500;
+      color: var(--retro-text-secondary);
       cursor: pointer;
       font-family: inherit;
       transition: all 0.12s;
       white-space: nowrap;
     }
     .sort-votes-btn:hover {
-      border-color: var(--col-accent);
-      color: var(--col-accent);
+      border-color: var(--retro-accent-border);
+      color: var(--retro-accent-ink);
     }
     .sort-votes-btn.active {
-      border-color: var(--col-accent);
-      color: var(--col-accent);
-      background: color-mix(in srgb, var(--col-accent) 8%, transparent);
+      border-color: var(--retro-accent-border);
+      color: var(--retro-accent-ink);
+      font-weight: 600;
+      background: var(--retro-accent-tint);
     }
     .vote-indicator {
-      font-size: 0.75rem;
+      font-size: 11px;
       color: var(--retro-text-muted);
       white-space: nowrap;
     }
@@ -641,7 +644,7 @@ export class RetroColumn extends LitElement {
         ?canMove=${this.phase !== 'closed' &&
         !card.group_id &&
         (card.author_name === this.participantName || this.isFacilitator)}
-        style="--card-accent:${this.participantColorMap[card.author_name] ?? '#6b7280'}"
+        style="--card-edge: var(--col-accent)"
       ></retro-card>
     `
 
@@ -691,7 +694,7 @@ export class RetroColumn extends LitElement {
               ? html`<button class="delete-col-btn" @click=${this.onRemoveColumn} title="Remove column">×</button>`
               : ''}
             ${this.maxVotes !== null
-              ? html`<span class="vote-indicator">${this.votesUsed} / ${this.maxVotes} votes</span>`
+              ? html`<span class="vote-indicator">${this.votesUsed}/${this.maxVotes} votes</span>`
               : ''}
             <span class="count-badge" style="background:${this.accent}">${this.visibleCards.length}</span>
           </div>
@@ -726,7 +729,7 @@ export class RetroColumn extends LitElement {
                             ?canReact=${(this.phase === 'discussing' || this.phase === 'closed') && card.published}
                             ?canAssign=${false}
                             ?canGroup=${false}
-                            style="--card-accent:${this.participantColorMap[card.author_name] ?? '#6b7280'}"
+                            style="--card-edge: var(--col-accent)"
                           ></retro-card>
                           <button
                             class="ungroup-btn"

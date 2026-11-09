@@ -15,11 +15,9 @@ import './retro-column'
 import './retro-timer'
 import './retro-help'
 
-const COLUMN_ACCENTS: Record<string, string> = {
-  'Went Well': '#22c55e',
-  'To Improve': '#f97316',
-  'Action Items': '#3b82f6',
-}
+// Columns take the design's three colours in order and wrap after the third.
+const COLUMN_COLOUR_COUNT = 3
+const columnAccent = (index: number): string => `var(--retro-col-${(index % COLUMN_COLOUR_COUNT) + 1})`
 
 @customElement('retro-board')
 export class RetroBoard extends LitElement {
@@ -888,14 +886,14 @@ export class RetroBoard extends LitElement {
         @sort-column=${this.onSortColumn}
       >
         ${session.columns.map(
-          (col) => html`
+          (col, index) => html`
             <retro-column
               .title=${col}
               .cards=${session.cards.filter((c) => c.column === col)}
               .participantName=${this.participantName}
               .participantNames=${participantNames}
               .phase=${session.phase}
-              .accent=${COLUMN_ACCENTS[col] ?? '#e85d04'}
+              .accent=${columnAccent(index)}
               .participantColorMap=${this.participantColorMap}
               ?isFacilitator=${this.isFacilitator}
               .reactionsEnabled=${session.reactions_enabled}

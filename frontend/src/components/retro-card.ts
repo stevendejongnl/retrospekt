@@ -71,10 +71,8 @@ export class RetroCard extends LitElement {
     }
     .card {
       background: var(--retro-glass-bg-medium);
-      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-left: 4px solid var(--card-accent, #d97426);
+      border-left: 3px solid var(--card-edge, var(--retro-border-strong));
       border-radius: var(--retro-radius-md);
       padding: 12px 14px;
       margin-bottom: 8px;
@@ -82,7 +80,6 @@ export class RetroCard extends LitElement {
     }
     .card.draft {
       border-left-style: dashed;
-      background: var(--retro-glass-bg-light);
     }
     .card.drag-over {
       outline: 2px dashed var(--retro-accent);
@@ -90,7 +87,7 @@ export class RetroCard extends LitElement {
     }
     .card-text {
       font-size: 14px;
-      line-height: 1.55;
+      line-height: 1.5;
       color: var(--retro-text-primary);
       margin-bottom: 10px;
       word-break: break-word;
@@ -102,7 +99,7 @@ export class RetroCard extends LitElement {
       text-decoration: underline dotted var(--retro-text-muted);
     }
     .card-text a {
-      color: var(--retro-accent);
+      color: var(--retro-accent-ink);
     }
     .card-text code {
       font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
@@ -126,7 +123,7 @@ export class RetroCard extends LitElement {
       font-family: inherit;
       color: var(--retro-text-primary);
       background: var(--retro-bg-surface);
-      border: 1.5px solid var(--card-accent, #e85d04);
+      border: 1.5px solid var(--retro-accent);
       border-radius: var(--retro-radius-sm);
       padding: 4px 8px;
       margin-bottom: 10px;
@@ -148,25 +145,25 @@ export class RetroCard extends LitElement {
       border: 1px solid var(--retro-border-default);
       border-radius: var(--retro-radius-md);
       padding: 2px 7px;
-      font-size: 13px;
+      font-size: 12px;
       cursor: pointer;
       font-family: inherit;
       transition: all 0.12s ease;
       line-height: 1.4;
     }
     .reaction-btn:hover:not(:disabled) {
-      border-color: var(--card-accent, #e85d04);
-      background: color-mix(in srgb, var(--card-accent, #e85d04) 8%, transparent);
+      border-color: var(--retro-accent-border);
+      background: var(--retro-accent-tint);
     }
     .reaction-btn.reacted {
-      background: color-mix(in srgb, var(--card-accent, #e85d04) 15%, transparent);
-      border-color: var(--card-accent, #e85d04);
+      background: var(--retro-accent-tint);
+      border-color: color-mix(in srgb, var(--retro-accent) 50%, transparent);
     }
     .reaction-btn:disabled {
       cursor: default;
     }
     .reaction-count {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 600;
       color: var(--retro-text-secondary);
     }
@@ -177,12 +174,12 @@ export class RetroCard extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      background: color-mix(in srgb, var(--retro-accent) 10%, transparent);
-      border: 1px solid color-mix(in srgb, var(--retro-accent) 30%, transparent);
+      background: var(--retro-accent-tint);
+      border: 1px solid color-mix(in srgb, var(--retro-accent) 35%, transparent);
       border-radius: var(--retro-radius-md);
       padding: 2px 8px 2px 8px;
       font-size: 11px;
-      color: var(--retro-text-secondary);
+      color: var(--retro-accent-ink);
       font-weight: 500;
     }
     .unassign-btn {
@@ -214,12 +211,12 @@ export class RetroCard extends LitElement {
     }
     /* Matches emoji-picker's .trigger, its neighbour in the footer */
     .assign-btn {
-      width: 26px;
-      height: 26px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
-      border: 1px dashed var(--retro-border-default);
-      background: none;
-      color: var(--retro-text-muted);
+      border: 1px solid var(--retro-border-default);
+      background: var(--retro-bg-subtle);
+      color: var(--retro-text-secondary);
       cursor: pointer;
       font-size: 11px;
       display: flex;
@@ -245,19 +242,19 @@ export class RetroCard extends LitElement {
     }
     .card-author {
       font-size: 11px;
-      color: var(--retro-text-disabled);
+      color: var(--retro-text-muted);
       font-weight: 500;
       letter-spacing: 0.2px;
     }
     .draft-badge {
       font-size: 10px;
       font-weight: 700;
-      color: var(--retro-text-disabled);
+      color: var(--retro-accent-ink);
+      background: var(--retro-accent-tint);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border: 1px solid var(--retro-border-default);
-      border-radius: 4px;
-      padding: 1px 5px;
+      letter-spacing: 0.4px;
+      border-radius: var(--retro-radius-sm);
+      padding: 1px 6px;
     }
     .card-actions {
       display: flex;
@@ -268,27 +265,27 @@ export class RetroCard extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      background: var(--retro-glass-bg-light);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid var(--retro-glass-border);
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
       border-radius: 999px;
       padding: 3px 10px;
       font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
       color: var(--retro-text-secondary);
       transition: all 0.12s ease;
       font-family: inherit;
     }
     .vote-btn:hover:not(:disabled) {
-      border-color: var(--card-accent, #e85d04);
-      color: var(--card-accent, #e85d04);
-      background: color-mix(in srgb, var(--card-accent, #e85d04) 8%, transparent);
+      border-color: var(--retro-accent-border);
+      color: var(--retro-accent-ink);
+      background: var(--retro-accent-tint);
     }
     .vote-btn.voted {
-      background: var(--card-accent, #e85d04);
-      border-color: var(--card-accent, #e85d04);
-      color: white;
+      background: var(--retro-accent);
+      border-color: var(--retro-accent-border);
+      color: var(--retro-accent-contrast);
+      font-weight: 700;
     }
     .vote-btn:disabled {
       opacity: 0.45;
@@ -298,14 +295,14 @@ export class RetroCard extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      background: var(--card-accent, #e85d04);
-      border: none;
-      border-radius: var(--retro-radius-lg);
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
+      border-radius: var(--retro-radius-sm);
       padding: 3px 10px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
-      color: white;
+      color: var(--retro-accent-ink);
       font-family: inherit;
       transition: opacity 0.12s ease;
     }
@@ -316,8 +313,8 @@ export class RetroCard extends LitElement {
       background: none;
       border: none;
       cursor: pointer;
-      color: var(--retro-border-strong);
-      font-size: 16px;
+      color: var(--retro-text-secondary);
+      font-size: 14px;
       line-height: 1;
       padding: 2px 4px;
       border-radius: 4px;
@@ -330,17 +327,16 @@ export class RetroCard extends LitElement {
       background: none;
       border: none;
       cursor: pointer;
-      color: var(--retro-text-disabled);
+      color: var(--retro-text-secondary);
       font-size: 11px;
-      font-weight: 600;
       line-height: 1;
-      padding: 3px 6px;
+      padding: 2px 4px;
       border-radius: 4px;
       font-family: inherit;
       transition: color 0.12s;
     }
     .unpublish-btn:hover {
-      color: var(--card-accent, #e85d04);
+      color: var(--retro-accent-ink);
     }
   `]
 
