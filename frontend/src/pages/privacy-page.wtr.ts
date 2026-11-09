@@ -21,7 +21,7 @@ describe('privacy-page', () => {
       navigate: (path: string) => { navigatedTo = path },
     }
     const el = await fixture<PrivacyPage>(html`<privacy-page></privacy-page>`)
-    el.shadowRoot!.querySelector<HTMLAnchorElement>('.back-pill')!.click()
+    el.shadowRoot!.querySelector<HTMLAnchorElement>('.back-link')!.click()
     expect(navigatedTo).to.equal('/')
   })
 })

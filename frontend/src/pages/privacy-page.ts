@@ -8,124 +8,141 @@ import { bacon } from '../theme'
 export class PrivacyPage extends LitElement {
   static styles = [baseStyles, css`
     :host {
-      display: flex;
-      justify-content: center;
+      display: block;
       min-height: 100vh;
       background: var(--retro-bg-page);
-      padding: 48px 24px;
-      position: relative;
-      overflow: hidden;
+      color: var(--retro-text-secondary);
     }
     .content {
-      position: relative;
-      z-index: 1;
-      max-width: 640px;
-      width: 100%;
-      color: var(--retro-text-secondary);
-      font-size: 14px;
-      line-height: 1.6;
+      max-width: 828px; /* 780px of content plus the 24px side padding */
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
-    h1 {
-      font-size: 26px;
-      color: var(--retro-text-primary);
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .back-link {
+      color: var(--retro-accent-ink);
+      text-decoration: none;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    .page-title {
+      font-size: 22px;
       font-weight: 800;
       letter-spacing: -0.02em;
-      margin-bottom: 4px;
-    }
-    h1 em {
-      font-style: normal;
-      color: var(--retro-accent);
-    }
-    .updated {
-      font-size: 12px;
-      color: var(--retro-text-muted);
-      margin-bottom: 24px;
-    }
-    h2 {
-      font-size: 16px;
       color: var(--retro-text-primary);
-      margin: 28px 0 8px;
     }
-    ul {
-      margin: 0 0 8px;
-      padding-left: 20px;
+    .headline {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--retro-text-primary);
     }
-    li {
+    .headline em {
+      font-style: normal;
+      color: var(--retro-accent-ink);
+    }
+    .intro {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--retro-text-secondary);
+    }
+    .card {
+      padding: 16px 20px;
+      background: var(--retro-glass-bg-medium);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: var(--retro-radius-md);
+      box-shadow: var(--retro-glass-shadow);
+    }
+    .card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--retro-text-primary);
       margin-bottom: 4px;
     }
-    a {
-      color: var(--retro-accent);
-    }
-    .back-pill {
-      display: inline-flex;
-      align-items: center;
-      margin-top: 32px;
-      padding: 10px 22px;
-      border-radius: 999px;
-      background: var(--retro-glass-bg-strong);
-      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      border: 1px solid var(--retro-glass-border);
-      box-shadow: var(--retro-glass-shadow);
+    .card p {
       font-size: 13px;
-      font-weight: 600;
-      color: var(--retro-accent);
-      cursor: pointer;
-      text-decoration: none;
-      transition: opacity 0.12s;
+      line-height: 1.6;
+      color: var(--retro-text-secondary);
     }
-    .back-pill:hover {
-      opacity: 0.85;
+    .card a {
+      color: var(--retro-accent-ink);
+    }
+    @media (max-width: 720px) {
+      .content {
+        padding: 24px 16px 48px;
+      }
     }
   `]
 
   render() {
     return html`
       <div class="content">
-        <h1>${bacon()} Privacy at Retro<em>spekt</em></h1>
-        <p class="updated">A plain-language summary of what this instance collects and why.</p>
+        <header class="page-header">
+          <a class="back-link" href="/" @click=${(e: Event) => { e.preventDefault(); window.router.navigate('/') }}>← Back</a>
+          <h1 class="page-title">Privacy</h1>
+        </header>
 
-        <h2>Retro data</h2>
-        <p>
-          Your display name, cards, votes, reactions, and board notes are stored to run the
-          retrospective and are shared with everyone in that session — there's no login, the
-          name you type is your identity for that session. Sessions (and everything in them)
-          expire automatically after a fixed number of days of inactivity, configured by whoever
-          runs this instance.
-        </p>
+        <h2 class="headline">${bacon()} Privacy at Retro<em>spekt</em></h2>
+        <p class="intro">A plain-language summary of what this instance collects and why.</p>
 
-        <h2>Feedback</h2>
-        <p>
-          The 💬 feedback form sends your rating, comment, display name, and app version to the
-          people running this instance so they can improve it. Feedback isn't automatically
-          deleted — it's kept until a maintainer removes it.
-        </p>
+        <section class="card">
+          <h3>Retro data</h3>
+          <p>
+            Your display name, cards, votes, reactions, and board notes are stored to run the
+            retrospective and are shared with everyone in that session — there's no login, the
+            name you type is your identity for that session. Sessions (and everything in them)
+            expire automatically after a fixed number of days of inactivity, configured by whoever
+            runs this instance.
+          </p>
+        </section>
 
-        <h2>Analytics</h2>
-        <p>
-          We use a self-hosted <a href="https://matomo.org" target="_blank" rel="noopener noreferrer">Matomo</a>
-          instance to see which pages and features are used. This only runs after you accept the
-          banner — nothing is tracked before that, and you can decline. It records page views and
-          feature usage, not card/note contents.
-        </p>
+        <section class="card">
+          <h3>Feedback</h3>
+          <p>
+            The feedback form sends your rating, comment, display name, and app version to the
+            people running this instance so they can improve it. Feedback isn't automatically
+            deleted — it's kept until a maintainer removes it.
+          </p>
+        </section>
 
-        <h2>Error monitoring</h2>
-        <p>
-          We use <a href="https://sentry.io" target="_blank" rel="noopener noreferrer">Sentry</a>
-          to catch crashes and bugs. Error reports are tagged with a session id but not your
-          display name.
-        </p>
+        <section class="card">
+          <h3>Analytics</h3>
+          <p>
+            We use a self-hosted <a href="https://matomo.org" target="_blank" rel="noopener noreferrer">Matomo</a>
+            instance to see which pages and features are used. This only runs after you accept the
+            banner — nothing is tracked before that, and you can decline. It records page views and
+            feature usage, not card/note contents.
+          </p>
+        </section>
 
-        <h2>Questions</h2>
-        <p>
-          This is a self-hosted, open-source tool — see the
-          <a href="https://github.com/stevendejongnl/retrospekt" target="_blank" rel="noopener noreferrer">source on GitHub</a>
-          for exactly what runs, or ask whoever operates this instance.
-        </p>
+        <section class="card">
+          <h3>Error monitoring</h3>
+          <p>
+            We use <a href="https://sentry.io" target="_blank" rel="noopener noreferrer">Sentry</a>
+            to catch crashes and bugs. Error reports are tagged with a session id but not your
+            display name.
+          </p>
+        </section>
 
-        <a class="back-pill" href="/" @click=${(e: Event) => { e.preventDefault(); window.router.navigate('/') }}>
-          ← Back to home
-        </a>
+        <section class="card">
+          <h3>Questions</h3>
+          <p>
+            This is a self-hosted, open-source tool — see the
+            <a href="https://github.com/stevendejongnl/retrospekt" target="_blank" rel="noopener noreferrer">source on GitHub</a>
+            for exactly what runs, or ask whoever operates this instance.
+          </p>
+        </section>
       </div>
     `
   }

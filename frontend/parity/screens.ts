@@ -83,7 +83,7 @@ export const PARITY_SCREENS: ParityScreen[] = [
     steps: [{ fill: ['input[type="password"]', 'parity'] }, { click: 'button' }],
   }),
   { ...PAGE, name: 'admin-locked-light', theme: 'light', size: [1000, 480], route: '/admin' },
-  ...pair('privacy', { ...PAGE, size: [1100, 700], route: '/privacy' }),
+  ...pair('privacy', { ...PAGE, size: [1100, 820], route: '/privacy' }),
   ...pair('feedback-page', { ...PAGE, size: [1000, 660], route: '/feedback' }),
   ...pair('not-found', { ...PAGE, size: [1000, 620], route: '/no-such-page' }),
   ...pair('changelog', { ...PAGE, size: [1100, 1100], route: '/changelog' }),
