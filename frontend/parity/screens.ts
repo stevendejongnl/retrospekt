@@ -46,8 +46,8 @@ const NEEDS_NEW_HEADER_ICONS = 'is opened from the new header, which is not buil
 
 export const PARITY_SCREENS: ParityScreen[] = [
   // Home
-  ...pair('home', { ...PAGE, size: [1000, 780], route: '/' }),
-  { ...PAGE, name: 'home-cs-brand', theme: 'light', brand: 'cs', size: [1000, 780], route: '/' },
+  ...pair('home', { ...PAGE, size: [1000, 940], route: '/' }),
+  { ...PAGE, name: 'home-cs-brand', theme: 'light', brand: 'cs', size: [1000, 940], route: '/' },
 
   // Joining a board
   { ...PAGE, name: 'join-light', theme: 'light', size: [1000, 620], route: SESSION },
@@ -71,19 +71,19 @@ export const PARITY_SCREENS: ParityScreen[] = [
 
   // Overlays that open from the header or the dock
   ...pair('dock', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, askConsent: true, pending: 'needs the star-rating feedback card and the dock that shifts right' }),
-  ...pair('settings', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, pending: `the settings dialog ${NEEDS_NEW_HEADER_ICONS.replace('is opened from the new header', 'is opened from the dock')}` }),
+  ...pair('settings', { viewer: 'facilitator', size: [1100, 620], route: SESSION, board: { phase: 'discussing' }, pending: `the settings dialog ${NEEDS_NEW_HEADER_ICONS.replace('is opened from the new header', 'is opened from the dock')}` }),
   ...pair('help', { viewer: 'facilitator', size: [1000, 700], route: SESSION, board: { phase: 'discussing' }, pending: `the help dialog ${NEEDS_NEW_HEADER_ICONS}` }),
   ...pair('history', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, withHistory: true, pending: `the sessions sidebar ${NEEDS_NEW_HEADER_ICONS}` }),
   ...pair('notes', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, pending: `the notes sidebar ${NEEDS_NEW_HEADER_ICONS}` }),
 
   // Pages
-  ...pair('stats', { ...PAGE, size: [1100, 1100], route: '/stats' }),
+  ...pair('stats', { ...PAGE, size: [1100, 880], route: '/stats' }),
   ...pair('admin', {
-    ...PAGE, size: [1100, 1060], route: '/admin',
+    ...PAGE, size: [1100, 860], route: '/admin',
     steps: [{ fill: ['input[type="password"]', 'parity'] }, { click: 'button' }],
   }),
   { ...PAGE, name: 'admin-locked-light', theme: 'light', size: [1000, 480], route: '/admin' },
-  ...pair('privacy', { ...PAGE, size: [1100, 860], route: '/privacy' }),
+  ...pair('privacy', { ...PAGE, size: [1100, 700], route: '/privacy' }),
   ...pair('feedback-page', { ...PAGE, size: [1000, 660], route: '/feedback' }),
   ...pair('not-found', { ...PAGE, size: [1000, 620], route: '/no-such-page' }),
   ...pair('changelog', { ...PAGE, size: [1100, 1100], route: '/changelog' }),

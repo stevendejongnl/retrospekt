@@ -1,0 +1,4 @@
+
+# pixel parity: screenshots and difference images of a run, and the downloaded React/Babel cache
+parity/output/
+parity/.cache/
