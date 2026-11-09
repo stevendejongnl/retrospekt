@@ -72,7 +72,7 @@ export class EmojiPicker extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 12px;
+      border-radius: var(--retro-radius-md);
       box-shadow: var(--retro-glass-shadow);
       padding: 8px;
     }
@@ -83,7 +83,7 @@ export class EmojiPicker extends LitElement {
       font-size: 12px;
       font-family: inherit;
       border: 1px solid var(--retro-border-default);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       background: var(--retro-bg-subtle);
       color: var(--retro-text-primary);
       margin-bottom: 6px;
@@ -111,7 +111,7 @@ export class EmojiPicker extends LitElement {
       border: none;
       background: none;
       cursor: pointer;
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
     }
     .emoji-btn:hover {
       background: var(--retro-bg-subtle);

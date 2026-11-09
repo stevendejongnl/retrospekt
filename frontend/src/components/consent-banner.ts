@@ -32,7 +32,7 @@ export class ConsentBanner extends LitElement {
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
       box-shadow: var(--retro-glass-shadow);
-      border-radius: 12px;
+      border-radius: var(--retro-radius-md);
       padding: 10px 12px;
       font-size: 12px;
       color: var(--retro-text-secondary);
@@ -52,7 +52,7 @@ export class ConsentBanner extends LitElement {
       font-size: 12px;
       font-weight: 600;
       padding: 6px 12px;
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       cursor: pointer;
       border: 1px solid var(--retro-glass-border);
       background: none;

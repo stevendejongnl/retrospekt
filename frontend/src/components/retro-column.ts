@@ -52,7 +52,7 @@ export class RetroColumn extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 14px;
+      border-radius: var(--retro-radius-md);
       padding: 12px;
       height: 100%;
       display: flex;
@@ -83,7 +83,7 @@ export class RetroColumn extends LitElement {
       font-size: 11px;
       font-weight: 600;
       color: white;
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       padding: 1px 7px;
       min-width: 20px;
       text-align: center;
@@ -91,7 +91,7 @@ export class RetroColumn extends LitElement {
     .publish-all-btn {
       background: none;
       border: 1.5px solid var(--col-accent);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       padding: 2px 9px;
       font-size: 11px;
       font-weight: 600;
@@ -117,7 +117,7 @@ export class RetroColumn extends LitElement {
       width: 100%;
       background: transparent;
       border: 1px dashed var(--retro-border-default);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       padding: 10px 12px;
       cursor: pointer;
       color: var(--retro-text-muted);
@@ -144,7 +144,7 @@ export class RetroColumn extends LitElement {
       flex: 1;
       padding: 10px 12px;
       border: 1px solid var(--retro-border-default);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       font-size: 13px;
       font-family: inherit;
       resize: vertical;
@@ -169,7 +169,7 @@ export class RetroColumn extends LitElement {
       background: var(--col-accent);
       color: white;
       border: none;
-      border-radius: 7px;
+      border-radius: var(--retro-radius-sm);
       padding: 7px 16px;
       font-size: 13px;
       font-weight: 600;
@@ -183,7 +183,7 @@ export class RetroColumn extends LitElement {
     .btn-cancel {
       background: none;
       border: 1.5px solid var(--retro-border-default);
-      border-radius: 7px;
+      border-radius: var(--retro-radius-sm);
       padding: 7px 14px;
       font-size: 13px;
       cursor: pointer;
@@ -200,7 +200,7 @@ export class RetroColumn extends LitElement {
       font-weight: 700;
       color: var(--retro-text-primary);
       border: 1.5px solid var(--col-accent);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       padding: 1px 6px;
       background: var(--retro-bg-surface);
       font-family: inherit;
@@ -227,7 +227,7 @@ export class RetroColumn extends LitElement {
     .sort-votes-btn {
       background: none;
       border: 1px solid var(--retro-border-default);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       padding: 2px 7px;
       font-size: 11px;
       font-weight: 600;
@@ -255,7 +255,7 @@ export class RetroColumn extends LitElement {
     /* ── Card group stack ── */
     .stack-tile {
       background: var(--retro-bg-surface);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       padding: 12px 14px;
       margin-bottom: 8px;
       box-shadow: 0 1px 3px var(--retro-card-shadow);
@@ -272,7 +272,7 @@ export class RetroColumn extends LitElement {
       right: 4px;
       bottom: 4px;
       background: var(--retro-bg-surface);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       border-left: 3px solid var(--col-accent);
       box-shadow: 0 1px 3px var(--retro-card-shadow);
       z-index: -1;
@@ -301,7 +301,7 @@ export class RetroColumn extends LitElement {
       font-weight: 700;
       color: white;
       background: var(--col-accent);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       padding: 1px 7px;
       min-width: 20px;
       text-align: center;
@@ -323,7 +323,7 @@ export class RetroColumn extends LitElement {
     .stack-expanded {
       margin-bottom: 8px;
       border-left: 3px solid var(--col-accent);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       overflow: hidden;
       background: color-mix(in srgb, var(--col-accent) 4%, transparent);
       padding-bottom: 4px;

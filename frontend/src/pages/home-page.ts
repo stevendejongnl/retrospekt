@@ -182,7 +182,7 @@ export class HomePage extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 18px;
+      border-radius: var(--retro-radius-lg);
       padding: 24px;
       box-shadow: var(--retro-glass-shadow);
     }
@@ -202,7 +202,7 @@ export class HomePage extends LitElement {
       width: 100%;
       padding: 10px 12px;
       border: 1px solid var(--retro-border-default);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       font-size: 14px;
       font-family: inherit;
       color: var(--retro-text-primary);
@@ -229,7 +229,7 @@ export class HomePage extends LitElement {
       background: var(--retro-accent);
       color: white;
       border: none;
-      border-radius: 12px;
+      border-radius: var(--retro-radius-md);
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
@@ -271,7 +271,7 @@ export class HomePage extends LitElement {
     .template-btn {
       padding: 10px 12px;
       border: 1px solid var(--retro-border-default);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       cursor: pointer;
       background: var(--retro-glass-bg-light);
       text-align: left;
@@ -303,7 +303,7 @@ export class HomePage extends LitElement {
       gap: 10px;
       padding: 10px 12px;
       border: 1px solid var(--retro-border-default);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       cursor: pointer;
       background: var(--retro-glass-bg-light);
       transition: border-color 0.12s, background 0.12s;
@@ -347,7 +347,7 @@ export class HomePage extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1.5px solid var(--retro-error);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       padding: 10px 16px;
       font-size: 13px;
       color: var(--retro-text-primary);

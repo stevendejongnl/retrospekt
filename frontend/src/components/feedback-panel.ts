@@ -83,7 +83,7 @@ export class FeedbackPanel extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 14px;
+      border-radius: var(--retro-radius-md);
       padding: 18px;
       box-shadow: var(--retro-glass-shadow);
     }
@@ -111,7 +111,7 @@ export class FeedbackPanel extends LitElement {
 
     .feedback-tab-btn {
       border: 1px solid var(--retro-border-subtle);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       background: transparent;
       color: var(--retro-text-secondary);
       font-size: 12px;
@@ -133,7 +133,7 @@ export class FeedbackPanel extends LitElement {
 
     .feedback-entry {
       border: 1px solid var(--retro-border-subtle);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       padding: 10px 12px;
       background: var(--retro-bg-subtle);
     }
@@ -197,7 +197,7 @@ export class FeedbackPanel extends LitElement {
     .feedback-ignore-btn {
       margin-top: 6px;
       border: 1px solid var(--retro-border-subtle);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       background: transparent;
       color: var(--retro-text-secondary);
       font-size: 11px;

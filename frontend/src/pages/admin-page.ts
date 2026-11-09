@@ -313,7 +313,7 @@ export class AdminPage extends LitElement {
         backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
         -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
         border: 1px solid var(--retro-glass-border);
-        border-radius: 14px;
+        border-radius: var(--retro-radius-md);
         padding: 20px 24px;
         margin-bottom: 24px;
         box-shadow: var(--retro-glass-shadow);
@@ -336,7 +336,7 @@ export class AdminPage extends LitElement {
         min-width: 180px;
         padding: 8px 12px;
         border: 1.5px solid var(--retro-border-default);
-        border-radius: 8px;
+        border-radius: var(--retro-radius-sm);
         background: var(--retro-bg-page);
         color: var(--retro-text-primary);
         font-size: 14px;
@@ -351,7 +351,7 @@ export class AdminPage extends LitElement {
         background: var(--retro-accent);
         color: #fff;
         border: none;
-        border-radius: 8px;
+        border-radius: var(--retro-radius-sm);
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
@@ -383,7 +383,7 @@ export class AdminPage extends LitElement {
         backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
         -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
         border: 1px solid var(--retro-glass-border);
-        border-radius: 14px;
+        border-radius: var(--retro-radius-md);
         padding: 18px;
         box-shadow: var(--retro-glass-shadow);
       }
@@ -421,7 +421,7 @@ export class AdminPage extends LitElement {
       .stat-card {
         background: var(--retro-glass-bg-medium);
         border: 1px solid var(--retro-glass-border);
-        border-radius: 14px;
+        border-radius: var(--retro-radius-md);
         padding: 18px 16px;
         display: flex;
         flex-direction: column;
@@ -461,7 +461,7 @@ export class AdminPage extends LitElement {
         font-size: 12px;
         padding: 4px 8px;
         background: var(--retro-bg-page);
-        border-radius: 6px;
+        border-radius: var(--retro-radius-sm);
       }
 
       .sentry-issue-title {
@@ -496,7 +496,7 @@ export class AdminPage extends LitElement {
         color: var(--retro-danger, #ef4444);
         background: color-mix(in srgb, var(--retro-danger, #ef4444) 10%, transparent);
         border: 1px solid color-mix(in srgb, var(--retro-danger, #ef4444) 30%, transparent);
-        border-radius: 8px;
+        border-radius: var(--retro-radius-sm);
         padding: 8px 12px;
         margin: 0;
       }

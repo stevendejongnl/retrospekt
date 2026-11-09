@@ -53,7 +53,7 @@ export class RetroBoard extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 12px;
+      border-radius: var(--retro-radius-md);
       margin-bottom: 16px;
       box-shadow: var(--retro-glass-shadow);
     }
@@ -68,7 +68,7 @@ export class RetroBoard extends LitElement {
       display: inline-flex;
       align-items: center;
       padding: 4px 12px;
-      border-radius: 20px;
+      border-radius: var(--retro-radius-lg);
       font-size: 13px;
       font-weight: 500;
     }
@@ -88,7 +88,7 @@ export class RetroBoard extends LitElement {
       background: var(--retro-accent);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       padding: 6px 14px;
       font-size: 13px;
       font-weight: 600;
@@ -116,7 +116,7 @@ export class RetroBoard extends LitElement {
     .back-btn {
       background: none;
       border: 1px solid var(--retro-facilitator-border);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       padding: 7px 14px;
       font-size: 13px;
       font-weight: 500;
@@ -178,7 +178,7 @@ export class RetroBoard extends LitElement {
       cursor: pointer;
       font-family: inherit;
       padding: 4px 8px;
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       display: inline-flex;
       align-items: center;
       gap: 4px;
@@ -197,7 +197,7 @@ export class RetroBoard extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 12px;
+      border-radius: var(--retro-radius-md);
       margin-bottom: 16px;
       box-shadow: var(--retro-glass-shadow);
     }
@@ -219,7 +219,7 @@ export class RetroBoard extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 18px;
+      border-radius: var(--retro-radius-lg);
       padding: 28px 32px;
       max-width: 400px;
       width: 100%;
@@ -286,7 +286,7 @@ export class RetroBoard extends LitElement {
     .add-column-btn {
       background: none;
       border: 1.5px dashed var(--retro-facilitator-border);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       padding: 7px 16px;
       font-size: 13px;
       font-weight: 500;
@@ -316,7 +316,7 @@ export class RetroBoard extends LitElement {
     .action-items-panel {
       margin-top: 24px;
       background: var(--retro-bg-subtle);
-      border-radius: 14px;
+      border-radius: var(--retro-radius-md);
       padding: 16px 20px;
     }
     .action-items-heading {
@@ -336,7 +336,7 @@ export class RetroBoard extends LitElement {
     }
     .action-item {
       background: var(--retro-bg-surface);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       padding: 10px 14px;
       display: flex;
       align-items: center;
@@ -364,7 +364,7 @@ export class RetroBoard extends LitElement {
       font-weight: 600;
       background: color-mix(in srgb, var(--retro-accent) 12%, transparent);
       color: var(--retro-accent);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       padding: 2px 8px;
     }
     .action-item-column {
@@ -389,7 +389,7 @@ export class RetroBoard extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 18px;
+      border-radius: var(--retro-radius-lg);
       padding: 24px;
       max-width: 440px;
       width: 100%;
@@ -419,7 +419,7 @@ export class RetroBoard extends LitElement {
       box-sizing: border-box;
       padding: 9px 12px;
       border: 1px solid var(--retro-border-default);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       font-family: inherit;
       font-size: 14px;
       background: var(--retro-bg-page);
@@ -464,7 +464,7 @@ export class RetroBoard extends LitElement {
     .settings-cancel-btn {
       background: none;
       border: 1px solid var(--retro-border-default);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       padding: 9px 18px;
       font-size: 14px;
       font-weight: 500;
@@ -480,7 +480,7 @@ export class RetroBoard extends LitElement {
       background: var(--retro-accent);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       padding: 8px 18px;
       font-size: 14px;
       font-weight: 600;

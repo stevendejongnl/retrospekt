@@ -36,7 +36,7 @@ export class FeedbackDialog extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 14px;
+      border-radius: var(--retro-radius-md);
       padding: 14px 14px 12px;
       box-shadow: var(--retro-glass-shadow);
     }
@@ -67,7 +67,7 @@ export class FeedbackDialog extends LitElement {
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       flex: 1;
       aspect-ratio: 1;
       font-size: 20px;
@@ -95,7 +95,7 @@ export class FeedbackDialog extends LitElement {
       width: 100%;
       padding: 8px 10px;
       border: 1px solid var(--retro-border-default);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       font-size: 12px;
       font-family: inherit;
       resize: vertical;
@@ -128,7 +128,7 @@ export class FeedbackDialog extends LitElement {
       background: var(--retro-accent);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;

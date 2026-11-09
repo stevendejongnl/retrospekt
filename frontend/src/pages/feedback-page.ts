@@ -60,7 +60,7 @@ export class FeedbackPage extends LitElement {
       .card {
         background: var(--retro-bg-surface);
         border: 1px solid var(--retro-border-default);
-        border-radius: 16px;
+        border-radius: var(--retro-radius-lg);
         padding: 28px 28px 24px;
         width: 100%;
         display: flex;
@@ -85,7 +85,7 @@ export class FeedbackPage extends LitElement {
       .emoji-btn {
         background: none;
         border: 2px solid transparent;
-        border-radius: 10px;
+        border-radius: var(--retro-radius-md);
         font-size: 28px;
         cursor: pointer;
         padding: 6px 8px;
@@ -106,7 +106,7 @@ export class FeedbackPage extends LitElement {
         width: 100%;
         box-sizing: border-box;
         border: 1px solid var(--retro-border-default);
-        border-radius: 8px;
+        border-radius: var(--retro-radius-sm);
         padding: 10px 12px;
         font-size: 13px;
         font-family: inherit;
@@ -125,7 +125,7 @@ export class FeedbackPage extends LitElement {
         background: var(--retro-accent);
         color: #fff;
         border: none;
-        border-radius: 8px;
+        border-radius: var(--retro-radius-sm);
         padding: 10px 20px;
         font-size: 14px;
         font-weight: 600;

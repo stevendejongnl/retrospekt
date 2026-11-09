@@ -75,7 +75,7 @@ export class RetroCard extends LitElement {
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
       border-left: 4px solid var(--card-accent, #d97426);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       padding: 12px 14px;
       margin-bottom: 8px;
       box-shadow: var(--retro-glass-shadow);
@@ -115,7 +115,7 @@ export class RetroCard extends LitElement {
       display: block;
       max-width: 100%;
       max-height: 220px;
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       margin-top: 6px;
     }
     .card-edit-input {
@@ -127,7 +127,7 @@ export class RetroCard extends LitElement {
       color: var(--retro-text-primary);
       background: var(--retro-bg-surface);
       border: 1.5px solid var(--card-accent, #e85d04);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       padding: 4px 8px;
       margin-bottom: 10px;
       resize: none;
@@ -146,7 +146,7 @@ export class RetroCard extends LitElement {
       gap: 3px;
       background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);
-      border-radius: 12px;
+      border-radius: var(--retro-radius-md);
       padding: 2px 7px;
       font-size: 13px;
       cursor: pointer;
@@ -179,7 +179,7 @@ export class RetroCard extends LitElement {
       gap: 5px;
       background: color-mix(in srgb, var(--retro-accent) 10%, transparent);
       border: 1px solid color-mix(in srgb, var(--retro-accent) 30%, transparent);
-      border-radius: 12px;
+      border-radius: var(--retro-radius-md);
       padding: 2px 8px 2px 8px;
       font-size: 11px;
       color: var(--retro-text-secondary);
@@ -202,7 +202,7 @@ export class RetroCard extends LitElement {
       font-size: 11px;
       padding: 2px 6px;
       border: 1px solid var(--retro-border-default);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       background: var(--retro-bg-surface);
       color: var(--retro-text-secondary);
       font-family: inherit;
@@ -300,7 +300,7 @@ export class RetroCard extends LitElement {
       gap: 4px;
       background: var(--card-accent, #e85d04);
       border: none;
-      border-radius: 20px;
+      border-radius: var(--retro-radius-lg);
       padding: 3px 10px;
       font-size: 12px;
       font-weight: 600;

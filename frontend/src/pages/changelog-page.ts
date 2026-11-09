@@ -89,7 +89,7 @@ export class ChangelogPage extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 12px;
+      border-radius: var(--retro-radius-md);
       padding: 14px 16px;
       box-shadow: var(--retro-glass-shadow);
     }
@@ -121,7 +121,7 @@ export class ChangelogPage extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 14px;
+      border-radius: var(--retro-radius-md);
       padding: 20px 22px;
       box-shadow: var(--retro-glass-shadow);
     }

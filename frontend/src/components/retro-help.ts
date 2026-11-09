@@ -37,7 +37,7 @@ export class RetroHelp extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 18px;
+      border-radius: var(--retro-radius-lg);
       padding: 28px 32px;
       max-width: 480px;
       max-height: 90vh;
@@ -88,7 +88,7 @@ export class RetroHelp extends LitElement {
       background: var(--retro-accent);
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       font-size: 14px;
       font-weight: 700;
       cursor: pointer;

@@ -196,7 +196,7 @@ export class SessionPage extends LitElement {
       font-family: inherit;
       padding: 3px 6px;
       border: 1.5px solid var(--retro-accent);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       background: var(--retro-bg-surface);
       color: var(--retro-text-primary);
     }
@@ -211,7 +211,7 @@ export class SessionPage extends LitElement {
       padding: 4px 8px;
       background: var(--retro-bg-surface);
       border: 1px solid var(--retro-error);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       white-space: nowrap;
     }
     .help-btn {
@@ -267,7 +267,7 @@ export class SessionPage extends LitElement {
       padding: 9px 14px;
       background: var(--retro-share-bg);
       border: 1px solid var(--retro-share-border);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       margin-bottom: 16px;
     }
     .share-icon {
@@ -286,7 +286,7 @@ export class SessionPage extends LitElement {
     .copy-btn {
       background: none;
       border: 1px solid var(--retro-share-border);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       padding: 4px 10px;
       cursor: pointer;
       font-size: 12px;
@@ -301,7 +301,7 @@ export class SessionPage extends LitElement {
     .export-btn {
       background: none;
       border: 1px solid var(--retro-share-border);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       padding: 4px 8px;
       cursor: pointer;
       font-size: 14px;
@@ -320,7 +320,7 @@ export class SessionPage extends LitElement {
       text-align: center;
       padding: 9px 16px;
       margin-bottom: 16px;
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       font-size: 14px;
       font-weight: 500;
     }
@@ -374,7 +374,7 @@ export class SessionPage extends LitElement {
     }
     .name-card {
       background: var(--retro-bg-surface);
-      border-radius: 20px;
+      border-radius: var(--retro-radius-lg);
       padding: 36px 32px;
       max-width: 400px;
       width: 100%;
@@ -400,7 +400,7 @@ export class SessionPage extends LitElement {
       width: 100%;
       padding: 12px 16px;
       border: 1.5px solid var(--retro-border-default);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       font-size: 16px;
       font-family: inherit;
       box-sizing: border-box;
@@ -429,7 +429,7 @@ export class SessionPage extends LitElement {
       background: var(--retro-accent);
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;

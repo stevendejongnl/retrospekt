@@ -534,7 +534,7 @@ export class StatsPage extends LitElement {
         backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
         -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
         border: 1px solid var(--retro-glass-border);
-        border-radius: 14px;
+        border-radius: var(--retro-radius-md);
         padding: 18px 16px;
         display: flex;
         flex-direction: column;
@@ -578,7 +578,7 @@ export class StatsPage extends LitElement {
         backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
         -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
         border: 1px solid var(--retro-glass-border);
-        border-radius: 14px;
+        border-radius: var(--retro-radius-md);
         padding: 18px;
         box-shadow: var(--retro-glass-shadow);
       }
@@ -619,7 +619,7 @@ export class StatsPage extends LitElement {
         backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
         -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
         border: 1px solid var(--retro-glass-border);
-        border-radius: 14px;
+        border-radius: var(--retro-radius-md);
         padding: 24px;
         margin-bottom: 24px;
         box-shadow: var(--retro-glass-shadow);
@@ -654,7 +654,7 @@ export class StatsPage extends LitElement {
         align-items: center;
         padding: 8px 12px;
         background: var(--retro-bg-page);
-        border-radius: 8px;
+        border-radius: var(--retro-radius-sm);
         font-size: 14px;
       }
 
@@ -703,7 +703,7 @@ export class StatsPage extends LitElement {
         padding: 4px 10px;
         background: var(--retro-bg-page);
         border: 1px solid var(--retro-border-default);
-        border-radius: 20px;
+        border-radius: var(--retro-radius-lg);
         font-size: 13px;
         color: var(--retro-text-primary);
       }

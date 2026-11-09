@@ -47,7 +47,7 @@ export class RetroTimer extends LitElement {
     .timer-panel {
       background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);
-      border-radius: 12px;
+      border-radius: var(--retro-radius-md);
       padding: 14px 16px;
       display: flex;
       align-items: center;
@@ -85,7 +85,7 @@ export class RetroTimer extends LitElement {
     .preset-btn {
       background: none;
       border: 1px solid var(--retro-border-default);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       padding: 3px 9px;
       font-size: 12px;
       font-weight: 600;
@@ -112,7 +112,7 @@ export class RetroTimer extends LitElement {
       width: 52px;
       padding: 3px 7px;
       border: 1px solid var(--retro-border-default);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       font-size: 12px;
       font-family: inherit;
       background: var(--retro-bg-surface);
@@ -125,7 +125,7 @@ export class RetroTimer extends LitElement {
     .custom-set-btn {
       background: none;
       border: 1px solid var(--retro-border-default);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       padding: 3px 9px;
       font-size: 12px;
       font-weight: 600;
@@ -154,7 +154,7 @@ export class RetroTimer extends LitElement {
       background: var(--retro-accent);
       color: white;
       border: none;
-      border-radius: 7px;
+      border-radius: var(--retro-radius-sm);
       padding: 5px 12px;
       font-size: 12px;
       font-weight: 600;
@@ -186,7 +186,7 @@ export class RetroTimer extends LitElement {
       gap: 8px;
       background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);
-      border-radius: 20px;
+      border-radius: var(--retro-radius-lg);
       padding: 6px 14px;
     }
     .mute-btn {
@@ -195,7 +195,7 @@ export class RetroTimer extends LitElement {
       justify-content: center;
       background: none;
       border: 1px solid var(--retro-border-default);
-      border-radius: 7px;
+      border-radius: var(--retro-radius-sm);
       padding: 5px 8px;
       font-size: 12px;
       cursor: pointer;

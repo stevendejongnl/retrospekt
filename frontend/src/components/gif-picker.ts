@@ -37,7 +37,7 @@ export class GifPicker extends LitElement {
     .trigger {
       height: 26px;
       padding: 0 8px;
-      border-radius: 13px;
+      border-radius: var(--retro-radius-md);
       border: 1px dashed var(--retro-border-default);
       background: none;
       color: var(--retro-text-muted);
@@ -65,7 +65,7 @@ export class GifPicker extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 12px;
+      border-radius: var(--retro-radius-md);
       box-shadow: var(--retro-glass-shadow);
       padding: 8px;
     }
@@ -76,7 +76,7 @@ export class GifPicker extends LitElement {
       font-size: 12px;
       font-family: inherit;
       border: 1px solid var(--retro-border-default);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       background: var(--retro-bg-subtle);
       color: var(--retro-text-primary);
       margin-bottom: 6px;
@@ -101,7 +101,7 @@ export class GifPicker extends LitElement {
       border: none;
       background: none;
       cursor: pointer;
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       overflow: hidden;
       line-height: 0;
     }

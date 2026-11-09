@@ -104,7 +104,7 @@ export class SessionHistory extends LitElement {
 
     .session-item {
       border: 1.5px solid var(--retro-border-default);
-      border-radius: 12px;
+      border-radius: var(--retro-radius-md);
       padding: 12px 14px;
       cursor: pointer;
       transition: border-color 0.12s, background 0.12s;
@@ -166,7 +166,7 @@ export class SessionHistory extends LitElement {
       font-size: 10px;
       font-weight: 700;
       padding: 2px 7px;
-      border-radius: 20px;
+      border-radius: var(--retro-radius-lg);
       letter-spacing: 0.3px;
       text-transform: uppercase;
     }
@@ -187,7 +187,7 @@ export class SessionHistory extends LitElement {
       font-size: 10px;
       font-weight: 700;
       padding: 2px 7px;
-      border-radius: 20px;
+      border-radius: var(--retro-radius-lg);
       letter-spacing: 0.3px;
       background: var(--retro-accent-tint);
       color: var(--retro-accent);

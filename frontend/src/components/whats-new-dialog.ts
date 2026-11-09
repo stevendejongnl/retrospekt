@@ -22,7 +22,7 @@ export class WhatsNewDialog extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 14px;
+      border-radius: var(--retro-radius-md);
       overflow: hidden;
       box-shadow: var(--retro-glass-shadow);
     }
@@ -88,7 +88,7 @@ export class WhatsNewDialog extends LitElement {
     .got-it-btn {
       background: var(--retro-accent);
       border: none;
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       padding: 6px 14px;
       font-size: 12px;
       font-weight: 600;

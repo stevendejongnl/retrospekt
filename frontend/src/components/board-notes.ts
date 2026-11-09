@@ -126,7 +126,7 @@ export class BoardNotes extends LitElement {
 
     .note-item {
       border: 1.5px solid var(--retro-border-default);
-      border-radius: 10px;
+      border-radius: var(--retro-radius-md);
       padding: 10px 12px;
       position: relative;
     }
@@ -217,7 +217,7 @@ export class BoardNotes extends LitElement {
       color: var(--retro-text-primary);
       background: var(--retro-bg-page);
       border: 1.5px solid var(--retro-accent);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       padding: 5px 8px;
       outline: none;
       margin-bottom: 6px;
@@ -231,7 +231,7 @@ export class BoardNotes extends LitElement {
       color: var(--retro-text-primary);
       background: var(--retro-bg-page);
       border: 1.5px solid var(--retro-accent);
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       padding: 6px 8px;
       resize: vertical;
       min-height: 60px;
@@ -248,7 +248,7 @@ export class BoardNotes extends LitElement {
     .note-save-btn,
     .note-cancel-btn {
       padding: 4px 12px;
-      border-radius: 6px;
+      border-radius: var(--retro-radius-sm);
       font-size: 12px;
       font-weight: 600;
       font-family: inherit;
@@ -313,7 +313,7 @@ export class BoardNotes extends LitElement {
       color: var(--retro-text-primary);
       background: var(--retro-bg-page);
       border: 1.5px solid var(--retro-border-default);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       padding: 7px 10px;
       outline: none;
       transition: border-color 0.12s;
@@ -329,7 +329,7 @@ export class BoardNotes extends LitElement {
       color: var(--retro-text-primary);
       background: var(--retro-bg-page);
       border: 1.5px solid var(--retro-border-default);
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       padding: 8px 10px;
       resize: none;
       height: 60px;
@@ -349,7 +349,7 @@ export class BoardNotes extends LitElement {
       background: var(--retro-accent);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       font-size: 13px;
       font-weight: 700;
       font-family: inherit;

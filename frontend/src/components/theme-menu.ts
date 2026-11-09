@@ -49,7 +49,7 @@ export class ThemeMenu extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: 12px;
+      border-radius: var(--retro-radius-md);
       box-shadow: var(--retro-glass-shadow);
       padding: 10px;
       min-width: 160px;
@@ -64,7 +64,7 @@ export class ThemeMenu extends LitElement {
       align-items: center;
       gap: 8px;
       padding: 7px 8px;
-      border-radius: 8px;
+      border-radius: var(--retro-radius-sm);
       cursor: pointer;
       font-size: 13px;
       color: var(--retro-text-primary);
