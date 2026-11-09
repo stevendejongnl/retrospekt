@@ -1,3 +1,10 @@
+## [1.52.0](https://github.com/stevendejongnl/retrospekt/compare/v1.51.0...v1.52.0) (2026-11-09)
+
+### Features
+
+* **header:** a phase stepper in the header, and the phase banners are gone ([401d5fb](https://github.com/stevendejongnl/retrospekt/commit/401d5fbc63671b1d22ddb5c2a9505643a55ac640))
+* **session:** sharing moves into a popover behind a Share button ([04a043b](https://github.com/stevendejongnl/retrospekt/commit/04a043bcccd50c66f0b0279da5f99c5e36f83d8e))
+
 ## [1.51.0](https://github.com/stevendejongnl/retrospekt/compare/v1.50.1...v1.51.0) (2026-11-09)
 
 ### Features
