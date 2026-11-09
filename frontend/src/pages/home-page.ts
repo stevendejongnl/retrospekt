@@ -6,7 +6,6 @@ import { storage } from '../storage'
 import { getBrand, clearBrand, bacon } from '../theme'
 import { faIconStyles, iconClockRotateLeft, iconRotateLeft, iconChartBar } from '../icons'
 import '../components/session-history'
-import '../components/background-blobs'
 import '../components/theme-menu'
 
 const COLUMN_TEMPLATES = [
@@ -411,7 +410,6 @@ export class HomePage extends LitElement {
     const canCreate = !!this.sessionName.trim() && !this.loading
 
     return html`
-      <background-blobs></background-blobs>
       ${this.sessionNotFound ? html`
         <div class="not-found-banner">
           <span>Session not found — it may have expired or the link is broken.</span>

@@ -1,7 +1,6 @@
 import { LitElement, css, html } from 'lit'
 import { customElement } from 'lit/decorators.js'
 
-import '../components/background-blobs'
 import { bacon } from '../theme'
 
 @customElement('privacy-page')
@@ -81,7 +80,6 @@ export class PrivacyPage extends LitElement {
 
   render() {
     return html`
-      <background-blobs></background-blobs>
       <div class="content">
         <h1>${bacon()} Privacy at Retro<em>spekt</em></h1>
         <p class="updated">A plain-language summary of what this instance collects and why.</p>

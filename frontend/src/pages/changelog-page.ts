@@ -1,6 +1,5 @@
 import { LitElement, css, html } from 'lit'
 import { customElement } from 'lit/decorators.js'
-import '../components/background-blobs'
 import { CHANGELOG } from '../generated/changelog'
 import type { ChangelogEntry, ChangelogKind } from '../generated/changelog'
 
@@ -236,7 +235,6 @@ export class ChangelogPage extends LitElement {
 
   render() {
     return html`
-      <background-blobs></background-blobs>
       <div class="page">
         <div class="topbar">
           <button class="back-btn" @click=${() => window.history.back()}>← Back</button>

@@ -12,7 +12,6 @@ import { storage } from './storage'
 if (window.__SENTRY_DSN__) {
   Sentry.init({ dsn: window.__SENTRY_DSN__, tracesSampleRate: 0 })
 }
-import './components/background-blobs'
 import './components/notification-dock'
 import './pages/home-page'
 import './pages/session-page'

@@ -26,7 +26,6 @@ import '../components/retro-board'
 import '../components/session-history'
 import '../components/board-notes'
 import { notifications } from '../components/notification-dock'
-import '../components/background-blobs'
 import '../components/retro-help'
 import '../components/theme-menu'
 import { CHANGELOG } from '../generated/changelog'
@@ -668,7 +667,6 @@ export class SessionPage extends LitElement {
     const { session } = this
 
     return html`
-      <background-blobs></background-blobs>
       <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
       <board-notes
         .open=${this.showNotes}
