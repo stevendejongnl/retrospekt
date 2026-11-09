@@ -11,12 +11,14 @@ HEIGHT = 630
 
 FONT_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 
-BACKGROUND = "#fdfcf9"
-ACCENT = "#d97426"
-ACCENT_TINT = "#fdf3e8"
+# Slate + Soft palette, the same values as the app's light theme tokens.
+BACKGROUND = "#f3f5f8"
+ACCENT = "#b45309"
+ACCENT_INK = "#9a4a07"
+ACCENT_TINT = "#fff1dc"
 ON_ACCENT = "#ffffff"
-TEXT_PRIMARY = "#1c1a17"
-TEXT_SECONDARY = "#5a534b"
+TEXT_PRIMARY = "#141a24"
+TEXT_SECONDARY = "#465068"
 
 LEFT_MARGIN = 96
 TEXT_WIDTH = WIDTH - LEFT_MARGIN * 2
@@ -77,7 +79,7 @@ def render_banner(title: str, subtitle: str | None = None, cta: str | None = Non
     draw = ImageDraw.Draw(image)
     draw.rectangle((0, 0, 28, HEIGHT), fill=ACCENT)
 
-    draw.text((LEFT_MARGIN, 72), "Retrospekt", font=brand_font, fill=ACCENT)
+    draw.text((LEFT_MARGIN, 72), "Retrospekt", font=brand_font, fill=ACCENT_INK)
 
     cleaned = drop_unsupported_characters(title, title_font) or FALLBACK_TITLE
     lines = wrap_title(cleaned, title_font, TEXT_WIDTH, TITLE_MAX_LINES)
