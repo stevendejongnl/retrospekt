@@ -58,7 +58,7 @@ describe('image comparison', () => {
   })
 
   it('paints differing pixels red on a dimmed copy of the screenshot', () => {
-    const reference = solid(2, 1, [0, 0, 0])
+    const reference = withPixel(solid(2, 1, [200, 200, 200]), 1, 0, [0, 0, 0])
     const screenshot = withPixel(solid(2, 1, [200, 200, 200]), 1, 0, [255, 255, 255])
     const marked = createDifferenceRaster(reference, screenshot, 24)
     expect(Array.from(marked.data.slice(0, 4))).toEqual([70, 70, 70, 255]) // matching pixel dimmed to 35%
