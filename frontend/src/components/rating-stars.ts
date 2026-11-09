@@ -40,7 +40,7 @@ export class RatingStars extends LitElement {
     }
     .rating-btn.filled {
       background: var(--retro-accent-tint);
-      border-color: var(--retro-accent-border);
+      border-color: color-mix(in srgb, var(--retro-accent) 55%, transparent);
       color: var(--retro-accent-ink);
     }
     svg {

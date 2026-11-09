@@ -4,9 +4,7 @@ import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 import { storage } from '../storage'
-import { faIconStyles } from '../icons'
 import '../components/rating-stars'
-import { bacon } from '../theme'
 
 @customElement('feedback-page')
 export class FeedbackPage extends LitElement {
@@ -21,92 +19,113 @@ export class FeedbackPage extends LitElement {
 
   static styles = [
     baseStyles,
-    faIconStyles,
     css`
       :host {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: block;
         min-height: 100vh;
         background: var(--retro-bg-page);
-        padding: 24px;
-        position: relative;
-        overflow: hidden;
       }
 
-      .content {
-        position: relative;
-        z-index: 1;
+      .page {
+        padding: 32px 0;
         display: flex;
         flex-direction: column;
+        gap: 16px;
+      }
+
+      .page-header {
+        display: flex;
         align-items: center;
-        gap: 0;
-        width: 100%;
-        max-width: 420px;
+        gap: 14px;
+        padding: 0 32px;
       }
 
-      .brand {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--retro-text-primary);
-        margin-bottom: 32px;
+      .back-link {
+        color: var(--retro-accent-ink);
         text-decoration: none;
+        font-size: 13px;
+        white-space: nowrap;
       }
 
-      .brand em {
-        font-style: normal;
-        color: var(--retro-accent);
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      .page-title {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--retro-text-primary);
+      }
+
+      .card-wrap {
+        display: flex;
+        justify-content: center;
+        margin-top: 24px;
+        padding: 0 16px;
       }
 
       .card {
-        background: var(--retro-bg-surface);
-        border: 1px solid var(--retro-border-default);
-        border-radius: var(--retro-radius-lg);
-        padding: 28px 28px 24px;
         width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
+        max-width: 460px;
+        padding: 28px;
+        background: var(--retro-glass-bg-strong);
+        border: 1px solid var(--retro-glass-border);
+        border-radius: var(--retro-radius-lg);
+        box-shadow: var(--retro-shadow-float);
       }
 
       .headline {
-        font-size: 17px;
+        font-size: 20px;
         font-weight: 700;
+        letter-spacing: -0.01em;
         color: var(--retro-text-primary);
-        margin: 0;
-        text-align: center;
+      }
+
+      .subtext {
+        font-size: 13px;
+        color: var(--retro-text-secondary);
+        margin: 4px 0 20px;
+      }
+
+      rating-stars {
+        margin-bottom: 18px;
       }
 
       textarea {
+        display: block;
         width: 100%;
-        box-sizing: border-box;
-        border: 1px solid var(--retro-border-default);
-        border-radius: var(--retro-radius-sm);
         padding: 10px 12px;
-        font-size: 13px;
-        font-family: inherit;
-        resize: vertical;
-        min-height: 72px;
-        background: var(--retro-bg-page);
+        border: 1px solid var(--retro-border-default);
+        border-radius: var(--retro-radius-md);
+        background: var(--retro-bg-surface);
         color: var(--retro-text-primary);
+        font-family: inherit;
+        font-size: 14px;
+        resize: none;
+        outline: none;
+        margin-bottom: 18px;
+      }
+
+      textarea::placeholder {
+        color: var(--retro-text-muted);
       }
 
       textarea:focus {
-        outline: none;
         border-color: var(--retro-accent);
       }
 
       .submit-btn {
         background: var(--retro-accent);
-        color: #fff;
-        border: none;
+        color: var(--retro-accent-contrast);
+        border: 1px solid var(--retro-accent-border);
         border-radius: var(--retro-radius-sm);
-        padding: 10px 20px;
-        font-size: 14px;
+        padding: 9px 18px;
+        font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         font-family: inherit;
-        transition: opacity 0.15s;
+        white-space: nowrap;
       }
 
       .submit-btn:disabled {
@@ -122,26 +141,15 @@ export class FeedbackPage extends LitElement {
       }
 
       .thanks-check {
-      display: block;
-      margin: 0 auto 6px;
-      width: 30px;
-      height: 30px;
-      stroke: var(--retro-accent-ink);
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
-    }
-
-      .back-link {
-        margin-top: 20px;
-        font-size: 13px;
-        color: var(--retro-text-muted);
-        text-decoration: none;
-      }
-
-      .back-link:hover {
-        color: var(--retro-accent);
+        display: block;
+        margin: 0 auto 6px;
+        width: 30px;
+        height: 30px;
+        stroke: var(--retro-accent-ink);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
       }
     `,
   ]
@@ -164,36 +172,42 @@ export class FeedbackPage extends LitElement {
 
   render() {
     return html`
-      <div class="content">
-        <a class="brand" href="/">${bacon()} Retro<em>spekt</em></a>
-        <div class="card">
-          ${this.submitted
-            ? html`
-                <div class="thank-you">
-                  <svg class="thanks-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12" /></svg>
-                  Thanks for your feedback!
-                </div>
-              `
-            : html`
-                <p class="headline">How's Retrospekt working for you?</p>
-                <rating-stars
-                  size="40"
-                  .value=${this.selectedRating}
-                  @rating-change=${(e: CustomEvent<number>) => { this.selectedRating = e.detail }}
-                ></rating-stars>
-                <textarea
-                  placeholder="Anything you'd like to share? (optional)"
-                  .value=${this.comment}
-                  @input=${(e: Event) => { this.comment = (e.target as HTMLTextAreaElement).value }}
-                ></textarea>
-                <button
-                  class="submit-btn"
-                  ?disabled=${this.selectedRating < 1 || this.submitting}
-                  @click=${this._submit}
-                >Send feedback</button>
-              `}
+      <div class="page">
+        <header class="page-header">
+          <a class="back-link" href="/">← Back</a>
+          <h1 class="page-title">Feedback</h1>
+        </header>
+        <div class="card-wrap">
+          <div class="card">
+            ${this.submitted
+              ? html`
+                  <div class="thank-you">
+                    <svg class="thanks-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12" /></svg>
+                    Thanks for your feedback!
+                  </div>
+                `
+              : html`
+                  <h2 class="headline">How's Retrospekt working for you?</h2>
+                  <p class="subtext">Your feedback helps improve the app.</p>
+                  <rating-stars
+                    size="40"
+                    .value=${this.selectedRating}
+                    @rating-change=${(e: CustomEvent<number>) => { this.selectedRating = e.detail }}
+                  ></rating-stars>
+                  <textarea
+                    rows="4"
+                    placeholder="Anything you'd like to share? (optional)"
+                    .value=${this.comment}
+                    @input=${(e: Event) => { this.comment = (e.target as HTMLTextAreaElement).value }}
+                  ></textarea>
+                  <button
+                    class="submit-btn"
+                    ?disabled=${this.selectedRating < 1 || this.submitting}
+                    @click=${this._submit}
+                  >Send feedback</button>
+                `}
+          </div>
         </div>
-        <a class="back-link" href="/">← Back to home</a>
       </div>
     `
   }
