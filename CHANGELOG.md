@@ -1,3 +1,9 @@
+## [1.50.0](https://github.com/stevendejongnl/retrospekt/compare/v1.49.2...v1.50.0) (2026-11-09)
+
+### Features
+
+* **share:** fuller title and description, title in the spliced fragment, CTA on the banner ([654e7c1](https://github.com/stevendejongnl/retrospekt/commit/654e7c1390039f1b76b75f72f7765c70584e70d1))
+
 ## [1.49.2](https://github.com/stevendejongnl/retrospekt/compare/v1.49.1...v1.49.2) (2026-11-09)
 
 ### Bug Fixes

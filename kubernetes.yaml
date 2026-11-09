@@ -31,7 +31,7 @@ spec:
         runAsUser: 1000
       containers:
         - name: backend
-          image: ghcr.io/stevendejongnl/retrospekt-backend:1.49.2
+          image: ghcr.io/stevendejongnl/retrospekt-backend:1.50.0
           imagePullPolicy: Always
           ports:
             - name: http
@@ -166,7 +166,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/stevendejongnl/retrospekt-frontend:1.49.2
+          image: ghcr.io/stevendejongnl/retrospekt-frontend:1.50.0
           imagePullPolicy: Always
           ports:
             - name: http
