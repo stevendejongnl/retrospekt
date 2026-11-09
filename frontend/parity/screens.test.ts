@@ -28,7 +28,7 @@ describe('parity screens', () => {
 
   it('says why a screen cannot be compared yet', () => {
     expect(PENDING_SCREENS.length).toBeGreaterThan(0)
-    for (const screen of PENDING_SCREENS) expect(screen.pending, screen.name).toMatch(/\S{8,}/)
+    for (const screen of PENDING_SCREENS) expect(screen.pending, screen.name).toMatch(/.{20,}/)
   })
 
   it('compares every screen that is not pending', () => {
