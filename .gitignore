@@ -36,6 +36,9 @@ test-results/
 # Keep docs assets
 !docs/assets/*.jpg
 !docs/assets/*.png
+
+# Keep the pixel parity reference images (rendered from the design)
+!frontend/parity/references/*.png
 frontend/src/generated/
 
 # Superpowers local specs/plans (never commit)
