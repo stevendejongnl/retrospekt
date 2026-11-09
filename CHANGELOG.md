@@ -1,3 +1,13 @@
+## [1.49.2](https://github.com/stevendejongnl/retrospekt/compare/v1.49.1...v1.49.2) (2026-11-09)
+
+### Bug Fixes
+
+* **share:** splice preview tags into index.html for every client ([48e70ed](https://github.com/stevendejongnl/retrospekt/commit/48e70ed2d5b3937c0e37827a02cbefd504f88ca3))
+
+### Documentation
+
+* **k8s:** set PUBLIC_URL so link previews use https ([e946a63](https://github.com/stevendejongnl/retrospekt/commit/e946a63be2d4c5187884d00ab630fc541b8913f0))
+
 ## [1.49.1](https://github.com/stevendejongnl/retrospekt/compare/v1.49.0...v1.49.1) (2026-11-09)
 
 ### Bug Fixes
