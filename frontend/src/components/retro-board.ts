@@ -36,7 +36,8 @@ export class RetroBoard extends LitElement {
     }
     .facilitator-dock {
       position: fixed;
-      left: 50%;
+      /* <notification-dock> sets --retro-dock-shift while a card is docked bottom-left */
+      left: calc(50% + var(--retro-dock-shift, 0px));
       bottom: 20px;
       transform: translateX(-50%);
       z-index: 20;

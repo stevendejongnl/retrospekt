@@ -27,7 +27,7 @@ describe('parity screens', () => {
   })
 
   it('says why a screen cannot be compared yet', () => {
-    expect(PENDING_SCREENS.length).toBeGreaterThan(0)
+    // none are pending now; whenever one is, it has to say why
     for (const screen of PENDING_SCREENS) expect(screen.pending, screen.name).toMatch(/.{20,}/)
   })
 

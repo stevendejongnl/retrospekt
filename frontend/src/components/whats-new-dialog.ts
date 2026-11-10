@@ -19,60 +19,53 @@ export class WhatsNewDialog extends LitElement {
     .card {
       pointer-events: auto;
       background: var(--retro-glass-bg-strong);
-      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: var(--retro-radius-md);
-      overflow: hidden;
-      box-shadow: var(--retro-glass-shadow);
-    }
-
-    .hero {
-      background: linear-gradient(135deg, var(--retro-accent), var(--retro-accent-hover));
-      padding: 12px 14px 10px;
-      color: white;
+      border-radius: var(--retro-radius-lg);
+      padding: 14px;
+      box-shadow: var(--retro-shadow-notification);
     }
 
     .version-badge {
       display: inline-block;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-      background: rgba(255, 255, 255, 0.22);
-      border-radius: 5px;
-      padding: 1px 6px;
-      margin-bottom: 6px;
+      font-family: var(--retro-font-mono);
+      background: var(--retro-accent);
+      color: var(--retro-accent-contrast);
+      border-radius: 999px;
+      padding: 2px 8px;
+    }
+
+    p {
+      margin: 0;
     }
 
     .headline {
       font-size: 14px;
-      font-weight: 800;
-      margin: 0 0 4px;
-      letter-spacing: -0.3px;
-      line-height: 1.25;
+      font-weight: 700;
+      color: var(--retro-text-primary);
+      margin: 8px 0 2px;
+      letter-spacing: -0.01em;
     }
 
     .highlight-body {
       font-size: 12px;
-      opacity: 0.9;
-      margin: 0;
-      line-height: 1.45;
+      line-height: 1.5;
+      color: var(--retro-text-secondary);
     }
 
     .footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      padding: 10px 14px 12px;
+      margin-top: 12px;
     }
 
     .view-changelog {
-      font-size: 11px;
-      color: var(--retro-text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--retro-accent-ink);
       text-decoration: underline;
-      text-underline-offset: 2px;
       background: none;
       border: none;
       cursor: pointer;
@@ -81,27 +74,17 @@ export class WhatsNewDialog extends LitElement {
       text-align: left;
     }
 
-    .view-changelog:hover {
-      color: var(--retro-text-secondary);
-    }
-
     .got-it-btn {
       background: var(--retro-accent);
-      border: none;
+      border: 1px solid var(--retro-accent-border);
       border-radius: var(--retro-radius-sm);
-      padding: 6px 14px;
+      padding: 5px 12px;
       font-size: 12px;
       font-weight: 600;
-      color: white;
+      color: var(--retro-accent-contrast);
       cursor: pointer;
       font-family: inherit;
       flex-shrink: 0;
-      transition: background 0.12s;
-      box-shadow: 0 4px 12px rgba(217, 116, 38, 0.3);
-    }
-
-    .got-it-btn:hover {
-      background: var(--retro-accent-hover);
     }
   `
 
@@ -120,11 +103,9 @@ export class WhatsNewDialog extends LitElement {
 
     return html`
       <div class="card">
-        <div class="hero">
-          <div class="version-badge">v${entry.version}</div>
-          <p class="headline">${entry.highlight?.title ?? `What's new in v${entry.version}`}</p>
-          ${entry.highlight?.body ? html`<p class="highlight-body">${entry.highlight.body}</p>` : ''}
-        </div>
+        <span class="version-badge">v${entry.version}</span>
+        <p class="headline">${entry.highlight?.title ?? `What's new in v${entry.version}`}</p>
+        ${entry.highlight?.body ? html`<p class="highlight-body">${entry.highlight.body}</p>` : ''}
 
         <div class="footer">
           <button class="view-changelog" @click=${this._viewChangelog}>View full changelog →</button>

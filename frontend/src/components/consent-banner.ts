@@ -24,44 +24,46 @@ export class ConsentBanner extends LitElement {
       pointer-events: none;
     }
     .bar {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
       background: var(--retro-glass-bg-strong);
-      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      box-shadow: var(--retro-glass-shadow);
-      border-radius: var(--retro-radius-md);
-      padding: 10px 12px;
+      box-shadow: var(--retro-shadow-notification);
+      border-radius: var(--retro-radius-lg);
+      padding: 14px;
+    }
+    p {
+      margin: 0;
       font-size: 12px;
+      line-height: 1.5;
       color: var(--retro-text-secondary);
     }
-    .bar a {
+    a {
       pointer-events: auto;
-      color: var(--retro-accent);
+      color: var(--retro-accent-ink);
+      text-underline-offset: 2px;
     }
     .actions {
       display: flex;
-      gap: 6px;
+      gap: 8px;
       justify-content: flex-end;
+      margin-top: 10px;
     }
     button {
       pointer-events: auto;
       font-family: inherit;
       font-size: 12px;
-      font-weight: 600;
-      padding: 6px 12px;
+      font-weight: 500;
+      padding: 5px 12px;
       border-radius: var(--retro-radius-sm);
       cursor: pointer;
-      border: 1px solid var(--retro-glass-border);
-      background: none;
-      color: var(--retro-text-secondary);
+      border: 1px solid var(--retro-border-default);
+      background: var(--retro-bg-subtle);
+      color: var(--retro-text-primary);
     }
     .accept {
       background: var(--retro-accent);
-      border-color: var(--retro-accent);
-      color: white;
+      border-color: var(--retro-accent-border);
+      color: var(--retro-accent-contrast);
+      font-weight: 600;
     }
   `
 
@@ -83,10 +85,10 @@ export class ConsentBanner extends LitElement {
   render() {
     return html`
       <div class="bar">
-        <span>
-          This site uses privacy-friendly analytics. Nothing is tracked until you accept.
+        <p>
+          This site uses privacy-friendly analytics. Nothing is tracked until you accept.${' '}
           <a href="/privacy" @click=${(e: Event) => { e.preventDefault(); window.router.navigate('/privacy') }}>Learn more</a>
-        </span>
+        </p>
         <div class="actions">
           <button @click=${this.decline}>Decline</button>
           <button class="accept" @click=${this.accept}>Accept</button>

@@ -25,6 +25,8 @@ export interface ParityScreen {
   brand?: 'cs'
   /** Leave the analytics consent unanswered, so the consent card shows. */
   askConsent?: boolean
+  /** Leave the release note unseen, so the what's-new card shows. */
+  askWhatsNew?: boolean
   /** Seed the "your sessions" history in local storage. */
   withHistory?: boolean
   steps?: Step[]
@@ -72,7 +74,13 @@ export const PARITY_SCREENS: ParityScreen[] = [
   { viewer: 'facilitator', name: 'chosen-time-up-dark', theme: 'dark', size: [1100, 760], route: SESSION, board: { phase: 'discussing', timer: 'up' } },
 
   // Overlays that open from the header or the dock
-  ...pair('dock', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, askConsent: true, pending: 'needs the star-rating feedback card and the dock that shifts right' }),
+  ...pair('dock', {
+    viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, askConsent: true, askWhatsNew: true,
+    steps: [
+      { click: '.avatar-menu-btn' }, { click: '.menu-feedback' },
+      { click: 'feedback-dialog rating-stars .rating-btn:nth-child(4)' },
+    ],
+  }),
   ...pair('settings', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.settings-btn' }] }),
   ...pair('help', { viewer: 'participant', size: [1000, 700], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.avatar-menu-btn' }, { click: '.menu-help' }] }),
   ...pair('history', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, withHistory: true, steps: [{ click: '.avatar-menu-btn' }, { click: '.menu-history' }] }),

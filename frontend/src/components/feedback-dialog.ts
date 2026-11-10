@@ -32,52 +32,54 @@ export class FeedbackDialog extends LitElement {
     .card {
       pointer-events: auto;
       background: var(--retro-glass-bg-strong);
-      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
-      border-radius: var(--retro-radius-md);
-      padding: 14px 14px 12px;
-      box-shadow: var(--retro-glass-shadow);
+      border-radius: var(--retro-radius-lg);
+      padding: 14px;
+      box-shadow: var(--retro-shadow-notification);
+    }
+
+    p {
+      margin: 0;
     }
 
     .headline {
       font-size: 14px;
-      font-weight: 800;
+      font-weight: 700;
       color: var(--retro-text-primary);
-      margin: 0 0 2px;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.01em;
     }
 
     .subtext {
       font-size: 12px;
-      color: var(--retro-text-muted);
-      margin: 0 0 12px;
+      color: var(--retro-text-secondary);
+      margin: 2px 0 10px;
+    }
+
+    rating-stars {
+      margin-bottom: 10px;
     }
 
     textarea {
       width: 100%;
-      padding: 8px 10px;
-      border: 1px solid var(--retro-border-default);
-      border-radius: var(--retro-radius-sm);
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid var(--retro-input-border);
+      border-radius: var(--retro-radius-md);
       font-size: 12px;
       font-family: inherit;
-      resize: vertical;
-      min-height: 52px;
-      box-sizing: border-box;
-      background: var(--retro-glass-bg-light);
+      resize: none;
+      background: var(--retro-input-bg);
       color: var(--retro-text-primary);
-      transition: border-color 0.12s;
       margin-bottom: 10px;
     }
 
     textarea:focus {
       outline: none;
-      border-color: var(--retro-accent);
-      background: var(--retro-glass-bg-strong);
+      border-color: color-mix(in srgb, var(--retro-accent) 55%, transparent);
     }
 
     textarea::placeholder {
-      color: var(--retro-text-disabled);
+      color: var(--retro-text-muted);
     }
 
     .actions {
@@ -87,52 +89,51 @@ export class FeedbackDialog extends LitElement {
     }
 
     .submit-btn {
-      padding: 7px 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 12px;
       background: var(--retro-accent);
-      color: white;
-      border: none;
+      color: var(--retro-accent-contrast);
+      border: 1px solid var(--retro-accent-border);
       border-radius: var(--retro-radius-sm);
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: background 0.12s;
-      box-shadow: 0 4px 12px rgba(217, 116, 38, 0.3);
     }
 
-    .submit-btn:hover:not(:disabled) {
+    .submit-btn:hover:not([aria-disabled='true']) {
       background: var(--retro-accent-hover);
     }
 
-    .submit-btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
+    .submit-btn[aria-disabled='true'] {
+      opacity: 0.55;
+      cursor: default;
     }
 
     .skip-btn {
       background: none;
       border: none;
       font-size: 12px;
-      color: var(--retro-text-muted);
+      font-weight: 500;
+      color: var(--retro-text-secondary);
       cursor: pointer;
       font-family: inherit;
-      padding: 0;
+      padding: 5px 12px;
       text-decoration: underline;
-      text-underline-offset: 2px;
-    }
-
-    .skip-btn:hover {
-      color: var(--retro-text-secondary);
+      text-underline-offset: 3px;
+      text-decoration-color: var(--retro-border-default);
     }
 
     .thank-you {
       text-align: center;
-      padding: 8px 0;
+      padding: 14px 0;
     }
 
     .thanks-check {
       display: block;
-      margin: 0 auto 6px;
+      margin: 0 auto;
       width: 30px;
       height: 30px;
       stroke: var(--retro-accent-ink);
@@ -144,9 +145,9 @@ export class FeedbackDialog extends LitElement {
 
     .thank-you p {
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--retro-text-primary);
-      margin: 0;
+      margin: 6px 0 0;
     }
   `
 
@@ -189,6 +190,8 @@ export class FeedbackDialog extends LitElement {
                 ></rating-stars>
 
                 <textarea
+                  rows="2"
+                  aria-label="Comment"
                   placeholder="Anything you'd like to add? (optional)"
                   maxlength="500"
                   .value=${this.comment}
@@ -198,7 +201,7 @@ export class FeedbackDialog extends LitElement {
                 <div class="actions">
                   <button
                     class="submit-btn"
-                    ?disabled=${!isValidRating(this.selectedRating) || this.submitting}
+                    aria-disabled=${!isValidRating(this.selectedRating) || this.submitting ? 'true' : 'false'}
                     @click=${this._submit}
                   >
                     ${this.submitting ? 'Sending…' : 'Send feedback'}

@@ -22,6 +22,9 @@ import './whats-new-dialog'
  * one the user is already reading.
  */
 
+/** How far the facilitator dock moves right to clear the 320px cards. */
+const DOCK_SHIFT = '170px'
+
 type NotificationKind = 'consent' | 'feedback' | 'whats-new'
 
 interface NotificationItem {
@@ -39,8 +42,8 @@ export class NotificationDock extends LitElement {
   static styles = css`
     :host {
       position: fixed;
-      left: 12px;
-      bottom: 12px;
+      left: 16px;
+      bottom: 16px;
       z-index: 300;
       /* Like every other overlay in this app: the container never eats a
          click meant for the board behind it — only the cards' own controls
@@ -48,10 +51,10 @@ export class NotificationDock extends LitElement {
       pointer-events: none;
       display: flex;
       flex-direction: column-reverse;
-      gap: 8px;
+      gap: 10px;
       width: 320px;
-      max-width: calc(100vw - 24px);
-      max-height: calc(100vh - 24px);
+      max-width: calc(100vw - 32px);
+      max-height: calc(100vh - 32px);
     }
 
     @media (max-width: 480px) {
@@ -88,6 +91,7 @@ export class NotificationDock extends LitElement {
     document.removeEventListener('dragstart', this.onDragStart)
     document.removeEventListener('dragend', this.onDragEnd)
     document.removeEventListener('drop', this.onDragEnd)
+    document.documentElement.style.removeProperty('--retro-dock-shift')
   }
 
   /** Queue a notification. A kind already on screen is never stacked twice. */
@@ -127,6 +131,11 @@ export class NotificationDock extends LitElement {
           ></whats-new-dialog>
         `
     }
+  }
+
+  /** While a card is docked the facilitator dock makes room for it. */
+  protected updated(): void {
+    document.documentElement.style.setProperty('--retro-dock-shift', this.items.length ? DOCK_SHIFT : '0px')
   }
 
   render() {

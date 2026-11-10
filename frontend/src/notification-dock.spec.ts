@@ -197,4 +197,15 @@ test.describe('notification-dock', () => {
     await expect(page.locator('whats-new-dialog .headline')).toHaveText("What's new in v9.9.9")
     await expect(page.locator('whats-new-dialog .highlight-body')).toHaveCount(0)
   })
+
+  test('tells the facilitator dock to make room while a card is docked, and gives the room back', async ({ page }) => {
+    await mount(page)
+    const shift = () => page.evaluate(() => document.documentElement.style.getPropertyValue('--retro-dock-shift'))
+    await page.evaluate(() => (window as Win).notifications.consent())
+    await expect(dock(page).locator('consent-banner')).toBeVisible()
+    await expect.poll(shift).toBe('170px')
+    await dock(page).locator('consent-banner').getByRole('button', { name: 'Decline' }).click()
+    await expect(dock(page).locator('consent-banner')).toHaveCount(0)
+    await expect.poll(shift).toBe('0px')
+  })
 })

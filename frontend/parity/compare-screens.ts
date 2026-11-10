@@ -48,6 +48,13 @@ function storageFor(screen: ParityScreen): Record<string, string> {
   entries[`retro_feedback_v${FIXTURE_APP_VERSION}`] = 'true'
   if (screen.viewer !== 'visitor') entries[`retro_name_${FIXTURE_SESSION_ID}`] = 'Alice'
   if (screen.viewer === 'facilitator') entries[`retro_facilitator_${FIXTURE_SESSION_ID}`] = FACILITATOR_TOKEN
+  if (screen.askWhatsNew) {
+    // "returning visitor": one other board, last seen on an old release
+    entries.retro_history = JSON.stringify([{
+      id: 'h2', name: 'Mad Sad Glad — Q2', phase: 'collecting', created_at: '2026-05-02T09:00:00Z',
+      participantName: 'Alice', isFacilitator: false, joinedAt: '2026-05-02T09:00:00Z', seenChangelogVersion: '1.0.0',
+    }])
+  }
   if (screen.withHistory) {
     const entry = (id: string, name: string, phase: string, created: string, who: string, facilitator: boolean) => ({
       id, name, phase, created_at: created, participantName: who, isFacilitator: facilitator, joinedAt: created, seenChangelogVersion: '999.0.0',
