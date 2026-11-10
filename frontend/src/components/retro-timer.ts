@@ -88,7 +88,12 @@ export class RetroTimer extends LitElement {
       min-width: 0;
       letter-spacing: 0;
     }
+    .timer-readout.green { color: var(--retro-timer-ok); }
+    .timer-readout.amber { color: #f97316; }
+    .timer-readout.red { color: var(--retro-timer-late); }
     .timer-btn.icon {
+      background: var(--retro-corner-bg);
+      color: var(--retro-text-secondary);
       width: 28px;
       height: 28px;
       padding: 0;
@@ -449,7 +454,7 @@ export class RetroTimer extends LitElement {
 
     if (state === 'running') {
       return html`
-        <span class="timer-readout">
+        <span class="timer-readout ${this.colorClass}">
           ${designIcon('clock', 14)}
           <span class="timer-display ${this.colorClass}">${this.formatTime(this.displaySeconds)}</span>
         </span>
@@ -459,7 +464,7 @@ export class RetroTimer extends LitElement {
     }
     if (state === 'up') {
       return html`
-        <span class="timer-readout">
+        <span class="timer-readout red">
           ${designIcon('clock', 14)}
           <span class="timer-display red">${this.formatTime(0)}</span>
         </span>

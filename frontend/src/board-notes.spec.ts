@@ -402,7 +402,7 @@ test.describe('board-notes inline edit', () => {
     expect(patchCalled).toBe(false)
   })
 
-  test('delete button uses a trash icon, not an × character', async ({ page }) => {
+  test('delete button is a plain × like the design, and is gone while the note is edited', async ({ page }) => {
     await withName(page, 'Alice')
     await mockApi(page, makeSession([NOTE_1]))
     await page.goto(`/session/${SESSION_ID}`)
@@ -410,8 +410,9 @@ test.describe('board-notes inline edit', () => {
     await page.locator('button[title="Board notes"]').click()
     const btn = page.locator('board-notes .delete-note-btn').first()
     await expect(btn).toBeVisible()
-    await expect(btn.locator('svg.fa-icon')).toBeVisible()
-    await expect(btn).not.toHaveText('×')
+    await expect(btn).toHaveText('×')
+    await page.locator('board-notes .note-text').first().click()
+    await expect(page.locator('board-notes .delete-note-btn')).toHaveCount(0)
   })
 })
 

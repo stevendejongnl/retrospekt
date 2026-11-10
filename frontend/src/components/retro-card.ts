@@ -287,7 +287,7 @@ export class RetroCard extends LitElement {
     }
     .vote-btn.voted {
       background: var(--retro-accent);
-      border-color: var(--retro-accent-border);
+      border-color: var(--retro-accent);
       color: var(--retro-accent-contrast);
       font-weight: 600;
     }

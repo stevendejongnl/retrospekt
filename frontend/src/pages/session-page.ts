@@ -168,7 +168,7 @@ export class SessionPage extends LitElement {
     }
 
     .icon-btn.active {
-      border-color: var(--retro-accent-border);
+      border-color: color-mix(in srgb, var(--retro-accent) 50%, transparent);
       color: var(--retro-accent-ink);
       background: var(--retro-accent-tint);
     }
@@ -303,7 +303,7 @@ export class SessionPage extends LitElement {
       cursor: pointer;
     }
     .avatar-menu-btn.open {
-      border-color: var(--retro-accent-border);
+      border-color: color-mix(in srgb, var(--retro-accent) 50%, transparent);
     }
     .user-menu {
       width: 210px;
@@ -458,7 +458,7 @@ export class SessionPage extends LitElement {
       white-space: nowrap;
     }
     .share-btn[aria-expanded='true'] {
-      border-color: var(--retro-accent-border);
+      border-color: color-mix(in srgb, var(--retro-accent) 50%, transparent);
       color: var(--retro-accent-ink);
     }
     .share-row {
