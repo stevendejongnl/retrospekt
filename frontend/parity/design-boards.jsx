@@ -22,6 +22,10 @@ both('board-actions', (dark) => <BoardV2 dark={dark} phase="Discussing" actionsO
 both('board-menu', (dark) => <BoardV2 dark={dark} phase="Discussing" menuOpen />);
 PARITY_BOARDS['board-cs-brand'] = () => <BoardV2 dark={false} phase="Discussing" collab />;
 
+both('present-collecting', (dark) => <PresentBoard dark={dark} phase="Collecting" height={600} />);
+both('present-discussing', (dark) => <PresentBoard dark={dark} phase="Discussing" timer height={760} />);
+both('present-closed', (dark) => <PresentBoard dark={dark} phase="Closed" height={720} />);
+
 both('chosen-participant', (dark) => <BoardV2 dark={dark} phase="Discussing" role="participant" timer="running" />);
 PARITY_BOARDS['chosen-share-light'] = () => <BoardV2 dark={false} phase="Discussing" shareOpen />;
 PARITY_BOARDS['chosen-timer-menu-dark'] = () => <BoardV2 dark phase="Discussing" timerMenu />;

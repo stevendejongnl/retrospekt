@@ -48,6 +48,7 @@ function storageFor(screen: ParityScreen): Record<string, string> {
   entries[`retro_feedback_v${FIXTURE_APP_VERSION}`] = 'true'
   if (screen.viewer !== 'visitor') entries[`retro_name_${FIXTURE_SESSION_ID}`] = 'Alice'
   if (screen.viewer === 'facilitator') entries[`retro_facilitator_${FIXTURE_SESSION_ID}`] = FACILITATOR_TOKEN
+  if (screen.presenting) entries[`retro_present_${FIXTURE_SESSION_ID}`] = 'true'
   if (screen.askWhatsNew) {
     // "returning visitor": one other board, last seen on an old release
     entries.retro_history = JSON.stringify([{

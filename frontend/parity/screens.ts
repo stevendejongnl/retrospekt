@@ -23,6 +23,8 @@ export interface ParityScreen {
   /** The session the board shows, when the route is a board. */
   board?: { phase: SessionPhase; timer?: TimerFixture; notes?: boolean }
   brand?: 'cs'
+  /** The viewer is presenting the board on a meeting screen (presentation mode). */
+  presenting?: boolean
   /** Leave the analytics consent unanswered, so the consent card shows. */
   askConsent?: boolean
   /** Leave the release note unseen, so the what's-new card shows. */
@@ -70,6 +72,11 @@ export const PARITY_SCREENS: ParityScreen[] = [
   ...pair('board-actions', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: 'button[aria-label="Action items"]' }] }),
   ...pair('board-menu', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.avatar-menu-btn' }] }),
   { viewer: 'facilitator', name: 'board-cs-brand', theme: 'light', brand: 'cs', size: [1100, 760], route: SESSION, board: { phase: 'discussing' } },
+
+  // Presentation mode: the board the way the room sees it
+  ...pair('present-collecting', { viewer: 'facilitator', size: [1100, 600], route: SESSION, board: { phase: 'collecting' }, presenting: true }),
+  ...pair('present-discussing', { viewer: 'facilitator', size: [1100, 760], route: SESSION, board: { phase: 'discussing', timer: 'running' }, presenting: true }),
+  ...pair('present-closed', { viewer: 'facilitator', size: [1100, 720], route: SESSION, board: { phase: 'closed' }, presenting: true }),
 
   // The header and dock, as a participant and in their other states
   ...pair('chosen-participant', { viewer: 'participant', size: [1100, 700], route: SESSION, board: { phase: 'discussing', timer: 'running' } }),
