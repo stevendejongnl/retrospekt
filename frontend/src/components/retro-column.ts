@@ -29,6 +29,8 @@ export class RetroColumn extends LitElement {
   @property({ type: String }) accent = '#e85d04'
   @property({ type: String }) color: ColumnColor | '' = ''
   @property({ type: Boolean }) isFacilitator = false
+  // Presentation mode: published cards only, nothing to press (the board decides who the audience is)
+  @property({ type: Boolean }) presenting = false
   @property({ type: Object }) participantColorMap: Record<string, string> = {}
   @property({ type: Array }) participantNames: string[] = []
   @property({ type: Boolean }) reactionsEnabled = true
@@ -86,6 +88,14 @@ export class RetroColumn extends LitElement {
     }
     .count-badge[role='button'] {
       cursor: pointer;
+    }
+    .empty-note {
+      padding: 18px 12px;
+      border-radius: var(--retro-radius-md);
+      border: 1px dashed var(--retro-border-default);
+      text-align: center;
+      font-size: 12px;
+      color: var(--retro-text-muted);
     }
     .color-picker {
       display: flex;
@@ -565,6 +575,16 @@ export class RetroColumn extends LitElement {
   }
 
   private get visibleCards(): Card[] {
+    if (this.presenting) {
+      // Collecting is private, even for cards published before the facilitator stepped back
+      if (this.phase === 'collecting') return []
+      // The room sees what the team sees: published cards, none of anyone's drafts
+      const published = this.cards.filter((c) => c.published)
+      if (this.phase === 'closed' || (this.phase === 'discussing' && this.sortByVotes)) {
+        return [...published].sort((a, b) => b.votes.length - a.votes.length)
+      }
+      return published
+    }
     if (this.phase === 'collecting') {
       // During collection, each participant only sees their own cards
       return this.cards.filter((c) => c.author_name === this.participantName)
@@ -649,7 +669,7 @@ export class RetroColumn extends LitElement {
   private _onStackVote(item: { groupId: string; cards: Card[] }): void {
     const hasVoted = item.cards.some((c) =>
       c.votes.some((v) => v.participant_name === this.participantName)
-    )
+    ) && !this.presenting
     const eventType = hasVoted ? 'group-unvote' : 'group-vote'
     this.dispatchEvent(
       new CustomEvent(eventType, {
@@ -669,7 +689,7 @@ export class RetroColumn extends LitElement {
     return html`
       <button
         class="vote-btn ${hasVotedOnGroup ? 'voted' : ''}"
-        ?disabled=${this.phase !== 'discussing' || !this.participantName}
+        ?disabled=${this.presenting || this.phase !== 'discussing' || !this.participantName}
         title="${hasVotedOnGroup ? 'Remove vote from group' : 'Vote for group'}"
         @click=${() => this._onStackVote(item)}
       >
@@ -679,7 +699,8 @@ export class RetroColumn extends LitElement {
   }
 
   render() {
-    const canAdd = this.phase !== 'closed' && !!this.participantName
+    const canAdd = !this.presenting && this.phase !== 'closed' && !!this.participantName
+    const live = !this.presenting
     const accentStyle = `--col-accent: ${this.accent};`
     const items = this.cardItems
     const canReact = this.phase === 'discussing' || this.phase === 'closed'
@@ -690,26 +711,26 @@ export class RetroColumn extends LitElement {
         .participantName=${this.participantName}
         .participantNames=${this.participantNames}
         .showVote=${this.phase !== 'collecting'}
-        ?canVote=${this.phase === 'discussing' &&
+        ?canVote=${live && this.phase === 'discussing' &&
         card.published &&
         card.author_name !== this.participantName}
-        ?canDelete=${card.author_name === this.participantName &&
+        ?canDelete=${live && card.author_name === this.participantName &&
         !card.group_id}
-        ?canEdit=${card.author_name === this.participantName &&
+        ?canEdit=${live && card.author_name === this.participantName &&
         this.phase !== 'closed'}
-        ?canPublish=${this.phase === 'discussing' &&
+        ?canPublish=${live && this.phase === 'discussing' &&
         !card.published &&
         card.author_name === this.participantName}
-        ?canUnpublish=${card.published &&
+        ?canUnpublish=${live && card.published &&
         card.author_name === this.participantName &&
         !card.group_id}
         .reactionsEnabled=${this.reactionsEnabled}
-        ?canReact=${canReact && card.published}
-        ?canAssign=${this.phase !== 'collecting' &&
+        ?canReact=${live && canReact && card.published}
+        ?canAssign=${live && this.phase !== 'collecting' &&
         card.published &&
         (card.author_name === this.participantName || this.isFacilitator)}
-        ?canGroup=${this.phase === 'discussing' && card.published}
-        ?canMove=${this.phase !== 'closed' &&
+        ?canGroup=${live && this.phase === 'discussing' && card.published}
+        ?canMove=${live && this.phase !== 'closed' &&
         !card.group_id &&
         (card.author_name === this.participantName || this.isFacilitator)}
         style="--card-edge: ${card.published ? 'var(--col-accent)' : 'var(--retro-text-muted)'}"
@@ -778,6 +799,9 @@ export class RetroColumn extends LitElement {
         </div>
         ${this.renderColorPicker()}
 
+        ${this.presenting && items.length === 0
+          ? html`<div class="empty-note">Cards appear here once they are published</div>`
+          : ''}
         <div class="cards-list ${items.length === 0 ? 'empty' : ''}">
           ${items.map((item) =>
             item.kind === 'single'
@@ -801,18 +825,20 @@ export class RetroColumn extends LitElement {
                             ?canVote=${false}
                             .showVote=${false}
                             ?canDelete=${false}
-                            ?canEdit=${card.author_name === this.participantName && this.phase !== 'closed'}
+                            ?canEdit=${live && card.author_name === this.participantName && this.phase !== 'closed'}
                             ?canPublish=${false}
                             .reactionsEnabled=${this.reactionsEnabled}
-                            ?canReact=${(this.phase === 'discussing' || this.phase === 'closed') && card.published}
+                            ?canReact=${live && (this.phase === 'discussing' || this.phase === 'closed') && card.published}
                             ?canAssign=${false}
                             ?canGroup=${false}
                             style="--card-edge: var(--col-accent)"
                           ></retro-card>
-                          <button
-                            class="ungroup-btn"
-                            @click=${() => this._dispatchUngroup(card.id)}
-                          >${iconLayerGroup()} Ungroup</button>
+                          ${live
+                            ? html`<button
+                                class="ungroup-btn"
+                                @click=${() => this._dispatchUngroup(card.id)}
+                              >${iconLayerGroup()} Ungroup</button>`
+                            : ''}
                         </div>
                       `)}
                     </div>

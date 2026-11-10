@@ -48,6 +48,8 @@ export class SessionPage extends LitElement {
   @state() private showHelp = false
   @state() private showHistory = false
   @state() private showNotes = false
+  // Presentation mode: per device, kept across reloads (see storage.getPresenting)
+  @state() private presenting = false
 
   // Not @state: the notification dock renders these, not this template.
   // The flag only exists so the idle check doesn't keep re-asking while the
@@ -492,6 +494,87 @@ export class SessionPage extends LitElement {
       cursor: pointer;
       white-space: nowrap;
     }
+    .present-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: var(--retro-accent-tint);
+      border: 1px solid color-mix(in srgb, var(--retro-accent) 50%, transparent);
+      border-radius: var(--retro-radius-sm);
+      color: var(--retro-accent-ink);
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .present-btn .present-text {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .present-btn .present-hint {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--retro-text-secondary);
+    }
+    .presenting-pill {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 8px 7px 14px;
+      background: var(--retro-glass-bg-strong);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: 999px;
+      box-shadow: var(--retro-shadow-float);
+      font-size: 12px;
+      color: var(--retro-text-secondary);
+    }
+    .presenting-pill .presenting-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--retro-accent);
+    }
+    .presenting-pill strong {
+      font-size: 13px;
+      color: var(--retro-text-primary);
+    }
+    .presenting-pill button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
+      border-radius: var(--retro-radius-sm);
+      color: var(--retro-text-primary);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .presenting-pill kbd {
+      padding: 0 5px;
+      border: 1px solid var(--retro-border-default);
+      border-radius: var(--retro-radius-sm);
+      font-family: var(--retro-font-mono);
+      font-size: 10px;
+      color: var(--retro-text-secondary);
+    }
+    /* A meeting screen: the whole board reads from the back of the room */
+    @media (min-width: 1600px) {
+      :host([presenting]) {
+        zoom: 1.25;
+      }
+    }
     .export-btn {
       display: inline-flex;
       align-items: center;
@@ -652,6 +735,7 @@ export class SessionPage extends LitElement {
     window.addEventListener('pointermove', this._onActivity)
     window.addEventListener('keydown', this._onActivity)
     this._idleCheckInterval = setInterval(() => this._checkIdle(), 30_000)
+    this.setPresenting(storage.getPresenting(this.sessionId), false)
     await this.loadSession()
   }
 
@@ -664,6 +748,8 @@ export class SessionPage extends LitElement {
     window.removeEventListener('keydown', this._onActivity)
     document.removeEventListener('keydown', this._onPanelKeydown)
     document.removeEventListener('click', this._onPanelOutsideClick, true)
+    document.removeEventListener('keydown', this._onPresentingKeydown)
+    notifications.suppress(false)
     if (this._idleCheckInterval !== null) clearInterval(this._idleCheckInterval)
   }
 
@@ -765,6 +851,25 @@ export class SessionPage extends LitElement {
     await api.setPhase(this.session.id, e.detail, storage.getFacilitatorToken(this.session.id) ?? '', this.participantName)
   }
 
+  /** Turn presentation mode on or off for this device. `remember` is false when it is only being restored from storage. */
+  private setPresenting(on: boolean, remember = true): void {
+    this.presenting = on
+    if (remember) storage.setPresenting(this.sessionId, on)
+    notifications.suppress(on)
+    document.removeEventListener('keydown', this._onPresentingKeydown)
+    if (on) {
+      this.closePanel()
+      this.showNotes = false
+      this.showHistory = false
+      this.showHelp = false
+      document.addEventListener('keydown', this._onPresentingKeydown)
+    }
+  }
+
+  private _onPresentingKeydown = (e: KeyboardEvent): void => {
+    if (e.key === 'Escape') this.setPresenting(false)
+  }
+
   private togglePanel(name: 'share' | 'actions' | 'menu'): void {
     if (this.openPanel === name) {
       this.closePanel()
@@ -813,6 +918,7 @@ export class SessionPage extends LitElement {
 
   protected override updated(changedProps: PropertyValues): void {
     super.updated(changedProps)
+    this.toggleAttribute('presenting', this.presenting)
     if (changedProps.has('session')) {
       const prev = changedProps.get('session') as Session | null
       // Show feedback after session closes
@@ -842,7 +948,7 @@ export class SessionPage extends LitElement {
   }
 
   private _openFeedback(): void {
-    if (this.feedbackOpen) return
+    if (this.feedbackOpen || this.presenting) return
     this.feedbackOpen = true
     notifications.feedback({
       sessionId: this.sessionId,
@@ -1014,18 +1120,19 @@ export class SessionPage extends LitElement {
         </div>
         <phase-stepper
           .phase=${session.phase}
-          ?interactive=${this.isFacilitator}
+          ?interactive=${this.isFacilitator && !this.presenting}
           @phase-select=${this.onPhaseSelect}
         ></phase-stepper>
         <div class="header-tools">
-        ${session.phase === 'discussing' && maxVotes
+        ${!this.presenting && session.phase === 'discussing' && maxVotes
           ? html`<span class="header-votes">${this.votesUsed}/${maxVotes} votes</span>`
           : nothing}
-        ${session.timer && (session.timer.started_at || !this.isFacilitator)
+        ${session.timer && (session.timer.started_at || !this.isFacilitator || this.presenting)
           ? html`<div class="header-countdown">
               <retro-timer .timer=${session.timer} .sessionId=${session.id} .participantName=${this.participantName}></retro-timer>
             </div>`
           : nothing}
+        ${this.presenting ? nothing : html`
         <div class="share-wrap pop-wrap" ?data-open=${this.openPanel === 'share'}>
           <button
             class="share-btn"
@@ -1050,6 +1157,13 @@ export class SessionPage extends LitElement {
                         </button>
                       `
                     : ''}
+                  <button class="present-btn" @click=${() => this.setPresenting(true)}>
+                    ${designIcon('present', 16)}
+                    <span class="present-text">
+                      <span>Present this board</span>
+                      <span class="present-hint">Published cards only, on this screen only</span>
+                    </span>
+                  </button>
                   <div class="eyebrow people-eyebrow">${session.participants.length} ${session.participants.length === 1 ? 'person' : 'people'} here</div>
                   <div class="people">
                     ${session.participants.map((p) => html`
@@ -1131,13 +1245,23 @@ export class SessionPage extends LitElement {
               </div>
             `
           : ''}
+        `}
         </div>
       </header>
+
+      ${this.presenting
+        ? html`<div class="presenting-pill" role="status" aria-label="Presenting">
+            <span class="presenting-dot" aria-hidden="true"></span>
+            <strong>Presenting</strong>
+            <span>Only published cards</span>
+            <button @click=${() => this.setPresenting(false)}>Exit <kbd>Esc</kbd></button>
+          </div>`
+        : nothing}
 
       ${this.showNamePrompt
         ? nothing
         : html`<main>
-            <retro-board .session=${session} .participantName=${this.participantName}></retro-board>
+            <retro-board .session=${session} .participantName=${this.participantName} ?presenting=${this.presenting}></retro-board>
           </main>`}
     `
   }

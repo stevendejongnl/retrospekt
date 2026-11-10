@@ -20,6 +20,8 @@ import './retro-timer'
 export class RetroBoard extends LitElement {
   @property({ type: Object }) session!: Session
   @property({ type: String }) participantName = ''
+  // Presentation mode: the board as the room sees it, nothing of yours, nothing to press
+  @property({ type: Boolean }) presenting = false
 
   @state() private showSettings = false
   @state() private settingName = ''
@@ -32,6 +34,23 @@ export class RetroBoard extends LitElement {
   static styles = [baseStyles, faIconStyles, css`
     :host {
       display: block;
+    }
+    .written-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 14px 24px 0;
+      padding: 12px 16px;
+      border-radius: var(--retro-radius-md);
+      background: var(--retro-glass-bg-medium);
+      border: 1px solid var(--retro-border-default);
+      color: var(--retro-text-secondary);
+      font-size: 13px;
+    }
+    .written-bar strong {
+      color: var(--retro-text-primary);
+      font-size: 14px;
     }
     .facilitator-dock {
       position: fixed;
@@ -375,6 +394,17 @@ export class RetroBoard extends LitElement {
     return buildParticipantColorMap(this.session.participants)
   }
 
+  /** Collecting while presenting: cards are private, so say how many exist, not what they say. */
+  private renderWrittenBar() {
+    const cards = this.session.cards
+    const people = new Set(cards.map((c) => c.author_name)).size
+    return html`<div class="written-bar" role="status">
+      ${designIcon('lock', 16)}
+      <strong>${cards.length} ${cards.length === 1 ? 'card' : 'cards'} written by ${people} ${people === 1 ? 'person' : 'people'}</strong>
+      <span>They stay private until the discussion starts.</span>
+    </div>`
+  }
+
   private get isFacilitator(): boolean {
     return storage.isFacilitator(this.session.id) || !!this.session?.open_facilitator
   }
@@ -675,7 +705,7 @@ export class RetroBoard extends LitElement {
         : ''}
 
 
-      ${this.isFacilitator
+      ${this.isFacilitator && !this.presenting
         ? html`
             <div class="facilitator-dock" role="toolbar" aria-label="Facilitator controls">
               ${session.phase !== 'collecting'
@@ -723,6 +753,8 @@ export class RetroBoard extends LitElement {
         ? html`<div class="vote-limit-msg">${this.voteLimitMessage}</div>`
         : ''}
 
+      ${this.presenting && session.phase === 'collecting' ? this.renderWrittenBar() : ''}
+
       <div
         class="columns"
         @add-card=${this.onAddCard}
@@ -752,13 +784,14 @@ export class RetroBoard extends LitElement {
             <retro-column
               .title=${col}
               .cards=${session.cards.filter((c) => c.column === col)}
-              .participantName=${this.participantName}
+              .participantName=${this.presenting ? '' : this.participantName}
               .participantNames=${participantNames}
               .phase=${session.phase}
               .accent=${columnColorVar(resolveColumnColor(session.column_colors, col, index))}
               .color=${resolveColumnColor(session.column_colors, col, index)}
               .participantColorMap=${this.participantColorMap}
-              ?isFacilitator=${this.isFacilitator}
+              ?isFacilitator=${this.isFacilitator && !this.presenting}
+              ?presenting=${this.presenting}
               .reactionsEnabled=${session.reactions_enabled}
               .sortByVotes=${session.column_sorts?.[col] ?? false}
             ></retro-column>

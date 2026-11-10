@@ -4,6 +4,7 @@
  *   retro_facilitator_{id}   — facilitator token UUID (set on create only)
  *
  * Cross-session localStorage contract:
+ *   retro_present_{id}       — "true" while this device presents the board (published cards only)
  *   retro_history            — JSON array of SessionHistoryEntry (newest first, max 50)
  *   retro_feedback_v{ver}    — "true" when feedback was submitted for that app version
  *   retro_analytics_consent  — "granted" | "denied", unset until the consent banner is answered
@@ -98,6 +99,15 @@ class RetroStorage {
     if (idx < 0) return
     history[idx] = { ...history[idx], seenChangelogVersion: version }
     localStorage.setItem('retro_history', JSON.stringify(history))
+  }
+
+  getPresenting(sessionId: string): boolean {
+    return localStorage.getItem(`retro_present_${sessionId}`) === 'true'
+  }
+
+  setPresenting(sessionId: string, on: boolean): void {
+    if (on) localStorage.setItem(`retro_present_${sessionId}`, 'true')
+    else localStorage.removeItem(`retro_present_${sessionId}`)
   }
 
   /* istanbul ignore next -- tested via Vitest (feedback-dialog.test.ts); not exercised in CT */

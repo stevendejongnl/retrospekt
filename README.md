@@ -21,6 +21,7 @@ A simple, self-hosted retrospective board.
 - UUID-based sessions — no accounts, no login
 - Share a URL to collaborate in real time
 - Column templates: Standard, Mad·Sad·Glad, Start·Stop·Continue, 4Ls
+- Presentation mode (Share › Present this board): shows the board the way the team sees it on a meeting screen — published cards only, none of your own drafts, no controls and no pop-ups; per device, kept across a reload; leave with Exit or Esc
 - Column management: add, rename, and delete columns (facilitator, collecting phase only); each column has a colour the facilitator can change (templates pick fitting ones, e.g. Mad red, Glad green)
 - Per-session name (remembered in localStorage; rename anytime by clicking it), guarded against picking a name already taken by another participant in the same session
 - Color-coded participants and cards — 10-color palette, consistent per participant

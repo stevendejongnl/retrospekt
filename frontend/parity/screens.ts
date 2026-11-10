@@ -62,7 +62,11 @@ export const PARITY_SCREENS: ParityScreen[] = [
   ...pair('board-collecting', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'collecting' } }),
   ...pair('board-discussing', { viewer: 'facilitator', size: [1100, 760], route: SESSION, board: { phase: 'discussing' } }),
   ...pair('board-closed', { viewer: 'facilitator', size: [1100, 720], route: SESSION, board: { phase: 'closed' } }),
-  ...pair('board-share', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.share-btn' }] }),
+  ...pair('board-share', {
+    viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.share-btn' }],
+    pending: 'The Share popover has the "Present this board" row, which the design project these references came from does not draw yet. '
+      + 'The design artifact has it (SharePopover). Re-render board-share-* from the design project that holds the row, then remove this.',
+  }),
   ...pair('board-actions', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: 'button[aria-label="Action items"]' }] }),
   ...pair('board-menu', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.avatar-menu-btn' }] }),
   { viewer: 'facilitator', name: 'board-cs-brand', theme: 'light', brand: 'cs', size: [1100, 760], route: SESSION, board: { phase: 'discussing' } },

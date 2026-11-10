@@ -96,8 +96,16 @@ export class NotificationDock extends LitElement {
 
   /** Queue a notification. A kind already on screen is never stacked twice. */
   show(item: NotificationItem): void {
+    if (suppressed) return
     if (this.items.some((i) => i.kind === item.kind)) return
     this.items = [...this.items, item]
+  }
+
+  /** Drop every card on screen, telling each owner it closed. */
+  clear(): void {
+    const dropped = this.items
+    this.items = []
+    dropped.forEach((item) => item.onClose?.())
   }
 
   private close(kind: NotificationKind): void {
@@ -144,6 +152,8 @@ export class NotificationDock extends LitElement {
 }
 
 let dockEl: NotificationDock | null = null
+// While presenting, nothing the app raises on its own may reach the shared screen.
+let suppressed = false
 
 function dock(): NotificationDock {
   if (!dockEl || !dockEl.isConnected) {
@@ -164,6 +174,12 @@ export interface FeedbackNotificationOptions {
  * dock is created on first use and reused after that.
  */
 export const notifications = {
+  /** On: drop what is docked and ignore new cards (not queued). Off: cards show again. */
+  suppress(on: boolean): void {
+    suppressed = on
+    if (on && dockEl?.isConnected) dockEl.clear()
+  },
+
   consent(onClose?: () => void): void {
     dock().show({ kind: 'consent', onClose })
   },
