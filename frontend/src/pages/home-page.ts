@@ -8,12 +8,14 @@ import { getBrand, clearBrand, bacon } from '../theme'
 import { faIconStyles, designIcon } from '../icons'
 import '../components/session-history'
 import '../components/theme-menu'
+import type { ColumnColor } from '../column-colors'
 
-const COLUMN_TEMPLATES = [
-  { label: 'Standard', columns: ['Went Well', 'To Improve', 'Action Items'] },
-  { label: 'Mad · Sad · Glad', columns: ['Mad', 'Sad', 'Glad'] },
-  { label: 'Start · Stop · Continue', columns: ['Start', 'Stop', 'Continue'] },
-  { label: '4Ls', columns: ['Liked', 'Learned', 'Lacked', 'Longed for'] },
+// Each template's colours follow what its columns mean (Mad is red, Glad green).
+const COLUMN_TEMPLATES: Array<{ label: string; columns: string[]; colors: ColumnColor[] }> = [
+  { label: 'Standard', columns: ['Went Well', 'To Improve', 'Action Items'], colors: ['green', 'amber', 'blue'] },
+  { label: 'Mad · Sad · Glad', columns: ['Mad', 'Sad', 'Glad'], colors: ['red', 'blue', 'green'] },
+  { label: 'Start · Stop · Continue', columns: ['Start', 'Stop', 'Continue'], colors: ['green', 'red', 'blue'] },
+  { label: '4Ls', columns: ['Liked', 'Learned', 'Lacked', 'Longed for'], colors: ['green', 'blue', 'amber', 'purple'] },
 ]
 
 @customElement('home-page')
@@ -339,8 +341,9 @@ export class HomePage extends LitElement {
     this.error = ''
 
     try {
-      const columns = COLUMN_TEMPLATES[this.selectedTemplate].columns
-      const session = await api.createSession(name, yourName, columns, this.reactionsEnabled, this.openFacilitator, this.maxVotesPerParticipant)
+      const { columns, colors } = COLUMN_TEMPLATES[this.selectedTemplate]
+      const columnColors = Object.fromEntries(columns.map((column, i) => [column, colors[i]]))
+      const session = await api.createSession(name, yourName, columns, this.reactionsEnabled, this.openFacilitator, this.maxVotesPerParticipant, columnColors)
       storage.setFacilitatorToken(session.id, session.facilitator_token)
       storage.setName(session.id, yourName)
       storage.addOrUpdateHistory({

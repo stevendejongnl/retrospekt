@@ -10,12 +10,11 @@ import { storage } from '../storage'
 import {
   faIconStyles,
 } from '../icons'
+import { COLUMN_COLORS, columnColorVar, resolveColumnColor } from '../column-colors'
+import type { ColumnColor } from '../column-colors'
 import './retro-column'
 import './retro-timer'
 
-// Columns take the design's three colours in order and wrap after the third.
-const COLUMN_COLOUR_COUNT = 3
-const columnAccent = (index: number): string => `var(--retro-col-${(index % COLUMN_COLOUR_COUNT) + 1})`
 
 @customElement('retro-board')
 export class RetroBoard extends LitElement {
@@ -535,7 +534,15 @@ export class RetroBoard extends LitElement {
     let name = 'New column'
     let n = 2
     while (existing.has(name)) name = `New column ${n++}`
-    await api.addColumn(this.session.id, name, this.facilitatorToken, this.participantName)
+    // A new column takes the first colour no other column uses, so it stands apart.
+    const used = new Set(this.session.columns.map((c, i) => resolveColumnColor(this.session.column_colors, c, i)))
+    const color = COLUMN_COLORS.find((c) => !used.has(c))
+    await api.addColumn(this.session.id, name, this.facilitatorToken, this.participantName, color)
+  }
+
+  private async onSetColumnColor(e: CustomEvent): Promise<void> {
+    const { column, color } = e.detail as { column: string; color: ColumnColor }
+    await api.setColumnColor(this.session.id, column, color, this.facilitatorToken, this.participantName)
   }
 
   private async onRenameColumn(e: CustomEvent): Promise<void> {
@@ -738,6 +745,7 @@ export class RetroBoard extends LitElement {
         @rename-column=${this.onRenameColumn}
         @remove-column=${this.onRemoveColumn}
         @sort-column=${this.onSortColumn}
+        @set-column-color=${this.onSetColumnColor}
       >
         ${session.columns.map(
           (col, index) => html`
@@ -747,7 +755,8 @@ export class RetroBoard extends LitElement {
               .participantName=${this.participantName}
               .participantNames=${participantNames}
               .phase=${session.phase}
-              .accent=${columnAccent(index)}
+              .accent=${columnColorVar(resolveColumnColor(session.column_colors, col, index))}
+              .color=${resolveColumnColor(session.column_colors, col, index)}
               .participantColorMap=${this.participantColorMap}
               ?isFacilitator=${this.isFacilitator}
               .reactionsEnabled=${session.reactions_enabled}

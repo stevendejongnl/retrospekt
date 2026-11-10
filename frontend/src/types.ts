@@ -1,3 +1,4 @@
+import type { ColumnColor } from './column-colors'
 export type SessionPhase = 'collecting' | 'discussing' | 'closed'
 
 export interface Vote {
@@ -46,6 +47,7 @@ export interface Session {
   name: string
   columns: string[]
   column_sorts: Record<string, boolean>
+  column_colors?: Record<string, ColumnColor>
   phase: SessionPhase
   participants: Participant[]
   cards: Card[]

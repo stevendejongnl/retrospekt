@@ -11,6 +11,7 @@ from ..models.requests import (
     CreateSessionRequest,
     JoinSessionRequest,
     RenameColumnRequest,
+    SetColumnColorRequest,
     SetColumnSortRequest,
     SetPhaseRequest,
     SetTimerDurationRequest,
@@ -43,13 +44,15 @@ async def create_session(
     body: CreateSessionRequest,
     repo: SessionRepository = Depends(get_repo),
 ) -> dict:
+    columns = body.columns or Session.model_fields["columns"].default
     session = Session(
         id=str(uuid4()),
         name=body.name,
         reactions_enabled=body.reactions_enabled,
         open_facilitator=body.open_facilitator,
         max_votes_per_participant=body.max_votes_per_participant,
-        columns=body.columns or Session.model_fields["columns"].default,
+        columns=columns,
+        column_colors={c: v for c, v in (body.column_colors or {}).items() if c in columns},
     )
     # Seed the creator as first participant
     session.participants.append(Participant(name=body.participant_name))
@@ -157,6 +160,8 @@ async def add_column(
         raise HTTPException(status_code=409, detail="Column already exists")
 
     session.columns.append(body.name)
+    if body.color:
+        session.column_colors[body.name] = body.color
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
     return _public(session)
@@ -187,6 +192,8 @@ async def rename_column(
     for card in session.cards:
         if card.column == column_name:
             card.column = body.name
+    if column_name in session.column_colors:
+        session.column_colors[body.name] = session.column_colors.pop(column_name)
 
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
@@ -211,9 +218,34 @@ async def remove_column(
         raise HTTPException(status_code=404, detail="Column not found")
 
     session.columns.remove(column_name)
+    session.column_colors.pop(column_name, None)
     session.cards = [c for c in session.cards if c.column != column_name]
     session = await repo.update(session)
     await sse_manager.broadcast(session_id, _public(session))
+
+
+@router.patch("/{session_id}/columns/{column_name}/color")
+async def set_column_color(
+    session_id: str,
+    column_name: str,
+    body: SetColumnColorRequest,
+    x_facilitator_token: str | None = Header(default=None),
+    x_participant_name: str | None = Header(default=None),
+    repo: SessionRepository = Depends(get_repo),
+) -> dict:
+    session = await repo.get_by_id(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    _check_facilitator_auth(session, x_facilitator_token, x_participant_name)
+    if session.phase == SessionPhase.CLOSED:
+        raise HTTPException(status_code=409, detail="Column colour cannot be changed in a closed session")
+    if column_name not in session.columns:
+        raise HTTPException(status_code=404, detail="Column not found")
+
+    session.column_colors[column_name] = body.color
+    session = await repo.update(session)
+    await sse_manager.broadcast(session_id, _public(session))
+    return _public(session)
 
 
 @router.patch("/{session_id}/columns/{column_name}/sort")

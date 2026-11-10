@@ -4,6 +4,8 @@ import type { TemplateResult } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Card, SessionPhase } from '../types'
+import { COLUMN_COLORS, columnColorVar } from '../column-colors'
+import type { ColumnColor } from '../column-colors'
 import { faIconStyles, iconLayerGroup, iconThumbsUp } from '../icons'
 import './retro-card'
 import { getDraggedCardInfo } from './retro-card'
@@ -25,6 +27,7 @@ export class RetroColumn extends LitElement {
   @property({ type: String }) participantName = ''
   @property({ type: String }) phase: SessionPhase = 'collecting'
   @property({ type: String }) accent = '#e85d04'
+  @property({ type: String }) color: ColumnColor | '' = ''
   @property({ type: Boolean }) isFacilitator = false
   @property({ type: Object }) participantColorMap: Record<string, string> = {}
   @property({ type: Array }) participantNames: string[] = []
@@ -34,6 +37,7 @@ export class RetroColumn extends LitElement {
   @state() private newCardText = ''
   @state() private isAdding = false
   @state() private editingTitle = false
+  @state() private pickingColor = false
   @state() private editTitleValue = ''
   @state() private expandedGroupId: string | null = null
   @state() private dragOverGroupId: string | null = null
@@ -79,6 +83,29 @@ export class RetroColumn extends LitElement {
       display: flex;
       align-items: center;
       gap: 6px;
+    }
+    .count-badge[role='button'] {
+      cursor: pointer;
+    }
+    .color-picker {
+      display: flex;
+      gap: 8px;
+      padding: 0 2px 10px;
+    }
+    .color-swatch {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+    .color-swatch[aria-checked='true'] {
+      border-color: var(--retro-text-primary);
+    }
+    .color-swatch:focus-visible {
+      outline: 2px solid var(--retro-accent);
+      outline-offset: 2px;
     }
     .count-badge {
       font-size: 11px;
@@ -483,6 +510,50 @@ export class RetroColumn extends LitElement {
     if (e.key === 'Escape') this.editingTitle = false
   }
 
+  private get canPickColor(): boolean {
+    return this.isFacilitator && this.phase !== 'closed'
+  }
+
+  private toggleColorPicker(): void {
+    if (this.canPickColor) this.pickingColor = !this.pickingColor
+  }
+
+  private onBadgeKeydown(e: KeyboardEvent): void {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      this.toggleColorPicker()
+    }
+  }
+
+  private pickColor(color: ColumnColor): void {
+    this.pickingColor = false
+    if (color === this.color) return
+    this.dispatchEvent(
+      new CustomEvent('set-column-color', {
+        detail: { column: this.title, color },
+        bubbles: true,
+        composed: true,
+      }),
+    )
+  }
+
+  private renderColorPicker(): TemplateResult | string {
+    if (!this.pickingColor || !this.canPickColor) return ''
+    return html`<div class="color-picker" role="radiogroup" aria-label="Column colour">
+      ${COLUMN_COLORS.map(
+        (color) => html`<button
+          class="color-swatch"
+          role="radio"
+          data-color=${color}
+          aria-label=${color}
+          aria-checked=${color === this.color ? 'true' : 'false'}
+          style="background:${columnColorVar(color)}"
+          @click=${() => this.pickColor(color)}
+        ></button>`,
+      )}
+    </div>`
+  }
+
   private onRemoveColumn(): void {
     this.dispatchEvent(
       new CustomEvent('remove-column', {
@@ -690,9 +761,22 @@ export class RetroColumn extends LitElement {
             ${this.isFacilitator && this.phase === 'collecting'
               ? html`<button class="delete-col-btn" @click=${this.onRemoveColumn} title="Remove column">×</button>`
               : ''}
-            <span class="count-badge" style="background:${this.accent}">${this.visibleCards.length}</span>
+            ${this.canPickColor
+              ? html`<span
+                  class="count-badge"
+                  role="button"
+                  tabindex="0"
+                  title="Change colour"
+                  aria-label="Change column colour"
+                  aria-expanded=${this.pickingColor ? 'true' : 'false'}
+                  style="background:${this.accent}"
+                  @click=${this.toggleColorPicker}
+                  @keydown=${this.onBadgeKeydown}
+                >${this.visibleCards.length}</span>`
+              : html`<span class="count-badge" style="background:${this.accent}">${this.visibleCards.length}</span>`}
           </div>
         </div>
+        ${this.renderColorPicker()}
 
         <div class="cards-list ${items.length === 0 ? 'empty' : ''}">
           ${items.map((item) =>

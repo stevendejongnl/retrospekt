@@ -2,6 +2,7 @@ import json
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
+from typing import Literal
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
@@ -13,6 +14,12 @@ from pydantic import BaseModel, Field, field_validator
 REACTION_EMOJI: frozenset[str] = frozenset(
     json.loads((Path(__file__).parent.parent / "data" / "emoji.json").read_text())
 )
+
+
+# Colour keys a column can take; the frontend maps each to a --retro-col-N token.
+# The first three are the design's original column colours, in the order columns
+# get them when none was chosen.
+ColumnColor = Literal["green", "amber", "blue", "red", "purple", "pink"]
 
 
 class SessionPhase(StrEnum):
@@ -86,6 +93,7 @@ class Session(BaseModel):
     notes: list[Note] = []
     timer: TimerState | None = None
     column_sorts: dict[str, bool] = Field(default_factory=dict)
+    column_colors: dict[str, ColumnColor] = Field(default_factory=dict)
     reactions_enabled: bool = True
     open_facilitator: bool = False
     max_votes_per_participant: int | None = None

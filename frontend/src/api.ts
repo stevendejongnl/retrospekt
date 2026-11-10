@@ -1,5 +1,6 @@
 import type { AdminStats, Card, CreateSessionResponse, Feedback, GifResult, Note, PublicStats, Session } from './types'
 import { tagManager } from './analytics'
+import type { ColumnColor } from './column-colors'
 
 const BASE = '/api/v1'
 
@@ -27,10 +28,10 @@ export function createApi(fetchFn: typeof fetch = fetch) {
   }
 
   return {
-    createSession: (name: string, participantName: string, columns?: string[], reactionsEnabled = true, openFacilitator = false, maxVotesPerParticipant: number | null = null) =>
+    createSession: (name: string, participantName: string, columns?: string[], reactionsEnabled = true, openFacilitator = false, maxVotesPerParticipant: number | null = null, columnColors?: Record<string, ColumnColor>) =>
       request<CreateSessionResponse>('/sessions', {
         method: 'POST',
-        body: JSON.stringify({ name, participant_name: participantName, columns, reactions_enabled: reactionsEnabled, open_facilitator: openFacilitator, max_votes_per_participant: maxVotesPerParticipant }),
+        body: JSON.stringify({ name, participant_name: participantName, columns, column_colors: columnColors, reactions_enabled: reactionsEnabled, open_facilitator: openFacilitator, max_votes_per_participant: maxVotesPerParticipant }),
       }, { category: 'Session', action: 'create' }),
 
     getSession: (id: string) => request<Session>(`/sessions/${id}`),
@@ -124,10 +125,10 @@ export function createApi(fetchFn: typeof fetch = fetch) {
         headers: { 'X-Participant-Name': participantName },
       }, { category: 'Card', action: 'publish_all', name: column }),
 
-    addColumn: (sessionId: string, name: string, facilitatorToken: string, participantName?: string) =>
+    addColumn: (sessionId: string, name: string, facilitatorToken: string, participantName?: string, color?: ColumnColor) =>
       request<Session>(`/sessions/${sessionId}/columns`, {
         method: 'POST',
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, color }),
         headers: {
           'X-Facilitator-Token': facilitatorToken,
           ...(participantName && { 'X-Participant-Name': participantName }),
@@ -162,6 +163,16 @@ export function createApi(fetchFn: typeof fetch = fetch) {
           ...(participantName && { 'X-Participant-Name': participantName }),
         },
       }, { category: 'Column', action: 'sort_toggle', name: sortByVotes ? 'votes' : 'default' }),
+
+    setColumnColor: (sessionId: string, columnName: string, color: ColumnColor, facilitatorToken: string, participantName?: string) =>
+      request<Session>(`/sessions/${sessionId}/columns/${encodeURIComponent(columnName)}/color`, {
+        method: 'PATCH',
+        body: JSON.stringify({ color }),
+        headers: {
+          'X-Facilitator-Token': facilitatorToken,
+          ...(participantName && { 'X-Participant-Name': participantName }),
+        },
+      }, { category: 'Column', action: 'color', name: color }),
 
     addReaction: (sessionId: string, cardId: string, emoji: string, participantName: string) =>
       request<Card>(`/sessions/${sessionId}/cards/${cardId}/reactions`, {

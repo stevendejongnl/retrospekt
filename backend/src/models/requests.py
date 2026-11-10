@@ -2,6 +2,8 @@ from typing import Any
 
 from pydantic import BaseModel, field_validator
 
+from .session import ColumnColor
+
 
 def reject_half_emoji(value: Any) -> Any:
     """Raise on a lone UTF-16 surrogate (half an emoji) anywhere in the value.
@@ -32,6 +34,7 @@ class CreateSessionRequest(RequestModel):
     name: str
     participant_name: str = "Facilitator"
     columns: list[str] | None = None
+    column_colors: dict[str, ColumnColor] | None = None
     reactions_enabled: bool = True
     open_facilitator: bool = False
     max_votes_per_participant: int | None = None
@@ -57,6 +60,11 @@ class PublishAllRequest(RequestModel):
 
 class AddColumnRequest(RequestModel):
     name: str
+    color: ColumnColor | None = None
+
+
+class SetColumnColorRequest(RequestModel):
+    color: ColumnColor
 
 
 class RenameColumnRequest(RequestModel):

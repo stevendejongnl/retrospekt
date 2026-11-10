@@ -21,7 +21,7 @@ A simple, self-hosted retrospective board.
 - UUID-based sessions — no accounts, no login
 - Share a URL to collaborate in real time
 - Column templates: Standard, Mad·Sad·Glad, Start·Stop·Continue, 4Ls
-- Column management: add, rename, and delete columns (facilitator, collecting phase only)
+- Column management: add, rename, and delete columns (facilitator, collecting phase only); each column has a colour the facilitator can change (templates pick fitting ones, e.g. Mad red, Glad green)
 - Per-session name (remembered in localStorage; rename anytime by clicking it), guarded against picking a name already taken by another participant in the same session
 - Color-coded participants and cards — 10-color palette, consistent per participant
 - Vote on cards (idempotent, one vote per participant per card)
@@ -85,6 +85,7 @@ GET    /api/v1/sessions/{id}/stream                             SSE stream
 POST   /api/v1/sessions/{id}/columns                            add column (facilitator, collecting only)
 PATCH  /api/v1/sessions/{id}/columns/{name}                     rename column (facilitator, collecting only)
 DELETE /api/v1/sessions/{id}/columns/{name}                     remove column + its cards (facilitator, collecting only)
+PATCH  /api/v1/sessions/{id}/columns/{name}/color               set column colour: green, amber, blue, red, purple, pink (facilitator, not closed)
 
 POST   /api/v1/sessions/{id}/cards                              add card (collecting phase)
 DELETE /api/v1/sessions/{id}/cards/{card_id}                    delete own card
