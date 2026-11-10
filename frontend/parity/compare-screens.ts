@@ -40,6 +40,7 @@ const SERVER_START_TIMEOUT_MS = 90_000
 const SETTLE_MS = 1500
 
 const FACILITATOR_TOKEN = 'parity-facilitator-token'
+const CHANGELOG_FIXTURE = readFileSync(join(PARITY_DIRECTORY, 'changelog-fixture.json'), 'utf8')
 
 function storageFor(screen: ParityScreen): Record<string, string> {
   const entries: Record<string, string> = { retro_theme: screen.theme }
@@ -67,6 +68,10 @@ async function answerApi(page: Page, screen: ParityScreen): Promise<void> {
   await page.route('**/*', (route: Route) => {
     const url = new URL(route.request().url())
     if (url.hostname !== '127.0.0.1') return route.abort() // nothing leaves this machine
+    // the app's own release notes are replaced by the ones the design shows, so the screen does not change with every release
+    if (url.pathname.endsWith('/generated/changelog.ts')) {
+      return route.fulfill({ contentType: 'text/javascript', body: `export const CHANGELOG = ${CHANGELOG_FIXTURE}` })
+    }
     if (!url.pathname.startsWith('/api/v1/')) return route.continue()
     const path = url.pathname.slice('/api/v1'.length)
     if (path === `/sessions/${FIXTURE_SESSION_ID}/stream`) {

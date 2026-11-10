@@ -109,8 +109,12 @@ test.describe('stats-page stat cards', () => {
     await expect(page.locator('stats-page').getByText('42').first()).toBeVisible()
   })
 
-  test('renders active sessions', async ({ page }) => {
-    await expect(page.locator('stats-page').getByText('15', { exact: true })).toBeVisible()
+  test('renders total reactions', async ({ page }) => {
+    await expect(page.locator('stats-page .stat-card', { hasText: 'Reactions' }).locator('.stat-value')).toHaveText('45')
+  })
+
+  test('renders the average feedback rating', async ({ page }) => {
+    await expect(page.locator('stats-page .stat-card', { hasText: 'Feedback' }).locator('.stat-value')).toHaveText('4.0')
   })
 
   test('renders total cards', async ({ page }) => {
@@ -135,9 +139,8 @@ test.describe('stats-page charts', () => {
     await expect(svg).toBeVisible()
   })
 
-  test('shows bar chart svg element', async ({ page }) => {
-    const svg = page.locator('stats-page').locator('#bar-chart')
-    await expect(svg).toBeVisible()
+  test('shows one column per day', async ({ page }) => {
+    await expect(page.locator('stats-page #bar-chart .column-bar')).toHaveCount(3)
   })
 })
 
@@ -158,9 +161,10 @@ test.describe('stats-page charts with empty data', () => {
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(emptyStats) }),
     )
     await page.goto('/stats')
-    // SVG elements still exist, just empty
+    // the charts still exist, just empty
     await expect(page.locator('stats-page').locator('#donut-chart')).toBeVisible()
     await expect(page.locator('stats-page').locator('#bar-chart')).toBeVisible()
+    await expect(page.locator('stats-page #bar-chart .column-bar')).toHaveCount(0)
   })
 
   test('renders donut chart with unknown phase using fallback color', async ({ page }) => {
@@ -172,10 +176,10 @@ test.describe('stats-page charts with empty data', () => {
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(unknownPhaseStats) }),
     )
     await page.goto('/stats')
-    // Donut chart should still render with the fallback grey color
+    // Donut chart should still render, with the muted fallback colour
     await expect(page.locator('stats-page').locator('#donut-chart')).toBeVisible()
     const path = page.locator('stats-page').locator('#donut-chart path')
-    await expect(path).toHaveAttribute('fill', '#9ca3af')
+    await expect(path).toHaveAttribute('style', /var\(--retro-text-muted\)/)
   })
 })
 
@@ -184,14 +188,13 @@ test.describe('stats-page charts with empty data', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('stats-page public analytics', () => {
-  test('shows Analytics section without any unlock step', async ({ page }) => {
+  test('shows every panel without any unlock step', async ({ page }) => {
     await mockStats(page)
     await page.goto('/stats')
     await expect(page.locator('stats-page .stat-value').first()).toBeVisible()
-    await expect(page.locator('stats-page').getByText(/Reaction Breakdown/i)).toBeVisible()
-    await expect(page.locator('stats-page').getByText(/Cards per Column/i)).toBeVisible()
-    await expect(page.locator('stats-page').getByText(/Engagement Funnel/i)).toBeVisible()
-    await expect(page.locator('stats-page').getByText(/Session Lifetime/i)).toBeVisible()
+    for (const title of ['Sessions by phase', 'Sessions per day', 'Reactions', 'Cards per column', 'Engagement funnel', 'Session lifetime', 'Feedback ratings']) {
+      await expect(page.locator('stats-page .eyebrow', { hasText: title })).toBeVisible()
+    }
   })
 
   test('no password field is rendered anywhere', async ({ page }) => {
@@ -201,72 +204,74 @@ test.describe('stats-page public analytics', () => {
     await expect(page.locator('stats-page').getByPlaceholder('Admin password')).toHaveCount(0)
   })
 
-  test('shows reaction breakdown chart and raw chips', async ({ page }) => {
+  test('links to the admin page', async ({ page }) => {
     await mockStats(page)
     await page.goto('/stats')
-    await expect(page.locator('stats-page').locator('#reaction-chart')).toBeVisible()
-    await expect(page.locator('stats-page').getByText('❤️ 20')).toBeVisible()
-    await expect(page.locator('stats-page').getByText('😂 15')).toBeVisible()
+    await page.locator('stats-page').getByRole('link', { name: /Admin/ }).click()
+    await expect(page).toHaveURL(/\/admin$/)
   })
 
-  test('shows cards per column list', async ({ page }) => {
+  test('shows the reaction bars, named when the emoji is one of ours', async ({ page }) => {
     await mockStats(page)
     await page.goto('/stats')
-    await expect(page.locator('stats-page .column-item', { hasText: 'Went Well' })).toBeVisible()
-    await expect(page.locator('stats-page .column-item', { hasText: 'To Improve' })).toBeVisible()
+    const chart = page.locator('stats-page #reaction-chart')
+    await expect(chart).toBeVisible()
+    await expect(chart.locator('.hbar-label', { hasText: '❤️ Heart' })).toBeVisible()
+    await expect(chart.locator('.hbar-label', { hasText: '😂' })).toBeVisible()
+    await expect(chart.locator('.hbar-value').first()).toHaveText('20')
   })
 
-  test('shows engagement funnel steps', async ({ page }) => {
+  test('shows cards per column', async ({ page }) => {
     await mockStats(page)
     await page.goto('/stats')
-    await expect(page.locator('stats-page .funnel-label', { hasText: 'Created' })).toBeVisible()
-    await expect(page.locator('stats-page .funnel-label', { hasText: 'Has cards' })).toBeVisible()
-    await expect(page.locator('stats-page .funnel-label', { hasText: 'Has votes' })).toBeVisible()
-    await expect(page.locator('stats-page .funnel-label', { hasText: 'Closed' })).toBeVisible()
+    await expect(page.locator('stats-page .hbar', { hasText: 'Went Well' }).locator('.hbar-value')).toHaveText('50')
+    await expect(page.locator('stats-page .hbar', { hasText: 'To Improve' }).locator('.hbar-value')).toHaveText('40')
   })
 
-  test('shows session lifetime distribution chart with 4 bars', async ({ page }) => {
+  test('shows the engagement funnel steps', async ({ page }) => {
     await mockStats(page)
     await page.goto('/stats')
-    const svg = page.locator('stats-page').locator('#lifetime-chart')
-    await expect(svg).toBeVisible()
-    const rects = page.locator('stats-page').locator('#lifetime-chart rect')
-    await expect(rects).toHaveCount(4)
+    for (const label of ['Created', 'Added cards', 'Voted', 'Closed']) {
+      await expect(page.locator('stats-page .hbar-label', { hasText: label })).toBeVisible()
+    }
   })
 
-  test('shows em dash for null avg time to close', async ({ page }) => {
-    const nullStats = {
+  test('shows the average open session time in days', async ({ page }) => {
+    await mockStats(page)
+    await page.goto('/stats')
+    // 14.5 hours open on average
+    await expect(page.locator('stats-page .lifetime-value')).toHaveText('0.6 days')
+  })
+
+  test('shows an en dash when no session has been open yet', async ({ page }) => {
+    const none = {
       ...MOCK_PUBLIC_STATS,
-      session_lifetime: {
-        ...MOCK_PUBLIC_STATS.session_lifetime,
-        avg_time_to_close_hours: null,
-      },
+      session_lifetime: { ...MOCK_PUBLIC_STATS.session_lifetime, avg_duration: { open_avg_hours: null, closed_avg_hours: null } },
     }
     await page.route('/api/v1/stats', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(nullStats) }),
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(none) }),
     )
     await page.goto('/stats')
-    await expect(page.locator('stats-page .stat-value').first()).toBeVisible()
-    // null → rendered as em dash "–" (exact to avoid matching "1–7 days" chart labels)
-    await expect(page.locator('stats-page').getByText('–', { exact: true })).toBeVisible()
+    await expect(page.locator('stats-page .lifetime-value')).toHaveText('–')
   })
 
-  test('shows feedback ratings without comment list', async ({ page }) => {
+  test('shows the feedback ratings, five stars first, without comments', async ({ page }) => {
     await mockStats(page)
     await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText(/User Feedback/i)).toBeVisible()
-    await expect(page.locator('stats-page').getByText('4.0')).toBeVisible()
-    await expect(page.locator('stats-page #feedback-rating-chart')).toBeVisible()
+    const chart = page.locator('stats-page #feedback-rating-chart')
+    await expect(chart).toBeVisible()
+    await expect(chart.locator('.hbar-label').first()).toHaveText('★★★★★')
+    await expect(chart.locator('.hbar-label')).toHaveCount(5)
     await expect(page.locator('stats-page .feedback-entry')).toHaveCount(0)
   })
 
-  test('feedback section shows "No feedback submitted yet" when total is 0', async ({ page }) => {
+  test('shows an en dash instead of the average rating when nobody has rated', async ({ page }) => {
     const noFeedbackStats = { ...MOCK_PUBLIC_STATS, feedback_total: 0, feedback_avg_rating: null, feedback_by_rating: [] }
     await page.route('/api/v1/stats', (route) =>
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(noFeedbackStats) }),
     )
     await page.goto('/stats')
-    await expect(page.locator('stats-page').getByText(/No feedback submitted yet/i)).toBeVisible()
-    await expect(page.locator('stats-page #feedback-rating-chart')).not.toBeVisible()
+    await expect(page.locator('stats-page .stat-card', { hasText: 'Feedback' }).locator('.stat-value')).toHaveText('–')
+    await expect(page.locator('stats-page #feedback-rating-chart .hbar-value').first()).toHaveText('0')
   })
 })

@@ -1,6 +1,7 @@
 import { LitElement, css, html, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
+import { baseStyles } from '../styles'
 import type { FeedbackStats } from '../types'
 
 @customElement('feedback-panel')
@@ -22,17 +23,19 @@ export class FeedbackPanel extends LitElement {
     const visibleEntries = this.feedbackTab === 'new' ? newEntries : resolvedEntries
 
     return html`
-      <div class="feedback-block chart-block">
-        <h3 class="chart-title">Feedback Comments</h3>
+      <section class="feedback-block">
+        <div class="eyebrow">Feedback comments</div>
 
         ${feedback.recent.length > 0 ? html`
           <div class="feedback-tabs">
             <button
               class="feedback-tab-btn ${this.feedbackTab === 'new' ? 'active' : ''}"
+              aria-pressed=${this.feedbackTab === 'new'}
               @click=${() => { this.feedbackTab = 'new' }}
             >New (${newEntries.length})</button>
             <button
               class="feedback-tab-btn ${this.feedbackTab === 'resolved' ? 'active' : ''}"
+              aria-pressed=${this.feedbackTab === 'resolved'}
               @click=${() => { this.feedbackTab = 'resolved' }}
             >Resolved (${resolvedEntries.length})</button>
           </div>
@@ -42,7 +45,7 @@ export class FeedbackPanel extends LitElement {
               ${visibleEntries.map((entry) => html`
                 <div class="feedback-entry">
                   <div class="feedback-entry-meta">
-                    <span class="feedback-stars">${'★'.repeat(entry.rating)}${'☆'.repeat(5 - entry.rating)}</span>
+                    <span class="feedback-stars" aria-label="${entry.rating} of 5 stars">${'★'.repeat(entry.rating)}${'☆'.repeat(5 - entry.rating)}</span>
                     ${entry.participant_name ? html`<span class="feedback-participant">${entry.participant_name}</span>` : nothing}
                     <span class="feedback-entry-date">${new Date(entry.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
                     ${entry.app_version ? html`<span class="feedback-version">${entry.app_version}</span>` : nothing}
@@ -54,157 +57,146 @@ export class FeedbackPanel extends LitElement {
                           e.preventDefault()
                           window.router.navigate(`/changelog#v${entry.fixed_in_version}`)
                         }}
-                      >✓ fixed in ${entry.fixed_in_version}</a>
+                      >fixed in ${entry.fixed_in_version}</a>
                     ` : nothing}
                     ${entry.status === 'ignored' ? html`<span class="feedback-ignored-badge">ignored</span>` : nothing}
                   </div>
-                  <p class="feedback-entry-comment">
-                    ${entry.comment || html`<span class="muted">—</span>`}
-                  </p>
-                  ${entry.status === 'new' ? html`
-                    <button class="feedback-ignore-btn" @click=${() => this._onIgnoreClick(entry.id)}>Ignore</button>
-                  ` : nothing}
+                  <div class="feedback-entry-body">
+                    <p class="feedback-entry-comment">${entry.comment || '—'}</p>
+                    ${entry.status === 'new' ? html`
+                      <button class="feedback-ignore-btn" @click=${() => this._onIgnoreClick(entry.id)}>Ignore</button>
+                    ` : nothing}
+                  </div>
                 </div>
               `)}
             </div>
-          ` : html`<p class="muted" style="margin-top: 8px;">Nothing here.</p>`}
-        ` : html`<p class="muted" style="margin-top: 8px;">No feedback submitted yet.</p>`}
-      </div>
+          ` : html`<p class="muted">Nothing here.</p>`}
+        ` : html`<p class="muted">No feedback submitted yet.</p>`}
+      </section>
     `
   }
 
-  static styles = css`
+  static styles = [baseStyles, css`
     :host {
       display: block;
     }
-
-    .chart-block {
-      background: var(--retro-glass-bg-medium);
-      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      border: 1px solid var(--retro-glass-border);
-      border-radius: var(--retro-radius-md);
+    .feedback-block {
       padding: 18px;
+      background: var(--retro-bg-surface);
+      border: 1px solid var(--retro-border-default);
+      border-radius: var(--retro-radius-md);
       box-shadow: var(--retro-glass-shadow);
     }
-
-    .chart-title {
-      font-size: 13px;
+    .eyebrow {
+      margin-bottom: 12px;
+      font-size: 10px;
       font-weight: 700;
-      color: var(--retro-text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin: 0 0 12px;
-    }
-
-    .muted {
+      letter-spacing: 0.6px;
       color: var(--retro-text-muted);
-      font-size: 14px;
-      margin: 0;
     }
-
+    .muted {
+      font-size: 13px;
+      color: var(--retro-text-secondary);
+    }
     .feedback-tabs {
       display: flex;
       gap: 6px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
-
     .feedback-tab-btn {
-      border: 1px solid var(--retro-border-subtle);
-      border-radius: var(--retro-radius-sm);
-      background: transparent;
-      color: var(--retro-text-secondary);
+      padding: 5px 14px;
+      border-radius: 999px;
       font-size: 12px;
-      padding: 4px 10px;
+      font-weight: 500;
+      font-family: inherit;
       cursor: pointer;
+      background: var(--retro-bg-subtle);
+      color: var(--retro-text-secondary);
+      border: 1px solid var(--retro-border-default);
     }
-
     .feedback-tab-btn.active {
-      background: var(--retro-accent);
-      color: white;
-      border-color: var(--retro-accent);
+      font-weight: 600;
+      background: var(--retro-accent-tint);
+      color: var(--retro-accent-ink);
+      border-color: color-mix(in srgb, var(--retro-accent) 50%, transparent);
     }
-
     .feedback-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
-
     .feedback-entry {
-      border: 1px solid var(--retro-border-subtle);
-      border-radius: var(--retro-radius-sm);
       padding: 10px 12px;
+      border-radius: var(--retro-radius-md);
       background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
     }
-
     .feedback-entry-meta {
       display: flex;
       align-items: center;
       gap: 8px;
       margin-bottom: 4px;
-      flex-wrap: wrap;
-    }
-
-    .feedback-stars {
-      color: var(--retro-accent);
-      white-space: nowrap;
-      font-size: 13px;
-    }
-
-    .feedback-entry-date {
+      font-size: 11px;
       color: var(--retro-text-muted);
-      font-size: 11px;
     }
-
-    .feedback-participant {
-      color: var(--retro-text-primary);
-      font-size: 11px;
-      font-weight: 600;
+    .feedback-stars {
+      color: var(--retro-accent-ink);
+      letter-spacing: 1px;
     }
-
     .feedback-version {
-      color: var(--retro-text-disabled);
-      font-size: 11px;
+      font-family: var(--retro-font-mono);
     }
-
+    .feedback-entry-body {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
     .feedback-entry-comment {
-      margin: 0;
       font-size: 13px;
-      color: var(--retro-text-secondary);
-      line-height: 1.4;
-      white-space: pre-wrap;
-      word-break: break-word;
+      line-height: 1.5;
+      color: var(--retro-text-primary);
     }
-
-    .feedback-fixed-badge {
-      color: #059669;
+    .feedback-fixed-badge,
+    .feedback-ignored-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--retro-radius-md);
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 500;
       text-decoration: none;
-      cursor: pointer;
+    }
+    .feedback-fixed-badge {
+      background: var(--retro-accent-tint);
+      color: var(--retro-accent-ink);
+      border: 1px solid color-mix(in srgb, var(--retro-accent) 35%, transparent);
     }
     .feedback-fixed-badge:hover {
       text-decoration: underline;
     }
-
     .feedback-ignored-badge {
-      color: var(--retro-text-disabled);
-      font-size: 11px;
-      font-style: italic;
-    }
-
-    .feedback-ignore-btn {
-      margin-top: 6px;
-      border: 1px solid var(--retro-border-subtle);
-      border-radius: var(--retro-radius-sm);
-      background: transparent;
+      background: var(--retro-bg-subtle);
       color: var(--retro-text-secondary);
-      font-size: 11px;
-      padding: 3px 8px;
-      cursor: pointer;
+      border: 1px solid var(--retro-border-default);
     }
-  `
+    .feedback-ignore-btn {
+      padding: 5px 12px;
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
+      border-radius: var(--retro-radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      color: var(--retro-text-primary);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .feedback-ignore-btn:hover {
+      background: var(--retro-bg-hover);
+    }
+  `]
 }
 
 declare global {

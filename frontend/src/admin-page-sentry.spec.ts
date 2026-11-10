@@ -70,79 +70,68 @@ test.describe('admin-page — Sentry health', () => {
     await page.addInitScript(() => sessionStorage.clear())
   })
 
-  test('renders both health blocks with unresolved counts and top issues', async ({ page }) => {
+  test('renders both health cards with their averages and unresolved issues', async ({ page }) => {
     await mockAuth(page)
     await mockStats(page, stats())
     await unlock(page)
 
     const admin = page.locator('admin-page')
-    await expect(admin.getByText('Sentry Health — Backend')).toBeVisible()
-    await expect(admin.getByText('Sentry Health — Frontend')).toBeVisible()
+    await expect(admin.getByText('Backend health')).toBeVisible()
+    await expect(admin.getByText('Frontend health')).toBeVisible()
     await expect(admin.getByText('TypeError: undefined is not a function').first()).toBeVisible()
-    await expect(admin.getByText('12 events').first()).toBeVisible()
+    await expect(admin.getByText('12×').first()).toBeVisible()
+    // 1.5 and 3.25 are the two real points; the null one does not count
+    await expect(admin.locator('#sentry-backend .metric-value').first()).toHaveText('2.4%')
+    await expect(admin.locator('#sentry-backend .metric-value').nth(1)).toHaveText('2 ms')
   })
 
-  test('draws a bar per point, giving null points zero height', async ({ page }) => {
+  test('the sparkline has a point for every day, with a missing day drawn as zero', async ({ page }) => {
     await mockAuth(page)
     await mockStats(page, stats())
     await unlock(page)
-    await expect(page.locator('admin-page').getByText('Sentry Health — Backend')).toBeVisible()
+    await expect(page.locator('admin-page').getByText('Backend health')).toBeVisible()
 
-    // Bars bind to the whole series, not the filtered one, so all three points get a
-    // rect and the null point is flattened to height 0 rather than omitted.
-    await expect
-      .poll(async () =>
-        page.locator('admin-page').evaluate((el) => {
-          const svg = el.shadowRoot!.querySelector('#sentry-backend-error-chart')
-          if (!svg) return null
-          const heights = Array.from(svg.querySelectorAll('rect')).map((r) =>
-            Number(r.getAttribute('height')),
-          )
-          return { count: heights.length, zeros: heights.filter((h) => h === 0).length }
-        }),
-      )
-      .toEqual({ count: 3, zeros: 1 })
+    const points = await page.locator('admin-page #sentry-backend .sparkline polyline').getAttribute('points')
+    const pairs = (points ?? '').trim().split(' ')
+    expect(pairs).toHaveLength(3)
+    // the null point sits on the baseline (y = 34)
+    expect(pairs[1].endsWith(',34')).toBe(true)
   })
 
-  test('an all-null series renders the chart but no bars', async ({ page }) => {
+  test('an all-null series draws no sparkline and shows a dash', async ({ page }) => {
     await mockAuth(page)
     await mockStats(
       page,
       stats({ sentry: health({ error_rate_7d: [{ date: '2026-03-12', value: null }], p95_latency_7d: [] }) }),
     )
     await unlock(page)
-    await expect(page.locator('admin-page').getByText('Sentry Health — Backend')).toBeVisible()
+    await expect(page.locator('admin-page').getByText('Backend health')).toBeVisible()
 
-    await expect
-      .poll(async () =>
-        page.locator('admin-page').evaluate((el) => {
-          const svg = el.shadowRoot!.querySelector('#sentry-backend-error-chart')
-          return svg ? svg.querySelectorAll('rect').length : -1
-        }),
-      )
-      .toBe(0)
+    await expect(page.locator('admin-page #sentry-backend .sparkline')).toHaveCount(0)
+    await expect(page.locator('admin-page #sentry-backend .metric-value').first()).toHaveText('–')
+    await expect(page.locator('admin-page #sentry-backend .metric-value').nth(1)).toHaveText('–')
   })
 
-  test('an error on the health payload shows the banner instead of the stats', async ({ page }) => {
+  test('an error on the health payload shows the banner instead of the numbers', async ({ page }) => {
     await mockAuth(page)
     await mockStats(page, stats({ sentry: health({ error: 'Sentry API unreachable' }) }))
     await unlock(page)
 
     const admin = page.locator('admin-page')
     await expect(admin.getByText('Sentry API unreachable')).toBeVisible()
-    // the stat card is part of the non-error branch
-    await expect(admin.getByText('Unresolved Issues').first()).toBeVisible()
+    await expect(admin.locator('#sentry-backend .metrics')).toHaveCount(0)
+    await expect(admin.locator('#sentry-frontend .metrics')).toBeVisible()
   })
 
-  test('no top issues omits the Top Issues list', async ({ page }) => {
+  test('no unresolved issues says so, and a missing frontend block is left out', async ({ page }) => {
     await mockAuth(page)
     await mockStats(page, stats({ sentry: health({ top_issues: [] }), sentry_frontend: null }))
     await unlock(page)
 
     const admin = page.locator('admin-page')
-    await expect(admin.getByText('Sentry Health — Backend')).toBeVisible()
-    await expect(admin.getByText('Sentry Health — Frontend')).not.toBeVisible()
-    await expect(admin.getByText('Top Issues')).not.toBeVisible()
+    await expect(admin.getByText('Backend health')).toBeVisible()
+    await expect(admin.getByText('Frontend health')).not.toBeVisible()
+    await expect(admin.getByText('No unresolved issues.')).toBeVisible()
   })
 })
 
@@ -154,7 +143,7 @@ test.describe('admin-page — token handling', () => {
     await page.goto('/admin')
 
     const admin = page.locator('admin-page')
-    await expect(admin.getByText('Feedback Comments', { exact: true })).toBeVisible()
+    await expect(admin.getByText('Feedback comments', { exact: true })).toBeVisible()
     await expect(admin.getByPlaceholder('Admin password')).not.toBeVisible()
   })
 
@@ -193,7 +182,7 @@ test.describe('admin-page — token handling', () => {
     const admin = page.locator('admin-page')
     await admin.getByPlaceholder('Admin password').fill('pw')
     await admin.getByPlaceholder('Admin password').press('Enter')
-    await expect(admin.getByText('Feedback Comments', { exact: true })).toBeVisible()
+    await expect(admin.getByText('Feedback comments', { exact: true })).toBeVisible()
   })
 
   test('a key other than Enter does not submit', async ({ page }) => {
@@ -204,7 +193,7 @@ test.describe('admin-page — token handling', () => {
     const admin = page.locator('admin-page')
     await admin.getByPlaceholder('Admin password').fill('pw')
     await admin.getByPlaceholder('Admin password').press('a')
-    await expect(admin.getByText('Feedback Comments', { exact: true })).not.toBeVisible()
+    await expect(admin.getByText('Feedback comments', { exact: true })).not.toBeVisible()
   })
 })
 

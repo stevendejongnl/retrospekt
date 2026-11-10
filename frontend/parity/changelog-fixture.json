@@ -1,0 +1,199 @@
+[
+ {
+  "version": "1.28.0",
+  "date": "2026-04-20",
+  "highlight": {
+   "title": "A fresh, frosted look",
+   "body": "Retrospekt has a brand new design — softer accents, drifting orbs, and frosted glass surfaces. Same workflow, smoother feel."
+  },
+  "groups": [
+   {
+    "kind": "Features",
+    "items": [
+     {
+      "scope": "help",
+      "text": "features section in both help modals"
+     },
+     {
+      "scope": "session",
+      "text": "sync vote sort across all participants via SSE"
+     }
+    ]
+   },
+   {
+    "kind": "Refactor",
+    "items": [
+     {
+      "scope": "stats",
+      "text": "replace feedback table with card list layout"
+     }
+    ]
+   },
+   {
+    "kind": "Docs",
+    "items": [
+     {
+      "text": "add dependency-cruiser visualization graphs"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "version": "1.27.1",
+  "date": "2026-03-23",
+  "groups": [
+   {
+    "kind": "Fixes",
+    "items": [
+     {
+      "scope": "cards",
+      "text": "allow adding cards in discussing phase"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "version": "1.27.0",
+  "date": "2026-03-20",
+  "groups": [
+   {
+    "kind": "Features",
+    "items": [
+     {
+      "scope": "column",
+      "text": "allow adding cards in discussing phase + sort-by-votes toggle"
+     },
+     {
+      "scope": "feedback",
+      "text": "add user feedback system"
+     }
+    ]
+   },
+   {
+    "kind": "Fixes",
+    "items": [
+     {
+      "scope": "column",
+      "text": "update WTR test to reflect add-area visible in discussing phase"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "version": "1.26.0",
+  "date": "2026-03-03",
+  "groups": [
+   {
+    "kind": "Features",
+    "items": [
+     {
+      "scope": "open-facilitator",
+      "text": "open facilitator toggle on create session form"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "version": "1.25.0",
+  "date": "2026-03-02",
+  "groups": [
+   {
+    "kind": "Features",
+    "items": [
+     {
+      "scope": "open-facilitator",
+      "text": "open_facilitator mode"
+     }
+    ]
+   },
+   {
+    "kind": "Fixes",
+    "items": [
+     {
+      "scope": "groups",
+      "text": "3+ grouping, cross-column prevention, visual containment"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "version": "1.24.0",
+  "date": "2026-03-02",
+  "groups": [
+   {
+    "kind": "Features",
+    "items": [
+     {
+      "scope": "groups",
+      "text": "card drag-and-drop grouping"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "version": "1.23.0",
+  "date": "2026-03-02",
+  "groups": [
+   {
+    "kind": "Features",
+    "items": [
+     {
+      "scope": "notes",
+      "text": "collaborative board notes"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "version": "1.22.0",
+  "date": "2026-03-02",
+  "groups": [
+   {
+    "kind": "Features",
+    "items": [
+     {
+      "scope": "cards",
+      "text": "inline card text editing"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "version": "1.21.0",
+  "date": "2026-03-02",
+  "groups": [
+   {
+    "kind": "Features",
+    "items": [
+     {
+      "scope": "jira-export",
+      "text": "in-app export dialog (replaces URL prefill)"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "version": "1.20.0",
+  "date": "2026-03-02",
+  "groups": [
+   {
+    "kind": "Features",
+    "items": [
+     {
+      "scope": "settings",
+      "text": "facilitator settings dialog"
+     }
+    ]
+   }
+  ]
+ }
+]

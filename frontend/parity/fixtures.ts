@@ -126,27 +126,40 @@ const publicStats: PublicStats = {
   ],
 }
 
-const healthOf = (issues: Array<[string, number]>, error: number): AdminStats['sentry'] => ({
+/** Seven days of Sentry numbers: the design's sparkline shape, scaled so the averages read 0.4 % / 182 ms and 1.1 % / 640 ms. */
+const healthOf = (
+  issues: Array<[string, number]>,
+  errorRate: number[],
+  latency: number[],
+): AdminStats['sentry'] => ({
   unresolved_count: issues.length,
   top_issues: issues.map(([title, count], i) => ({ id: `issue-${i}`, title, count, last_seen: '2026-05-05T08:00:00Z' })),
-  error_rate_7d: [3, 4, 2, 5, 3, 2, 1].map((v, i) => ({ date: `2026-04-${29 + (i % 2)}`, value: v * error })),
-  p95_latency_7d: [180, 190, 170, 200, 185, 175, 182].map((v, i) => ({ date: `2026-04-${29 + (i % 2)}`, value: v })),
+  error_rate_7d: errorRate.map((value, i) => ({ date: `2026-04-${29 + i}`, value })),
+  p95_latency_7d: latency.map((value, i) => ({ date: `2026-04-${29 + i}`, value })),
   error: null,
 })
 
 const adminStats: AdminStats = {
-  sentry: healthOf([['UnicodeEncodeError: surrogates not allowed', 12], ['SSE stream closed early', 4]], 0.1),
-  sentry_frontend: healthOf([['ResizeObserver loop limit exceeded', 31], ['Failed to fetch /api/v1/gifs/status', 2]], 0.3),
+  sentry: healthOf(
+    [['UnicodeEncodeError: surrogates not allowed', 12], ['SSE stream closed early', 4]],
+    [3, 4, 2, 5, 3, 2, 1].map((v) => v * 0.1 + 0.1142857),
+    [180, 190, 170, 200, 185, 175, 174],
+  ),
+  sentry_frontend: healthOf(
+    [['ResizeObserver loop limit exceeded', 31], ['Failed to fetch /api/v1/gifs/status', 2]],
+    [2, 2, 3, 6, 4, 3, 2].map((v) => v * 0.1 + 0.7857143),
+    [620, 650, 600, 700, 660, 630, 620],
+  ),
   feedback: {
     total: 18,
     avg_rating: 4.4,
     by_rating: publicStats.feedback_by_rating,
     recent: [
-      { id: 'f1', rating: 5, comment: 'Nice banners when sharing a link, exactly what I wanted.', participant_name: 'Alice', app_version: 'v1.50.0', status: 'new', fixed_in_version: null, created_at: '2026-05-04T10:00:00Z' },
-      { id: 'f2', rating: 3, comment: 'Cards were tall for the little they said.', participant_name: null, app_version: 'v1.49.2', status: 'new', fixed_in_version: null, created_at: '2026-05-03T10:00:00Z' },
-      { id: 'f3', rating: 4, comment: 'Assign control missing for non-facilitators.', participant_name: 'Bob', app_version: 'v1.48.0', status: 'new', fixed_in_version: null, created_at: '2026-05-02T10:00:00Z' },
-      { id: 'f4', rating: 4, comment: 'Popups are annoying, use something quieter.', participant_name: null, app_version: 'v1.47.3', status: 'fixed', fixed_in_version: 'v1.47.0', created_at: '2026-04-27T10:00:00Z' },
-      { id: 'f5', rating: 2, comment: '', participant_name: null, app_version: 'v1.46.1', status: 'ignored', fixed_in_version: null, created_at: '2026-04-24T10:00:00Z' },
+      { id: 'f1', rating: 5, comment: 'Nice banners when sharing a link, exactly what I wanted.', participant_name: 'Alice', app_version: 'v1.50.0', status: 'new', fixed_in_version: null, created_at: '2026-11-09T10:00:00Z' },
+      { id: 'f2', rating: 3, comment: 'Cards were tall for the little they said.', participant_name: null, app_version: 'v1.49.2', status: 'new', fixed_in_version: null, created_at: '2026-11-08T10:00:00Z' },
+      { id: 'f3', rating: 4, comment: 'Assign control missing for non-facilitators.', participant_name: 'Bob', app_version: 'v1.48.0', status: 'new', fixed_in_version: null, created_at: '2026-11-07T10:00:00Z' },
+      { id: 'f4', rating: 4, comment: 'Popups are annoying, use something quieter.', participant_name: null, app_version: 'v1.47.3', status: 'fixed', fixed_in_version: 'v1.47.0', created_at: '2026-11-02T10:00:00Z' },
+      { id: 'f5', rating: 2, comment: '', participant_name: null, app_version: 'v1.46.1', status: 'ignored', fixed_in_version: null, created_at: '2026-10-29T10:00:00Z' },
     ],
   },
 }
