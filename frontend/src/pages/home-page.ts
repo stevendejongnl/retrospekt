@@ -394,7 +394,7 @@ export class HomePage extends LitElement {
           <button class="dismiss" aria-label="dismiss" @click=${() => { this.sessionNotFound = false }}>×</button>
         </div>
       ` : ''}
-      <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
+      <session-history side="left" .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
       <div class="page">
       <div class="corner">
         <button class="corner-btn history-toggle" @click=${() => { this.showHistory = true }} title="Your sessions" aria-label="Your sessions">${designIcon('history', 15)}</button>

@@ -13,6 +13,8 @@ const PHASE_LABEL = { collecting: 'Collecting', discussing: 'Discussing', closed
 @customElement('session-history')
 export class SessionHistory extends LitElement {
   @property({ type: Boolean }) open = false
+  /** Which edge it slides in from: the side of the button that opens it. */
+  @property({ type: String, reflect: true }) side: 'left' | 'right' = 'right'
 
   @state() private history: SessionHistoryEntry[] = []
 
@@ -52,7 +54,15 @@ export class SessionHistory extends LitElement {
       pointer-events: all;
       overflow: hidden;
     }
-    .sidebar.open {
+    :host([side='left']) .sidebar {
+      right: auto;
+      left: 0;
+      border-left: none;
+      border-right: 1px solid var(--retro-glass-border);
+      transform: translateX(-100%);
+    }
+    .sidebar.open,
+    :host([side='left']) .sidebar.open {
       transform: translateX(0);
       box-shadow: var(--retro-shadow-float);
     }

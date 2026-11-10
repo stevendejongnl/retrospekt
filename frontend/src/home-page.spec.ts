@@ -107,6 +107,18 @@ test.describe('home-page history sidebar', () => {
     await page.locator('.history-toggle').click()
     await expect(page.locator('.sidebar.open')).toBeVisible()
   })
+
+  test('the sidebar opens on the same side as its button (left on the home page)', async ({ page }) => {
+    await page.goto('/')
+    const button = await page.locator('.history-toggle').boundingBox()
+    await page.locator('.history-toggle').click()
+    const sidebar = page.locator('session-history .sidebar.open')
+    await expect(sidebar).toBeVisible()
+    await page.waitForTimeout(400) // the slide-in
+    const box = await sidebar.boundingBox()
+    expect(button!.x).toBeLessThan(100)
+    expect(box!.x).toBe(0)
+  })
 })
 
 test.describe('home-page create session', () => {
