@@ -584,3 +584,36 @@ test.describe('retro-timer header countdown', () => {
     await expect(page.locator('.header-countdown')).toHaveCount(0)
   })
 })
+
+test.describe('retro-timer dock states', () => {
+  test('the Reset timer button in the running state calls POST /timer/reset', async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
+    const session = { ...BASE, timer: { duration_seconds: 300, started_at: new Date(Date.now() - 10000).toISOString(), paused_remaining: null } }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    const req = page.waitForRequest(r => r.url().includes('/timer/reset') && r.method() === 'POST')
+    await page.getByRole('button', { name: 'Reset timer' }).click()
+    await req
+  })
+
+  test('when the time is up the readout is red and a primary Reset clears it', async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
+    const session = { ...BASE, timer: { duration_seconds: 60, started_at: new Date(Date.now() - 120000).toISOString(), paused_remaining: null } }
+    await mockApi(page, session as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.facilitator-dock .timer-display.red')).toContainText('0:00')
+    const req = page.waitForRequest(r => r.url().includes('/timer/reset') && r.method() === 'POST')
+    await page.locator('.facilitator-dock .timer-btn').filter({ hasText: 'Reset' }).click()
+    await req
+  })
+
+  test('setting custom minutes clears the field', async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
+    await mockApi(page, BASE as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+    await openTimer(page)
+    await page.locator('.custom-input').fill('4')
+    await page.locator('.custom-set-btn').click()
+    await expect(page.locator('.custom-input')).toHaveValue('')
+  })
+})

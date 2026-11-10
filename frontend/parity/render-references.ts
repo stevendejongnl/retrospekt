@@ -18,6 +18,7 @@ import { basename, extname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { CONTEXT_OPTIONS, FIXED_TIME, FREEZE_MOTION_STYLE } from './browser-settings'
 import { PARITY_SCREENS } from './screens'
+import { COLLECT_TEXT_RECTS } from './geometry'
 
 const PARITY_DIRECTORY = resolve(fileURLToPath(new URL('.', import.meta.url)))
 const REFERENCE_DIRECTORY = join(PARITY_DIRECTORY, 'references')
@@ -161,6 +162,10 @@ async function main(): Promise<void> {
       await page.addStyleTag({ content: FREEZE_MOTION_STYLE })
       await page.evaluate(() => document.fonts.ready)
       await page.waitForTimeout(300)
+      if (process.env.PARITY_GEOMETRY) {
+        mkdirSync(process.env.PARITY_GEOMETRY, { recursive: true })
+        writeFileSync(join(process.env.PARITY_GEOMETRY, `${screen.name}.design.json`), JSON.stringify(await page.evaluate(COLLECT_TEXT_RECTS)))
+      }
       await page.screenshot({ path: join(REFERENCE_DIRECTORY, `${screen.name}.png`), clip: { x: 0, y: 0, width: screen.size[0], height: screen.size[1] } })
       console.log('rendered', screen.name)
       await context.close()

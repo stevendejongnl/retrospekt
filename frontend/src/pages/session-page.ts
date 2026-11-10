@@ -131,7 +131,7 @@ export class SessionPage extends LitElement {
     .header-tools {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
     .session-title {
       display: flex;
@@ -149,13 +149,11 @@ export class SessionPage extends LitElement {
       font-weight: 400;
     }
     .icon-btn {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      background: var(--retro-glass-bg-light);
-      backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-light)) saturate(180%);
-      border: 1px solid var(--retro-glass-border);
+      background: var(--retro-input-bg);
+      border: 1px solid var(--retro-border-default);
       color: var(--retro-text-secondary);
       cursor: pointer;
       font-size: 15px;
@@ -367,7 +365,7 @@ export class SessionPage extends LitElement {
     }
     .avatar-name {
       font-size: 13px;
-      color: var(--retro-text-secondary);
+      color: var(--retro-text-primary);
       max-width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -553,73 +551,92 @@ export class SessionPage extends LitElement {
       position: fixed;
       inset: 0;
       background: var(--retro-overlay-bg);
-      backdrop-filter: blur(2px);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 100;
       padding: 24px;
     }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+    header.dimmed {
+      opacity: 0.4;
+      filter: blur(2px);
+    }
     .name-card {
-      background: var(--retro-bg-surface);
+      background: var(--retro-glass-bg-strong);
+      border: 1px solid var(--retro-glass-border);
       border-radius: var(--retro-radius-lg);
-      padding: 36px 32px;
-      max-width: 400px;
+      padding: 28px;
+      max-width: 380px;
       width: 100%;
-      box-shadow: 0 16px 64px var(--retro-card-shadow);
+      text-align: center;
+      box-shadow: var(--retro-shadow-float);
     }
     .name-card .logo {
-      font-size: 40px;
-      margin-bottom: 12px;
+      font-size: 44px;
+      line-height: 1;
+      filter: drop-shadow(0 8px 24px oklch(0.65 0.18 45 / 0.35));
+      user-select: none;
     }
     .name-card h2 {
       font-size: 22px;
       font-weight: 800;
       color: var(--retro-text-primary);
-      margin-bottom: 6px;
-      letter-spacing: -0.5px;
+      margin: 10px 0 4px;
+      letter-spacing: -0.02em;
     }
     .name-card p {
-      font-size: 14px;
-      color: var(--retro-text-muted);
-      margin-bottom: 24px;
+      font-size: 13px;
+      color: var(--retro-text-secondary);
+      margin: 0 0 16px;
     }
     .name-card input {
       width: 100%;
-      padding: 12px 16px;
-      border: 1.5px solid var(--retro-border-default);
+      padding: 10px 12px;
+      border: 1px solid var(--retro-input-border);
       border-radius: var(--retro-radius-md);
-      font-size: 16px;
+      font-size: 14px;
       font-family: inherit;
-      box-sizing: border-box;
-      transition: border-color 0.12s;
-      background: var(--retro-bg-subtle);
+      text-align: center;
+      background: var(--retro-input-bg);
       color: var(--retro-text-primary);
+      outline: none;
     }
     .name-card input:focus {
-      outline: none;
-      border-color: var(--retro-accent);
-      background: var(--retro-bg-surface);
+      border-color: color-mix(in srgb, var(--retro-accent) 55%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--retro-accent) 14%, transparent);
+    }
+    .name-card input[aria-invalid='true'] {
+      border-color: var(--retro-error-border);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
     }
     .name-card input::placeholder {
-      color: var(--retro-text-disabled);
+      color: var(--retro-text-muted);
     }
-    .name-error {
+    .name-card .name-error {
       margin: 8px 0 0;
-      font-size: 13px;
-      color: var(--retro-error);
-      text-align: left;
+      font-size: 12px;
+      color: var(--retro-error-ink);
+      text-align: center;
     }
     .name-card button {
       width: 100%;
-      margin-top: 10px;
-      padding: 13px;
+      margin-top: 14px;
+      padding: 12px;
       background: var(--retro-accent);
-      color: white;
-      border: none;
-      border-radius: var(--retro-radius-md);
-      font-size: 15px;
-      font-weight: 700;
+      color: var(--retro-accent-contrast);
+      border: 1px solid var(--retro-accent-border);
+      border-radius: var(--retro-radius-sm);
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
       font-family: inherit;
       transition: background 0.12s;
@@ -628,7 +645,7 @@ export class SessionPage extends LitElement {
       background: var(--retro-accent-hover);
     }
     .name-card button:disabled {
-      opacity: 0.5;
+      opacity: 0.55;
       cursor: not-allowed;
     }
   `]
@@ -973,9 +990,12 @@ export class SessionPage extends LitElement {
                 <div class="logo">${bacon()}</div>
                 <h2>${session.name}</h2>
                 <p>Enter your name to join the retrospective.</p>
+                <label class="visually-hidden" for="join-name">Your name</label>
                 <input
+                  id="join-name"
                   type="text"
                   placeholder="Your name"
+                  aria-invalid=${this.nameTakenError ? 'true' : 'false'}
                   .value=${this.nameInput}
                   @input=${(e: Event) => {
                     this.nameInput = (e.target as HTMLInputElement).value
@@ -997,7 +1017,7 @@ export class SessionPage extends LitElement {
           `
         : ''}
 
-      <header>
+      <header class=${this.showNamePrompt ? 'dimmed' : ''}>
         <div class="header-left">
         <span class="brand" @click=${this.goHome}><span class="brand-mark">${bacon()}</span><span>Retro<em>spekt</em></span>${getBrand() === 'cs' ? html`<span class="cs-collab">× ${csLogo()}</span>` : nothing}</span>
         <span class="session-title">
@@ -1126,9 +1146,11 @@ export class SessionPage extends LitElement {
         </div>
       </header>
 
-      <main>
-        <retro-board .session=${session} .participantName=${this.participantName}></retro-board>
-      </main>
+      ${this.showNamePrompt
+        ? nothing
+        : html`<main>
+            <retro-board .session=${session} .participantName=${this.participantName}></retro-board>
+          </main>`}
     `
   }
 }

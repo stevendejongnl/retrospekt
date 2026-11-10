@@ -150,7 +150,8 @@ export class RetroCard extends LitElement {
       cursor: pointer;
       font-family: inherit;
       transition: all 0.12s ease;
-      line-height: 1.4;
+      line-height: 15px;
+      height: 21px;
     }
     .reaction-btn:hover:not(:disabled) {
       border-color: var(--retro-accent-border);
@@ -188,9 +189,10 @@ export class RetroCard extends LitElement {
       border: none;
       cursor: pointer;
       color: var(--retro-text-disabled);
-      font-size: 14px;
-      line-height: 1;
-      padding: 0 1px;
+      font-size: 12px;
+      font-family: inherit;
+      padding: 0;
+      margin-left: 2px;
       transition: color 0.12s;
     }
     .unassign-btn:hover {
@@ -316,9 +318,8 @@ export class RetroCard extends LitElement {
       cursor: pointer;
       color: var(--retro-text-secondary);
       font-size: 14px;
-      line-height: 1;
+      font-family: inherit;
       padding: 2px 4px;
-      border-radius: 4px;
       transition: color 0.12s;
     }
     .delete-btn:hover {
@@ -330,9 +331,7 @@ export class RetroCard extends LitElement {
       cursor: pointer;
       color: var(--retro-text-secondary);
       font-size: 11px;
-      line-height: 1;
       padding: 2px 4px;
-      border-radius: 4px;
       font-family: inherit;
       transition: color 0.12s;
     }

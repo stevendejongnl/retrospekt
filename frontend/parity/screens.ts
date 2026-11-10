@@ -41,8 +41,6 @@ function pair(name: string, base: Base): ParityScreen[] {
 }
 
 const PAGE: Pick<ParityScreen, 'viewer'> = { viewer: 'visitor' }
-const NEEDS_HEADER = 'needs the slim header with the phase stepper and the facilitator dock'
-const NEEDS_NEW_HEADER_ICONS = 'is opened from the new header, which is not built yet'
 
 export const PARITY_SCREENS: ParityScreen[] = [
   // Home
@@ -57,7 +55,7 @@ export const PARITY_SCREENS: ParityScreen[] = [
   },
 
   // Boards, as the facilitator
-  ...pair('board-collecting', { viewer: 'facilitator', size: [1100, 600], route: SESSION, board: { phase: 'collecting' } }),
+  ...pair('board-collecting', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'collecting' } }),
   ...pair('board-discussing', { viewer: 'facilitator', size: [1100, 760], route: SESSION, board: { phase: 'discussing' } }),
   ...pair('board-closed', { viewer: 'facilitator', size: [1100, 720], route: SESSION, board: { phase: 'closed' } }),
   ...pair('board-share', { viewer: 'facilitator', size: [1100, 560], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.share-btn' }] }),
@@ -67,17 +65,16 @@ export const PARITY_SCREENS: ParityScreen[] = [
 
   // The header and dock, as a participant and in their other states
   ...pair('chosen-participant', { viewer: 'participant', size: [1100, 700], route: SESSION, board: { phase: 'discussing', timer: 'running' } }),
-  { viewer: 'facilitator', name: 'chosen-share-light', theme: 'light', size: [1100, 760], route: SESSION, board: { phase: 'discussing' }, pending: `the Share popover ${NEEDS_HEADER}` },
-  { viewer: 'facilitator', name: 'chosen-timer-menu-dark', theme: 'dark', size: [1100, 760], route: SESSION, board: { phase: 'discussing' }, pending: `the timer menu ${NEEDS_HEADER}` },
-  { viewer: 'facilitator', name: 'chosen-running-light', theme: 'light', size: [1100, 760], route: SESSION, board: { phase: 'discussing', timer: 'running' }, pending: `the running timer ${NEEDS_HEADER}` },
-  { viewer: 'facilitator', name: 'chosen-time-up-dark', theme: 'dark', size: [1100, 760], route: SESSION, board: { phase: 'discussing', timer: 'up' }, pending: `the time-is-up state ${NEEDS_HEADER}` },
+  { viewer: 'facilitator', name: 'chosen-timer-menu-dark', theme: 'dark', size: [1100, 760], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.timer-chip' }] },
+  { viewer: 'facilitator', name: 'chosen-running-light', theme: 'light', size: [1100, 760], route: SESSION, board: { phase: 'discussing', timer: 'running' } },
+  { viewer: 'facilitator', name: 'chosen-time-up-dark', theme: 'dark', size: [1100, 760], route: SESSION, board: { phase: 'discussing', timer: 'up' } },
 
   // Overlays that open from the header or the dock
   ...pair('dock', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, askConsent: true, pending: 'needs the star-rating feedback card and the dock that shifts right' }),
-  ...pair('settings', { viewer: 'facilitator', size: [1100, 620], route: SESSION, board: { phase: 'discussing' }, pending: `the settings dialog ${NEEDS_NEW_HEADER_ICONS.replace('is opened from the new header', 'is opened from the dock')}` }),
-  ...pair('help', { viewer: 'facilitator', size: [1000, 700], route: SESSION, board: { phase: 'discussing' }, pending: `the help dialog ${NEEDS_NEW_HEADER_ICONS}` }),
-  ...pair('history', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, withHistory: true, pending: `the sessions sidebar ${NEEDS_NEW_HEADER_ICONS}` }),
-  ...pair('notes', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, pending: `the notes sidebar ${NEEDS_NEW_HEADER_ICONS}` }),
+  ...pair('settings', { viewer: 'facilitator', size: [1100, 620], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.settings-btn' }] }),
+  ...pair('help', { viewer: 'facilitator', size: [1000, 700], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.avatar-menu-btn' }, { click: '.menu-help' }] }),
+  ...pair('history', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, withHistory: true, steps: [{ click: '.avatar-menu-btn' }, { click: '.menu-history' }] }),
+  ...pair('notes', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: 'button[aria-label=\"Board notes\"]' }] }),
 
   // Pages
   ...pair('stats', { ...PAGE, size: [1100, 880], route: '/stats' }),

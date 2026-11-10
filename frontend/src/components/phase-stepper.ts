@@ -34,7 +34,6 @@ export class PhaseStepper extends LitElement {
     }
     .stepper {
       display: inline-flex;
-      gap: 2px;
       padding: 3px;
       background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);

@@ -3,7 +3,8 @@ import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Note } from '../types'
 import { api } from '../api'
-import { faIconStyles, iconNoteSticky, iconTrashCan } from '../icons'
+import { faIconStyles, designIcon, iconTrashCan } from '../icons'
+import { baseStyles } from '../styles'
 
 const CHECKLIST_LINE = /^- \[([ xX])\] (.*)$/
 
@@ -34,7 +35,7 @@ export class BoardNotes extends LitElement {
   @state() private editTitle = ''
   @state() private editText = ''
 
-  static styles = [faIconStyles, css`
+  static styles = [baseStyles, faIconStyles, css`
     :host {
       position: fixed;
       inset: 0;
@@ -45,14 +46,12 @@ export class BoardNotes extends LitElement {
     .backdrop {
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0);
-      backdrop-filter: blur(0px);
-      transition: background 0.25s, backdrop-filter 0.25s;
+      background: transparent;
+      transition: background 0.25s;
       pointer-events: none;
     }
     .backdrop.visible {
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(2px);
+      background: var(--retro-scrim-bg);
       pointer-events: all;
     }
 
@@ -62,10 +61,11 @@ export class BoardNotes extends LitElement {
       right: 0;
       bottom: 0;
       width: 340px;
-      background: var(--retro-bg-surface);
-      box-shadow: -4px 0 32px rgba(0, 0, 0, 0.14);
+      background: var(--retro-glass-bg-strong);
+      border-left: 1px solid var(--retro-glass-border);
+      box-shadow: none;
       transform: translateX(100%);
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s;
       display: flex;
       flex-direction: column;
       pointer-events: all;
@@ -73,46 +73,37 @@ export class BoardNotes extends LitElement {
     }
     .sidebar.open {
       transform: translateX(0);
+      box-shadow: var(--retro-shadow-float);
     }
 
     .sidebar-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 18px 20px 14px;
-      border-bottom: 1px solid var(--retro-border-subtle);
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--retro-border-default);
       flex-shrink: 0;
     }
     .sidebar-title {
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--retro-text-primary);
-      letter-spacing: -0.3px;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--retro-text-primary);
     }
     .sidebar-title .icon {
-      color: var(--retro-accent);
-      font-size: 14px;
+      color: var(--retro-accent-ink);
+      display: inline-flex;
     }
     .close-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 1.5px solid var(--retro-border-default);
       background: none;
+      border: none;
       cursor: pointer;
-      font-size: 14px;
-      color: var(--retro-text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.12s, border-color 0.12s;
-    }
-    .close-btn:hover {
-      background: var(--retro-bg-subtle);
-      color: var(--retro-text-primary);
+      font-size: 20px;
+      color: var(--retro-text-secondary);
+      font-family: inherit;
+      padding: 0;
     }
 
     .notes-list {
@@ -458,7 +449,7 @@ export class BoardNotes extends LitElement {
       <div class="sidebar ${this.open ? 'open' : ''}">
         <div class="sidebar-header">
           <span class="sidebar-title">
-            <span class="icon">${iconNoteSticky()}</span>
+            <span class="icon">${designIcon('note', 16)}</span>
             Board Notes
           </span>
           <button class="close-btn" @click=${this.close} aria-label="Close">×</button>
@@ -468,7 +459,7 @@ export class BoardNotes extends LitElement {
           ${this.notes.length === 0
             ? html`
                 <div class="empty-state">
-                  <span class="empty-icon">${iconNoteSticky()}</span>
+                  <span class="empty-icon">${designIcon('note', 16)}</span>
                   <span class="empty-title">No notes yet</span>
                   <span class="empty-sub">Add shared notes visible to everyone.</span>
                 </div>

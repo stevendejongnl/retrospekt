@@ -109,17 +109,19 @@ export class RetroColumn extends LitElement {
     .cards-list {
       flex: 1;
       overflow-y: auto;
+    }
+    .cards-list.empty {
       min-height: 100px;
     }
     .add-area {
-      margin-top: 12px;
+      margin-top: 0;
     }
     .add-btn {
       width: 100%;
       background: transparent;
-      border: 1px dashed var(--retro-border-default);
+      border: 1px dashed color-mix(in srgb, var(--retro-text-primary) 10%, transparent);
       border-radius: var(--retro-radius-md);
-      padding: 10px 12px;
+      padding: 12px;
       cursor: pointer;
       color: var(--retro-text-muted);
       font-size: 13px;
@@ -215,10 +217,10 @@ export class RetroColumn extends LitElement {
       background: none;
       border: none;
       cursor: pointer;
-      font-size: 14px;
-      color: var(--retro-text-disabled);
-      padding: 0 2px;
-      line-height: 1;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--retro-text-muted);
+      padding: 0;
       transition: color 0.12s;
       flex-shrink: 0;
     }
@@ -616,6 +618,7 @@ export class RetroColumn extends LitElement {
         .card=${card}
         .participantName=${this.participantName}
         .participantNames=${this.participantNames}
+        .showVote=${this.phase !== 'collecting'}
         ?canVote=${this.phase === 'discussing' &&
         card.published &&
         card.author_name !== this.participantName}
@@ -638,7 +641,7 @@ export class RetroColumn extends LitElement {
         ?canMove=${this.phase !== 'closed' &&
         !card.group_id &&
         (card.author_name === this.participantName || this.isFacilitator)}
-        style="--card-edge: var(--col-accent)"
+        style="--card-edge: ${card.published ? 'var(--col-accent)' : 'var(--retro-text-muted)'}"
       ></retro-card>
     `
 
@@ -691,7 +694,7 @@ export class RetroColumn extends LitElement {
           </div>
         </div>
 
-        <div class="cards-list">
+        <div class="cards-list ${items.length === 0 ? 'empty' : ''}">
           ${items.map((item) =>
             item.kind === 'single'
               ? renderSingleCard(item.card)

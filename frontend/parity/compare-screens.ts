@@ -27,6 +27,7 @@ import {
   type Raster,
 } from './image-comparison'
 import { COMPARED_SCREENS, PENDING_SCREENS, type ParityScreen, type Step } from './screens'
+import { COLLECT_TEXT_RECTS } from './geometry'
 
 const PARITY_DIRECTORY = resolve(fileURLToPath(new URL('.', import.meta.url)))
 const FRONTEND_DIRECTORY = resolve(PARITY_DIRECTORY, '..')
@@ -48,7 +49,7 @@ function storageFor(screen: ParityScreen): Record<string, string> {
   if (screen.viewer === 'facilitator') entries[`retro_facilitator_${FIXTURE_SESSION_ID}`] = FACILITATOR_TOKEN
   if (screen.withHistory) {
     const entry = (id: string, name: string, phase: string, created: string, who: string, facilitator: boolean) => ({
-      id, name, phase, created_at: created, participantName: who, isFacilitator: facilitator, joinedAt: created,
+      id, name, phase, created_at: created, participantName: who, isFacilitator: facilitator, joinedAt: created, seenChangelogVersion: '999.0.0',
     })
     entries.retro_history = JSON.stringify([
       entry(FIXTURE_SESSION_ID, 'Sprint 42 Retro', 'discussing', '2026-05-05T09:00:00Z', 'Alice', true),
@@ -110,6 +111,10 @@ async function capture(browser: Browser, screen: ParityScreen, target: string): 
       await page.waitForTimeout(SETTLE_MS)
     }
     await page.mouse.move(0, 0)
+    if (process.env.PARITY_GEOMETRY) {
+      mkdirSync(process.env.PARITY_GEOMETRY, { recursive: true })
+      writeFileSync(join(process.env.PARITY_GEOMETRY, `${screen.name}.app.json`), JSON.stringify(await page.evaluate(COLLECT_TEXT_RECTS)))
+    }
     await page.screenshot({ path: target, clip: { x: 0, y: 0, width, height } })
   } finally {
     await context.close()

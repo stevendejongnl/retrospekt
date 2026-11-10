@@ -125,3 +125,59 @@ test.describe('share popover people', () => {
     await expect(pop.locator('.share-person')).toHaveCount(2)
   })
 })
+
+test.describe('header popovers: closing and switching', () => {
+  test('clicking Share again closes its popover', async ({ page }) => {
+    await open(page)
+    await page.getByRole('button', { name: /Share/ }).click()
+    await expect(page.locator('.share-popover')).toBeVisible()
+    await page.getByRole('button', { name: /Share/ }).click()
+    await expect(page.locator('.share-popover')).toHaveCount(0)
+  })
+
+  test('opening the avatar menu closes an open popover', async ({ page }) => {
+    await open(page)
+    await page.getByRole('button', { name: /Share/ }).click()
+    await page.locator('.avatar-menu-btn').click()
+    await expect(page.locator('.share-popover')).toHaveCount(0)
+    await expect(page.getByRole('menu')).toBeVisible()
+  })
+
+  test('the Action items popover says so when nothing is assigned', async ({ page }) => {
+    await page.addInitScript((id: string) => localStorage.setItem(`retro_name_${id}`, 'Alice'), SESSION_ID)
+    const empty = { ...BASE, cards: [] }
+    await page.route(`/api/v1/sessions/${SESSION_ID}`, route => route.fulfill({ json: empty }))
+    await page.route(`/api/v1/sessions/${SESSION_ID}/stream`, route =>
+      route.fulfill({ status: 200, headers: { 'Content-Type': 'text/event-stream' }, body: `data: ${JSON.stringify(empty)}\n\n` }))
+    await page.route(`/api/v1/sessions/${SESSION_ID}/**`, route => route.fulfill({ json: empty }))
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.actions-badge')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Action items' }).click()
+    await expect(page.locator('.actions-popover')).toContainText('Nothing is assigned yet')
+  })
+})
+
+test.describe('avatar menu: theme choices and rename', () => {
+  test('Light, Dark and System each switch the preference, and Halal mode is remembered', async ({ page }) => {
+    await open(page)
+    await page.locator('.avatar-menu-btn').click()
+    await page.getByRole('menuitem', { name: 'Theme', exact: true }).click()
+    await page.getByRole('menuitemradio', { name: 'Dark' }).click()
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+    await page.getByRole('menuitemradio', { name: 'Light' }).click()
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+    await page.getByRole('menuitemradio', { name: 'System' }).click()
+    await expect(page.getByRole('menuitemradio', { name: 'System' })).toHaveAttribute('aria-checked', 'true')
+    await page.getByLabel('Halal mode').check()
+    expect(await page.evaluate(() => localStorage.getItem('retro_halal_mode'))).toBe('true')
+  })
+
+  test('renaming to the same name just stops editing', async ({ page }) => {
+    await open(page)
+    await page.locator('.avatar-menu-btn').click()
+    await page.getByRole('menuitem', { name: 'Change name' }).click()
+    await page.locator('.avatar-name-input').press('Enter')
+    await expect(page.locator('.avatar-name-input')).toHaveCount(0)
+    await expect(page.locator('.avatar-name')).toHaveText('Alice')
+  })
+})

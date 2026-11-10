@@ -2,8 +2,13 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { SessionHistoryEntry } from '../storage'
+import type { SessionPhase } from '../types'
 import { storage } from '../storage'
-import { faIconStyles, iconClockRotateLeft } from '../icons'
+import { designIcon } from '../icons'
+import { baseStyles } from '../styles'
+
+const PHASE_ICON = { collecting: 'pencil', discussing: 'comment', closed: 'lock' } as const
+const PHASE_LABEL = { collecting: 'Collecting', discussing: 'Discussing', closed: 'Closed' } as const
 
 @customElement('session-history')
 export class SessionHistory extends LitElement {
@@ -11,7 +16,7 @@ export class SessionHistory extends LitElement {
 
   @state() private history: SessionHistoryEntry[] = []
 
-  static styles = [faIconStyles, css`
+  static styles = [baseStyles, css`
     :host {
       position: fixed;
       inset: 0;
@@ -22,27 +27,26 @@ export class SessionHistory extends LitElement {
     .backdrop {
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0);
-      backdrop-filter: blur(0px);
-      transition: background 0.25s, backdrop-filter 0.25s;
+      background: transparent;
+      transition: background 0.25s;
       pointer-events: none;
     }
     .backdrop.visible {
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(2px);
+      background: var(--retro-scrim-bg);
       pointer-events: all;
     }
 
     .sidebar {
       position: absolute;
       top: 0;
-      left: 0;
+      right: 0;
       bottom: 0;
-      width: 320px;
-      background: var(--retro-bg-surface);
-      box-shadow: 4px 0 32px rgba(0, 0, 0, 0.14);
-      transform: translateX(-100%);
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 340px;
+      background: var(--retro-glass-bg-strong);
+      border-left: 1px solid var(--retro-glass-border);
+      box-shadow: none;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s;
       display: flex;
       flex-direction: column;
       pointer-events: all;
@@ -50,84 +54,69 @@ export class SessionHistory extends LitElement {
     }
     .sidebar.open {
       transform: translateX(0);
+      box-shadow: var(--retro-shadow-float);
     }
 
     .sidebar-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 18px 20px 14px;
-      border-bottom: 1px solid var(--retro-border-subtle);
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--retro-border-default);
       flex-shrink: 0;
     }
     .sidebar-title {
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--retro-text-primary);
-      letter-spacing: -0.3px;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--retro-text-primary);
     }
     .sidebar-title .icon {
-      color: var(--retro-accent);
-      font-size: 14px;
+      color: var(--retro-accent-ink);
+      display: inline-flex;
     }
     .close-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 1.5px solid var(--retro-border-default);
       background: none;
+      border: none;
       cursor: pointer;
-      font-size: 14px;
-      color: var(--retro-text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.12s, border-color 0.12s;
-    }
-    .close-btn:hover {
-      background: var(--retro-bg-subtle);
-      border-color: var(--retro-border-default);
-      color: var(--retro-text-primary);
+      font-size: 20px;
+      color: var(--retro-text-secondary);
+      font-family: inherit;
+      padding: 0;
     }
 
     .session-list {
       flex: 1;
       overflow-y: auto;
-      padding: 12px 12px 8px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
 
     .session-item {
-      border: 1.5px solid var(--retro-border-default);
+      border: 1px solid var(--retro-border-default);
+      background: var(--retro-bg-subtle);
       border-radius: var(--retro-radius-md);
-      padding: 12px 14px;
+      padding: 10px 12px;
       cursor: pointer;
-      transition: border-color 0.12s, background 0.12s;
-      position: relative;
     }
     .session-item:hover {
-      border-color: var(--retro-accent);
-      background: var(--retro-accent-tint);
+      border-color: var(--retro-accent-border);
     }
 
     .item-top {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 8px;
-      margin-bottom: 8px;
     }
     .item-name {
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 600;
       color: var(--retro-text-primary);
-      letter-spacing: -0.2px;
-      line-height: 1.3;
       flex: 1;
       overflow: hidden;
       display: -webkit-box;
@@ -135,24 +124,16 @@ export class SessionHistory extends LitElement {
       -webkit-box-orient: vertical;
     }
     .remove-btn {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      border: none;
       background: none;
+      border: none;
       cursor: pointer;
-      font-size: 12px;
-      color: var(--retro-text-disabled);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: background 0.1s, color 0.1s;
+      font-size: 16px;
+      color: var(--retro-text-muted);
+      font-family: inherit;
       padding: 0;
-      margin-top: 1px;
+      flex-shrink: 0;
     }
     .remove-btn:hover {
-      background: var(--retro-bg-subtle);
       color: var(--retro-error);
     }
 
@@ -160,20 +141,21 @@ export class SessionHistory extends LitElement {
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
-      margin-bottom: 7px;
+      margin: 6px 0;
     }
     .phase-badge {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: var(--retro-radius-lg);
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--retro-border-default);
+      font-size: 12px;
+      font-weight: 600;
     }
     .phase-collecting {
-      background: var(--retro-bg-subtle);
-      color: var(--retro-text-secondary);
-      border: 1px solid var(--retro-border-default);
+      background: var(--retro-phase-collecting-bg);
+      color: var(--retro-phase-collecting-text);
     }
     .phase-discussing {
       background: var(--retro-phase-discussing-bg);
@@ -184,14 +166,15 @@ export class SessionHistory extends LitElement {
       color: var(--retro-phase-closed-text);
     }
     .facilitator-badge {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: var(--retro-radius-lg);
-      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--retro-radius-md);
+      font-size: 11px;
+      font-weight: 500;
       background: var(--retro-accent-tint);
-      color: var(--retro-accent);
-      border: 1px solid color-mix(in srgb, var(--retro-accent) 30%, transparent);
+      color: var(--retro-accent-ink);
+      border: 1px solid color-mix(in srgb, var(--retro-accent) 35%, transparent);
     }
 
     .item-meta {
@@ -208,16 +191,15 @@ export class SessionHistory extends LitElement {
       padding: 40px 24px;
       text-align: center;
       gap: 10px;
-      color: var(--retro-text-disabled);
+      color: var(--retro-text-muted);
     }
     .empty-icon {
-      font-size: 32px;
-      color: var(--retro-border-default);
+      color: var(--retro-text-disabled);
     }
     .empty-title {
       font-size: 14px;
       font-weight: 600;
-      color: var(--retro-text-muted);
+      color: var(--retro-text-secondary);
     }
     .empty-sub {
       font-size: 12px;
@@ -225,19 +207,22 @@ export class SessionHistory extends LitElement {
     }
 
     .sidebar-footer {
-      padding: 10px 20px 14px;
-      border-top: 1px solid var(--retro-border-subtle);
+      padding: 12px;
+      border-top: 1px solid var(--retro-border-default);
       flex-shrink: 0;
     }
     .clear-btn {
       background: none;
       border: none;
       cursor: pointer;
+      padding: 5px 12px;
       font-size: 12px;
-      color: var(--retro-text-disabled);
+      font-weight: 500;
+      color: var(--retro-text-secondary);
       font-family: inherit;
-      padding: 0;
-      transition: color 0.12s;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-color: var(--retro-border-default);
     }
     .clear-btn:hover {
       color: var(--retro-error);
@@ -284,7 +269,7 @@ export class SessionHistory extends LitElement {
       <div class="sidebar ${this.open ? 'open' : ''}">
         <div class="sidebar-header">
           <span class="sidebar-title">
-            <span class="icon">${iconClockRotateLeft()}</span>
+            <span class="icon">${designIcon('history', 16)}</span>
             Your sessions
           </span>
           <button class="close-btn" @click=${this.close} aria-label="Close">×</button>
@@ -294,7 +279,7 @@ export class SessionHistory extends LitElement {
           ${this.history.length === 0
             ? html`
                 <div class="empty-state">
-                  <span class="empty-icon">${iconClockRotateLeft()}</span>
+                  <span class="empty-icon">${designIcon('history', 16)}</span>
                   <span class="empty-title">No sessions yet</span>
                   <span class="empty-sub">Sessions you create or join will appear here.</span>
                 </div>
@@ -312,7 +297,7 @@ export class SessionHistory extends LitElement {
                       >×</button>
                     </div>
                     <div class="item-badges">
-                      <span class="phase-badge phase-${entry.phase}">${entry.phase}</span>
+                      <span class="phase-badge phase-${entry.phase}">${designIcon(PHASE_ICON[entry.phase as SessionPhase], 13)} ${PHASE_LABEL[entry.phase as SessionPhase]}</span>
                       ${entry.isFacilitator ? html`<span class="facilitator-badge">Facilitator</span>` : ''}
                     </div>
                     <div class="item-meta">

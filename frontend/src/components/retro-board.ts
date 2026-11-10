@@ -102,7 +102,7 @@ export class RetroBoard extends LitElement {
       background: var(--retro-bg-hover);
     }
     .settings-btn {
-      background: var(--retro-bg-subtle);
+      background: var(--retro-input-bg);
       border: 1px solid var(--retro-border-default);
       border-radius: 50%;
       width: 28px;
@@ -125,7 +125,7 @@ export class RetroBoard extends LitElement {
       align-items: center;
       gap: 6px;
       background: none;
-      border: 1px dashed var(--retro-border-strong);
+      border: 1px dashed color-mix(in srgb, var(--retro-text-primary) 27%, transparent);
       border-radius: var(--retro-radius-sm);
       padding: 5px 12px;
       font-size: 12px;

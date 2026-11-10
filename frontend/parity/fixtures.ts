@@ -45,9 +45,9 @@ function cardsFor(phase: SessionPhase): Card[] {
   }
   const closed = phase === 'closed'
   return [
-    card('Went Well', 'Shipping went smoothly 🚀', 'Alice', {
+    card('Went Well', 'Shipping went smoothly 🚀', 'Bob', {
       votes: votes('Alice', 'Bob', 'Carol'),
-      reactions: [...reactions('❤️', 'Alice', 'Bob'), ...reactions('🎉', 'Carol')],
+      reactions: closed ? [] : [...reactions('❤️', 'Alice', 'Bob'), ...reactions('🎉', 'Carol')],
     }),
     card('Went Well', 'Great team collaboration', 'Bob', { votes: votes('Bob', 'Dave') }),
     card('Went Well', 'Tests caught a regression early', 'Carol'),

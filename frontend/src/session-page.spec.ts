@@ -355,6 +355,20 @@ test.describe('session-page phase stepper', () => {
     await expect.poll(() => body).toEqual({ phase: 'closed' })
   })
 
+  test('clicking the step you are already on does nothing', async ({ page }) => {
+    let called = false
+    await withName(page, 'Alice', FAC_TOKEN)
+    await mockApi(page, { ...BASE, phase: 'discussing' } as typeof BASE)
+    await page.route(`/api/v1/sessions/${SESSION_ID}/phase`, async (route) => {
+      called = true
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(BASE) })
+    })
+    await page.goto(`/session/${SESSION_ID}`)
+    await page.locator('header phase-stepper button', { hasText: 'Discussing' }).click()
+    await page.waitForTimeout(300)
+    expect(called).toBe(false)
+  })
+
   test('in open facilitator mode everybody can use the stepper', async ({ page }) => {
     await withName(page, 'Alice')
     await mockApi(page, { ...BASE, phase: 'discussing', open_facilitator: true } as typeof BASE)

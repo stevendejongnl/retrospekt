@@ -213,7 +213,7 @@ export class RetroTimer extends LitElement {
     .timer-btn {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       background: var(--retro-accent);
       color: var(--retro-accent-contrast);
       border: 1px solid var(--retro-accent-border);
