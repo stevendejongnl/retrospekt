@@ -26,6 +26,14 @@ both('present-collecting', (dark) => <PresentBoard dark={dark} phase="Collecting
 both('present-discussing', (dark) => <PresentBoard dark={dark} phase="Discussing" timer height={760} />);
 both('present-closed', (dark) => <PresentBoard dark={dark} phase="Closed" height={720} />);
 
+both('m-discussing', (dark) => <MBoard dark={dark} phase="Discussing" />);
+both('m-collecting', (dark) => <MBoard dark={dark} phase="Collecting" />);
+both('m-timer', (dark) => <MBoard dark={dark} phase="Discussing" timer="running" role="participant" />);
+both('m-share', (dark) => <MBoard dark={dark} phase="Discussing" sharing />);
+both('m-notification', (dark) => <MBoard dark={dark} phase="Discussing" notification />);
+both('m-present', (dark) => <MPresent dark={dark} />);
+both('m-stats', (dark) => <MStats dark={dark} />);
+
 both('chosen-participant', (dark) => <BoardV2 dark={dark} phase="Discussing" role="participant" timer="running" />);
 PARITY_BOARDS['chosen-share-light'] = () => <BoardV2 dark={false} phase="Discussing" shareOpen />;
 PARITY_BOARDS['chosen-timer-menu-dark'] = () => <BoardV2 dark phase="Discussing" timerMenu />;

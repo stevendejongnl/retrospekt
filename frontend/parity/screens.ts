@@ -48,6 +48,19 @@ const HOME_FILLED: Step[] = [{ fill: ['#session-name', 'Sprint 42 Retro'] }, { f
 
 const PAGE: Pick<ParityScreen, 'viewer'> = { viewer: 'visitor' }
 
+const MOBILE_PENDING = 'Mobile boards exist in the design artifact only; compare once the app matches them pixel for pixel (STE-258). The layout is guarded by src/mobile.spec.ts.'
+const MOBILE_SIZE: [number, number] = [390, 844]
+const MOBILE_BOARD = { viewer: 'facilitator', size: MOBILE_SIZE, route: SESSION, pending: MOBILE_PENDING } as const
+const MOBILE_SCREENS: ParityScreen[] = [
+  ...pair('m-discussing', { ...MOBILE_BOARD, board: { phase: 'discussing' } }),
+  ...pair('m-collecting', { ...MOBILE_BOARD, board: { phase: 'collecting' } }),
+  ...pair('m-timer', { ...MOBILE_BOARD, viewer: 'participant', board: { phase: 'discussing', timer: 'running' } }),
+  ...pair('m-share', { ...MOBILE_BOARD, board: { phase: 'discussing' }, steps: [{ click: '.share-btn' }] }),
+  ...pair('m-notification', { ...MOBILE_BOARD, board: { phase: 'discussing' }, askConsent: true }),
+  ...pair('m-present', { ...MOBILE_BOARD, board: { phase: 'discussing', timer: 'running' }, presenting: true }),
+  ...pair('m-stats', { viewer: 'visitor', size: MOBILE_SIZE, route: '/stats', pending: MOBILE_PENDING }),
+]
+
 export const PARITY_SCREENS: ParityScreen[] = [
   // Home
   ...pair('home', { ...PAGE, size: [1000, 940], route: '/', steps: HOME_FILLED }),
@@ -77,6 +90,11 @@ export const PARITY_SCREENS: ParityScreen[] = [
   ...pair('present-collecting', { viewer: 'facilitator', size: [1100, 600], route: SESSION, board: { phase: 'collecting' }, presenting: true }),
   ...pair('present-discussing', { viewer: 'facilitator', size: [1100, 760], route: SESSION, board: { phase: 'discussing', timer: 'running' }, presenting: true }),
   ...pair('present-closed', { viewer: 'facilitator', size: [1100, 720], route: SESSION, board: { phase: 'closed' }, presenting: true }),
+
+  // Mobile (390 px). The design artifact has these boards; the real design project does not yet, so the references come
+  // from the artifact and nothing is compared until the app matches them pixel for pixel. The phone-size Playwright spec
+  // (src/mobile.spec.ts) is what guards the layout meanwhile.
+  ...MOBILE_SCREENS,
 
   // The header and dock, as a participant and in their other states
   ...pair('chosen-participant', { viewer: 'participant', size: [1100, 700], route: SESSION, board: { phase: 'discussing', timer: 'running' } }),
