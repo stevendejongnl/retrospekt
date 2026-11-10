@@ -332,10 +332,6 @@ export class SessionPage extends LitElement {
     .menu-item:hover {
       background: var(--retro-bg-hover);
     }
-    .menu-chevron {
-      margin-left: auto;
-      display: inline-flex;
-    }
     .menu-sub {
       padding: 2px 0 4px 34px;
     }
@@ -924,7 +920,7 @@ export class SessionPage extends LitElement {
                 role="menuitem"
                 aria-expanded=${this.themeOpen}
                 @click=${() => { this.themeOpen = !this.themeOpen }}
-              >${designIcon('theme', 14)} Theme <span class="menu-chevron">${designIcon(this.themeOpen ? 'chevronUp' : 'chevronDown', 12)}</span></button>
+              >${designIcon('theme', 14)} Theme</button>
               ${this.themeOpen
                 ? html`
                     <div class="menu-sub">

@@ -132,7 +132,7 @@ const publicStats: PublicStats = {
   ],
 }
 
-/** Seven days of Sentry numbers: the design's sparkline shape, scaled so the averages read 0.4 % / 182 ms and 1.1 % / 640 ms. */
+/** Seven days of Sentry numbers: the design's sparkline shape, scaled in proportion (so the sparkline has the design's shape) so the averages read 0.4 % / 182 ms and 1.1 % / 640 ms. */
 const healthOf = (
   issues: Array<[string, number]>,
   errorRate: number[],
@@ -148,12 +148,12 @@ const healthOf = (
 const adminStats: AdminStats = {
   sentry: healthOf(
     [['UnicodeEncodeError: surrogates not allowed', 12], ['SSE stream closed early', 4]],
-    [3, 4, 2, 5, 3, 2, 1].map((v) => v * 0.1 + 0.1142857),
+    [3, 4, 2, 5, 3, 2, 1].map((v) => v * 0.14),
     [180, 190, 170, 200, 185, 175, 174],
   ),
   sentry_frontend: healthOf(
     [['ResizeObserver loop limit exceeded', 31], ['Failed to fetch /api/v1/gifs/status', 2]],
-    [2, 2, 3, 6, 4, 3, 2].map((v) => v * 0.1 + 0.7857143),
+    [2, 2, 3, 6, 4, 3, 2].map((v) => (v * 7.7) / 23),
     [620, 650, 600, 700, 660, 630, 620],
   ),
   feedback: {

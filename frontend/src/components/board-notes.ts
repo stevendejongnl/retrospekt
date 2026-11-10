@@ -177,6 +177,7 @@ export class BoardNotes extends LitElement {
     }
     .checklist-row input[type='checkbox'] {
       margin: 0;
+      color-scheme: light;
     }
     .checklist-row.checked .checklist-label {
       text-decoration: line-through;
@@ -234,6 +235,9 @@ export class BoardNotes extends LitElement {
     .note-save-btn,
     .note-cancel-btn,
     .add-note-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       padding: 5px 12px;
       border-radius: var(--retro-radius-sm);
       font-size: 12px;
@@ -243,7 +247,7 @@ export class BoardNotes extends LitElement {
     .note-save-btn,
     .add-note-btn {
       background: var(--retro-accent);
-      border: 1px solid var(--retro-accent);
+      border: 1px solid var(--retro-accent-border);
       color: var(--retro-accent-contrast);
       font-weight: 600;
     }

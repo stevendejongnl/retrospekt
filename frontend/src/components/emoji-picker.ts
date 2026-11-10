@@ -36,7 +36,7 @@ export class EmojiPicker extends LitElement {
       width: 26px;
       height: 22px;
       border-radius: var(--retro-radius-md);
-      border: 1px dashed color-mix(in srgb, var(--retro-text-primary) 27%, transparent);
+      border: 1px dashed var(--retro-dashed-border);
       background: var(--retro-bg-subtle);
       color: var(--retro-text-secondary);
       cursor: pointer;

@@ -103,7 +103,7 @@ export class RetroTimer extends LitElement {
     .timer-panel {
       position: absolute;
       bottom: calc(100% + 17px);
-      left: 1.5px;
+      left: 2px;
       z-index: 30;
       width: 300px;
       max-width: calc(100vw - 24px);
@@ -245,6 +245,7 @@ export class RetroTimer extends LitElement {
       box-shadow: var(--retro-glass-shadow);
       padding: 5px 12px;
       font-family: var(--retro-font-mono);
+      color: var(--retro-text-primary);
     }
     .timer-pill .timer-display {
       font-size: 15px;

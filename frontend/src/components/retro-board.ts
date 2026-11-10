@@ -126,7 +126,7 @@ export class RetroBoard extends LitElement {
       align-items: center;
       gap: 6px;
       background: none;
-      border: 1px dashed color-mix(in srgb, var(--retro-text-primary) 27%, transparent);
+      border: 1px dashed var(--retro-dashed-border);
       border-radius: var(--retro-radius-sm);
       padding: 5px 12px;
       font-size: 12px;

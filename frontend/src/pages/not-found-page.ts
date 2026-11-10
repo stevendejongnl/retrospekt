@@ -77,7 +77,7 @@ export class NotFoundPage extends LitElement {
       font-size: 11px;
       color: var(--retro-text-muted);
       text-decoration: underline;
-      text-decoration-color: color-mix(in srgb, var(--retro-text-primary) 20%, transparent);
+      text-decoration-color: var(--retro-hairline);
       text-underline-offset: 3px;
     }
   `]
