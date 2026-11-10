@@ -64,7 +64,7 @@ function storageFor(screen: ParityScreen): Record<string, string> {
 
 async function answerApi(page: Page, screen: ParityScreen): Promise<void> {
   const responses = createApiResponses()
-  const session = createSessionFixture(screen.board?.phase ?? 'discussing', screen.board?.timer ?? 'none')
+  const session = createSessionFixture(screen.board?.phase ?? 'discussing', screen.board?.timer ?? 'none', screen.board?.notes ?? false)
   await page.route('**/*', (route: Route) => {
     const url = new URL(route.request().url())
     if (url.hostname !== '127.0.0.1') return route.abort() // nothing leaves this machine

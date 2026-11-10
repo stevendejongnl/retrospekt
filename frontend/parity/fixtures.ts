@@ -2,7 +2,7 @@
  * The data the design shows, in the shapes the API returns. The comparison run answers the app's
  * requests with these, so the app and the design render the same board, the same stats and the same names.
  */
-import type { AdminStats, Card, PublicStats, Reaction, Session, SessionPhase, Vote } from '../src/types'
+import type { AdminStats, Card, Note, PublicStats, Reaction, Session, SessionPhase, Vote } from '../src/types'
 import { FIXED_TIME } from './browser-settings'
 
 export const FIXTURE_SESSION_ID = 'ad9aaaea-758c-4e27-a70d-169ff1b6cd90'
@@ -72,7 +72,13 @@ function timerFor(kind: TimerFixture): Session['timer'] {
   }
 }
 
-export function createSessionFixture(phase: SessionPhase, timer: TimerFixture = 'none'): Session {
+const NOTES: Note[] = [
+  { id: 'note-1', title: 'Follow-ups', text: '- [x] Book the retro room\n- [ ] Share the runbook link\n- [ ] Timebox stand-ups', author_name: 'Alice', created_at: '2026-05-05T09:40:00Z' },
+  { id: 'note-2', title: null, text: 'Parking lot: should we split the deploy docs by team?', author_name: 'Bob', created_at: '2026-05-05T09:45:00Z' },
+  { id: 'note-3', title: 'Next retro', text: 'Try Start / Stop / Continue next sprint.', author_name: 'Carol', created_at: '2026-05-05T09:50:00Z' },
+]
+
+export function createSessionFixture(phase: SessionPhase, timer: TimerFixture = 'none', withNotes = false): Session {
   return {
     id: FIXTURE_SESSION_ID,
     name: 'Sprint 42 Retro',
@@ -81,7 +87,7 @@ export function createSessionFixture(phase: SessionPhase, timer: TimerFixture = 
     phase,
     participants: PARTICIPANTS.map((name, i) => ({ name, joined_at: `2026-05-05T09:0${i}:00Z` })),
     cards: cardsFor(phase),
-    notes: [],
+    notes: withNotes ? NOTES : [],
     timer: timerFor(timer),
     reactions_enabled: true,
     open_facilitator: false,

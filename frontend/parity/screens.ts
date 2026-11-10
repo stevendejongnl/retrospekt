@@ -21,7 +21,7 @@ export interface ParityScreen {
   /** Who is looking: the facilitator of the board, a participant, or somebody who has not joined yet. */
   viewer: 'facilitator' | 'participant' | 'visitor'
   /** The session the board shows, when the route is a board. */
-  board?: { phase: SessionPhase; timer?: TimerFixture }
+  board?: { phase: SessionPhase; timer?: TimerFixture; notes?: boolean }
   brand?: 'cs'
   /** Leave the analytics consent unanswered, so the consent card shows. */
   askConsent?: boolean
@@ -76,7 +76,10 @@ export const PARITY_SCREENS: ParityScreen[] = [
   ...pair('settings', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.settings-btn' }] }),
   ...pair('help', { viewer: 'participant', size: [1000, 700], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.avatar-menu-btn' }, { click: '.menu-help' }] }),
   ...pair('history', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, withHistory: true, steps: [{ click: '.avatar-menu-btn' }, { click: '.menu-history' }] }),
-  ...pair('notes', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: 'button[aria-label=\"Board notes\"]' }] }),
+  ...pair('notes', {
+    viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing', notes: true },
+    steps: [{ click: 'button[aria-label="Board notes"]' }, { click: 'board-notes .note-item:nth-child(3) .note-text' }],
+  }),
 
   // Pages
   ...pair('stats', { ...PAGE, size: [1100, 880], route: '/stats' }),

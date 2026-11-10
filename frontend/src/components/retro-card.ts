@@ -135,6 +135,7 @@ export class RetroCard extends LitElement {
     .reactions-row {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 4px;
       margin-bottom: 8px;
     }
@@ -188,7 +189,7 @@ export class RetroCard extends LitElement {
       background: none;
       border: none;
       cursor: pointer;
-      color: var(--retro-text-disabled);
+      color: var(--retro-text-muted);
       font-size: 12px;
       font-family: inherit;
       padding: 0;

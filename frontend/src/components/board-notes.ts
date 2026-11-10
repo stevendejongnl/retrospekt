@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Note } from '../types'
 import { api } from '../api'
-import { faIconStyles, designIcon, iconTrashCan } from '../icons'
+import { faIconStyles, designIcon } from '../icons'
 import { baseStyles } from '../styles'
 
 const CHECKLIST_LINE = /^- \[([ xX])\] (.*)$/
@@ -109,49 +109,45 @@ export class BoardNotes extends LitElement {
     .notes-list {
       flex: 1;
       overflow-y: auto;
-      padding: 12px 12px 8px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
 
     .note-item {
-      border: 1.5px solid var(--retro-border-default);
+      border: 1px solid var(--retro-border-default);
+      background: var(--retro-bg-subtle);
       border-radius: var(--retro-radius-md);
       padding: 10px 12px;
       position: relative;
+    }
+    .note-item.editing {
+      border-color: color-mix(in srgb, var(--retro-accent) 50%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--retro-accent) 12%, transparent);
     }
 
     .note-meta {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .note-author {
       font-size: 11px;
-      font-weight: 700;
-      color: var(--retro-accent);
-      letter-spacing: 0.1px;
+      font-weight: 600;
+      color: var(--retro-text-muted);
     }
     .delete-note-btn {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
       border: none;
       background: none;
       cursor: pointer;
-      font-size: 13px;
-      color: var(--retro-text-disabled);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--retro-text-muted);
       padding: 0;
-      flex-shrink: 0;
-      transition: background 0.1s, color 0.1s;
     }
     .delete-note-btn:hover {
-      background: var(--retro-bg-subtle);
       color: var(--retro-error);
     }
 
@@ -161,105 +157,108 @@ export class BoardNotes extends LitElement {
       color: var(--retro-text-primary);
       margin-bottom: 4px;
       cursor: pointer;
-      border-radius: 4px;
-      padding: 2px 4px;
-      margin-left: -4px;
-    }
-    .note-title:hover {
-      background: var(--retro-bg-subtle);
     }
 
     .note-text {
       font-size: 13px;
-      color: var(--retro-text-primary);
+      color: var(--retro-text-secondary);
       line-height: 1.5;
       cursor: pointer;
-      border-radius: 4px;
-      padding: 2px 4px;
-      margin: -2px -4px;
-      transition: background 0.1s;
       word-break: break-word;
-    }
-    .note-text:hover {
-      background: var(--retro-bg-subtle);
     }
 
     .checklist-row {
       display: flex;
-      align-items: flex-start;
-      gap: 6px;
-      padding: 1px 0;
+      align-items: center;
+      gap: 8px;
+      padding: 2px 0;
+      font-size: 13px;
+      line-height: normal;
     }
-    .checklist-row input[type="checkbox"] {
-      margin-top: 3px;
-      flex-shrink: 0;
+    .checklist-row input[type='checkbox'] {
+      margin: 0;
     }
     .checklist-row.checked .checklist-label {
       text-decoration: line-through;
-      color: var(--retro-text-muted);
     }
 
     .note-edit-title-input {
+      display: block;
       width: 100%;
-      box-sizing: border-box;
       font-size: 13px;
       font-weight: 700;
       font-family: inherit;
       color: var(--retro-text-primary);
-      background: var(--retro-bg-page);
-      border: 1.5px solid var(--retro-accent);
-      border-radius: var(--retro-radius-sm);
-      padding: 5px 8px;
+      background: none;
+      border: none;
+      padding: 0;
+      margin-bottom: 4px;
       outline: none;
-      margin-bottom: 6px;
+    }
+    .note-edit-title-input::placeholder {
+      font-weight: 400;
+      color: var(--retro-text-muted);
     }
 
-    .note-edit-textarea {
+    .note-edit-textarea,
+    .add-note-textarea {
       width: 100%;
-      box-sizing: border-box;
       font-size: 13px;
       font-family: inherit;
       color: var(--retro-text-primary);
-      background: var(--retro-bg-page);
-      border: 1.5px solid var(--retro-accent);
-      border-radius: var(--retro-radius-sm);
-      padding: 6px 8px;
-      resize: vertical;
-      min-height: 60px;
+      background: var(--retro-input-bg);
+      border: 1px solid var(--retro-input-border);
+      border-radius: var(--retro-radius-md);
+      padding: 10px 12px;
+      resize: none;
       outline: none;
-      line-height: 1.5;
+    }
+    .note-edit-textarea {
+      margin-bottom: 8px;
+    }
+    .add-note-textarea::placeholder,
+    .add-note-title-input::placeholder {
+      color: var(--retro-text-muted);
+    }
+    .note-edit-textarea:focus,
+    .add-note-textarea:focus,
+    .add-note-title-input:focus {
+      border-color: color-mix(in srgb, var(--retro-accent) 55%, transparent);
     }
 
     .note-edit-actions {
       display: flex;
       justify-content: flex-end;
       gap: 6px;
-      margin-top: 6px;
     }
     .note-save-btn,
-    .note-cancel-btn {
-      padding: 4px 12px;
+    .note-cancel-btn,
+    .add-note-btn {
+      padding: 5px 12px;
       border-radius: var(--retro-radius-sm);
       font-size: 12px;
-      font-weight: 600;
       font-family: inherit;
       cursor: pointer;
-      border: none;
     }
-    .note-save-btn {
+    .note-save-btn,
+    .add-note-btn {
       background: var(--retro-accent);
-      color: white;
+      border: 1px solid var(--retro-accent);
+      color: var(--retro-accent-contrast);
+      font-weight: 600;
     }
-    .note-save-btn:hover {
+    .note-save-btn:hover,
+    .add-note-btn:hover {
       background: var(--retro-accent-hover);
     }
     .note-cancel-btn {
-      background: none;
-      color: var(--retro-text-muted);
+      background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);
+      color: var(--retro-text-primary);
+      font-weight: 500;
     }
     .note-cancel-btn:hover {
-      background: var(--retro-bg-subtle);
+      border-color: var(--retro-accent);
     }
 
     .empty-state {
@@ -288,70 +287,30 @@ export class BoardNotes extends LitElement {
     }
 
     .add-note-form {
-      padding: 12px 12px 16px;
-      border-top: 1px solid var(--retro-border-subtle);
+      padding: 12px;
+      border-top: 1px solid var(--retro-border-default);
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
     .add-note-title-input {
+      display: block;
       width: 100%;
-      box-sizing: border-box;
       font-size: 13px;
-      font-weight: 700;
       font-family: inherit;
       color: var(--retro-text-primary);
-      background: var(--retro-bg-page);
-      border: 1.5px solid var(--retro-border-default);
-      border-radius: var(--retro-radius-sm);
+      background: var(--retro-input-bg);
+      border: 1px solid var(--retro-input-border);
+      border-radius: var(--retro-radius-md);
       padding: 7px 10px;
       outline: none;
-      transition: border-color 0.12s;
-    }
-    .add-note-title-input:focus {
-      border-color: var(--retro-accent);
-    }
-    .add-note-textarea {
-      width: 100%;
-      box-sizing: border-box;
-      font-size: 13px;
-      font-family: inherit;
-      color: var(--retro-text-primary);
-      background: var(--retro-bg-page);
-      border: 1.5px solid var(--retro-border-default);
-      border-radius: var(--retro-radius-sm);
-      padding: 8px 10px;
-      resize: none;
-      height: 60px;
-      outline: none;
-      line-height: 1.5;
-      transition: border-color 0.12s;
-    }
-    .add-note-textarea:focus {
-      border-color: var(--retro-accent);
     }
     .add-note-footer {
       display: flex;
       justify-content: flex-end;
     }
-    .add-note-btn {
-      padding: 6px 16px;
-      background: var(--retro-accent);
-      color: white;
-      border: none;
-      border-radius: var(--retro-radius-sm);
-      font-size: 13px;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background 0.12s;
-    }
-    .add-note-btn:hover {
-      background: var(--retro-accent-hover);
-    }
-    .add-note-btn:disabled {
-      opacity: 0.5;
+    .add-note-btn[aria-disabled='true'] {
       cursor: default;
     }
   `]
@@ -450,7 +409,7 @@ export class BoardNotes extends LitElement {
         <div class="sidebar-header">
           <span class="sidebar-title">
             <span class="icon">${designIcon('note', 16)}</span>
-            Board Notes
+            Board notes
           </span>
           <button class="close-btn" @click=${this.close} aria-label="Close">×</button>
         </div>
@@ -465,15 +424,15 @@ export class BoardNotes extends LitElement {
                 </div>
               `
             : this.notes.map(note => html`
-                <div class="note-item">
+                <div class="note-item ${this.editingNoteId === note.id ? 'editing' : ''}">
                   <div class="note-meta">
                     <span class="note-author">${note.author_name}</span>
-                    <button
+                    ${this.editingNoteId === note.id ? '' : html`<button
                       class="delete-note-btn"
                       @click=${() => this.deleteNote(note.id)}
                       aria-label="Delete note"
                       title="Delete"
-                    >${iconTrashCan()}</button>
+                    >×</button>`}
                   </div>
                   ${this.editingNoteId === note.id
                     ? html`
@@ -487,6 +446,8 @@ export class BoardNotes extends LitElement {
                         />
                         <textarea
                           class="note-edit-textarea"
+                          rows="3"
+                          aria-label="Edit note text"
                           .value=${this.editText}
                           @input=${(e: Event) => { this.editText = (e.target as HTMLTextAreaElement).value }}
                           @keydown=${(e: KeyboardEvent) => this.onEditKeydown(e, note.id)}
@@ -518,6 +479,8 @@ export class BoardNotes extends LitElement {
             />
             <textarea
               class="add-note-textarea"
+              rows="3"
+              aria-label="Note text"
               placeholder="Add a shared note… (Ctrl+Enter to submit)"
               .value=${this.newNoteText}
               @input=${(e: Event) => { this.newNoteText = (e.target as HTMLTextAreaElement).value }}
@@ -527,7 +490,7 @@ export class BoardNotes extends LitElement {
               <button
                 class="add-note-btn"
                 @click=${this.addNote}
-                ?disabled=${!this.newNoteText.trim()}
+                aria-disabled=${this.newNoteText.trim() ? 'false' : 'true'}
               >Add</button>
             </div>
           </div>
