@@ -877,6 +877,7 @@ export class RetroBoard extends LitElement {
               .participantName=${this.presenting ? '' : this.participantName}
               .participantNames=${participantNames}
               .phase=${session.phase}
+              .columns=${session.columns}
               .accent=${columnColorVar(resolveColumnColor(session.column_colors, col, index))}
               .color=${resolveColumnColor(session.column_colors, col, index)}
               .participantColorMap=${this.participantColorMap}

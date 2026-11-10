@@ -31,6 +31,8 @@ export class RetroColumn extends LitElement {
   @property({ type: Boolean }) isFacilitator = false
   // Presentation mode: published cards only, nothing to press (the board decides who the audience is)
   @property({ type: Boolean, reflect: true }) presenting = false
+  // Every column of the board, for the touch picker's "Move to"
+  @property({ type: Array }) columns: string[] = []
   @property({ type: Object }) participantColorMap: Record<string, string> = {}
   @property({ type: Array }) participantNames: string[] = []
   @property({ type: Boolean }) reactionsEnabled = true
@@ -737,6 +739,15 @@ export class RetroColumn extends LitElement {
         ?canMove=${live && this.phase !== 'closed' &&
         !card.group_id &&
         (card.author_name === this.participantName || this.isFacilitator)}
+        .moveTargets=${live && this.phase !== 'closed' && !card.group_id &&
+        (card.author_name === this.participantName || this.isFacilitator)
+          ? this.columns.filter((column) => column !== this.title)
+          : []}
+        .groupTargets=${live && this.phase === 'discussing' && card.published && !card.group_id
+          ? this.visibleCards
+            .filter((other) => other.id !== card.id && other.published && !other.group_id)
+            .map((other) => ({ id: other.id, text: other.text }))
+          : []}
         style="--card-edge: ${card.published ? 'var(--col-accent)' : 'var(--retro-text-muted)'}"
       ></retro-card>
     `

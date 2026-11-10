@@ -58,6 +58,7 @@ const MOBILE_SCREENS: ParityScreen[] = [
   ...pair('m-share', { ...MOBILE_BOARD, board: { phase: 'discussing' }, steps: [{ click: '.share-btn' }] }),
   ...pair('m-notification', { ...MOBILE_BOARD, board: { phase: 'discussing' }, askConsent: true }),
   ...pair('m-present', { ...MOBILE_BOARD, board: { phase: 'discussing', timer: 'running' }, presenting: true }),
+  ...pair('m-card-move', { ...MOBILE_BOARD, size: [390, 640], board: { phase: 'discussing' } }),
   ...pair('m-stats', { viewer: 'visitor', size: MOBILE_SIZE, route: '/stats', pending: MOBILE_PENDING }),
 ]
 

@@ -32,6 +32,7 @@ both('m-timer', (dark) => <MBoard dark={dark} phase="Discussing" timer="running"
 both('m-share', (dark) => <MBoard dark={dark} phase="Discussing" sharing />);
 both('m-notification', (dark) => <MBoard dark={dark} phase="Discussing" notification />);
 both('m-present', (dark) => <MPresent dark={dark} />);
+both('m-card-move', (dark) => <MCardMove dark={dark} />);
 both('m-stats', (dark) => <MStats dark={dark} />);
 
 both('chosen-participant', (dark) => <BoardV2 dark={dark} phase="Discussing" role="participant" timer="running" />);

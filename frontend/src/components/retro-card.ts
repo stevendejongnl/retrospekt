@@ -47,6 +47,9 @@ export class RetroCard extends LitElement {
   @property({ type: Boolean }) canEdit = false
   @property({ type: Boolean }) canGroup = false
   @property({ type: Boolean }) canMove = false
+  // Touch screens: no dragging, so the card offers the same moves in a picker (set by retro-column from the same rules)
+  @property({ type: Array }) moveTargets: string[] = []
+  @property({ type: Array }) groupTargets: { id: string; text: string }[] = []
 
   @state() private isDragOver = false
   @state() private editing = false
@@ -348,6 +351,36 @@ export class RetroCard extends LitElement {
         font-size: 11px;
       }
     }
+
+    /* Touch screens only: the picker is the whole button, drawn as an icon, so there is nothing to drag */
+    .touch-move {
+      display: none;
+    }
+    @media (pointer: coarse) {
+      .touch-move {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--retro-bg-subtle);
+        border: 1px solid var(--retro-border-default);
+        color: var(--retro-text-secondary);
+      }
+      .touch-move svg {
+        pointer-events: none;
+      }
+      .move-select {
+        position: absolute;
+        inset: -1px; /* over the circle's border too, so the whole 32 px is the target */
+        width: calc(100% + 2px);
+        height: calc(100% + 2px);
+        opacity: 0;
+        font-size: 16px; /* anything smaller makes iOS zoom the page */
+      }
+    }
   `]
 
   private get hasVoted(): boolean {
@@ -491,6 +524,19 @@ export class RetroCard extends LitElement {
     )
   }
 
+  /** The phone's own picker: "move:<column>" or "group:<card id>", then the same events dragging fires. */
+  private onTouchMove(e: Event): void {
+    const select = e.target as HTMLSelectElement
+    const [kind, ...rest] = select.value.split(':')
+    const value = rest.join(':')
+    select.value = ''
+    if (kind === 'move') {
+      this.dispatchEvent(new CustomEvent('move-card', { bubbles: true, composed: true, detail: { cardId: this.card.id, column: value } }))
+    } else if (kind === 'group') {
+      this.dispatchEvent(new CustomEvent('group-cards', { bubbles: true, composed: true, detail: { cardId: this.card.id, targetCardId: value } }))
+    }
+  }
+
   private _onDragStart(e: DragEvent): void {
     _draggedCardId = this.card.id
     _draggedCardColumn = this.card.column
@@ -617,6 +663,20 @@ export class RetroCard extends LitElement {
           <div class="card-actions">
             ${this.reactionsEnabled && this.canReact && groups.length === 0
         ? html`<emoji-picker @pick-emoji=${this.onPickEmoji}></emoji-picker>`
+        : ''}
+            ${this.moveTargets.length || this.groupTargets.length
+        ? html`<span class="touch-move">
+                  <select class="move-select" aria-label="Move or group this card" @change=${this.onTouchMove}>
+                    <option value="">Move or group…</option>
+                    ${this.moveTargets.length
+            ? html`<optgroup label="Move to">${this.moveTargets.map((column) => html`<option value=${`move:${column}`}>${column}</option>`)}</optgroup>`
+            : ''}
+                    ${this.groupTargets.length
+            ? html`<optgroup label="Group with">${this.groupTargets.map((target) => html`<option value=${`group:${target.id}`}>${target.text}</option>`)}</optgroup>`
+            : ''}
+                  </select>
+                  ${designIcon('move', 14)}
+                </span>`
         : ''}
             ${this.canAssign && !card.assignee && !this.assigning
         ? html`<button class="assign-btn" @click=${this.onAssignClick} title="Assign to…">

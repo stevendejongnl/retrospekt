@@ -457,11 +457,16 @@ test.describe('touch: move and group a card without dragging (STE-256)', () => {
     await expect(page.locator('.move-select')).toHaveCount(0)
   })
 
-  test('a participant has it for their own cards only', async ({ page }) => {
+  test('a participant may move their own cards, and group any published card, like dragging', async ({ page }) => {
     const mine = { ...BASE, cards: [card({ id: 'a', text: 'Bobs', author_name: 'Bob' }), card({ id: 'z', text: 'Alices', author_name: 'Alice' })] as object[] }
     await open(page, { session: mine, facilitator: false })
-    await expect(page.locator('retro-card').filter({ hasText: 'Bobs' }).locator('.move-select')).toBeAttached()
-    await expect(page.locator('retro-card').filter({ hasText: 'Alices' }).locator('.move-select')).toHaveCount(0)
+    const byText = (text: string) => page.locator('retro-card').filter({ has: page.locator('.card-text', { hasText: text }) })
+    const own = await byText('Bobs').locator('.move-select option').allTextContents()
+    expect(own, 'own card can be moved').toContain('To Improve')
+    expect(own, 'own card can be grouped').toContain('Alices')
+    const other = await byText('Alices').locator('.move-select option').allTextContents()
+    expect(other, 'someone else\'s card cannot be moved').not.toContain('To Improve')
+    expect(other, 'someone else\'s card can be grouped').toContain('Bobs')
   })
 })
 
@@ -470,6 +475,6 @@ test.describe('with a mouse the touch control is not shown (STE-256)', () => {
 
   test('there is no Move or group control on desktop', async ({ page }) => {
     await open(page)
-    await expect(page.locator('.move-select')).toBeHidden()
+    await expect(page.locator('.move-select:visible')).toHaveCount(0)
   })
 })
