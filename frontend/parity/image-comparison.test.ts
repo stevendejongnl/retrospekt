@@ -24,7 +24,7 @@ function withPixel(raster: Raster, x: number, y: number, [r, g, b]: [number, num
 describe('image comparison', () => {
   it('uses the same rules as the Hoard parity checks', () => {
     expect(DEFAULT_CHANNEL_TOLERANCE).toBe(24)
-    expect(MAXIMUM_DIFFERENCE_SHARE).toBe(0)
+    expect(MAXIMUM_DIFFERENCE_SHARE).toBe(0.0002)
   })
 
   it('finds no differing pixel in identical images', () => {

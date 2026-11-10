@@ -3,7 +3,7 @@
  *
  * Font anti-aliasing differs a little between two renders of the same screen, so a pixel only counts as
  * different when one of its colour channels is further apart than a tolerance. A screen passes only while
- * the share of differing pixels stays within the maximum, which is none. Both numbers are set here once.
+ * the share of differing pixels stays within the maximum, which is a few edge pixels. Both numbers are set here once.
  */
 
 export interface Raster {
@@ -15,8 +15,12 @@ export interface Raster {
 
 /** A pixel differs when any colour channel is further apart than this (0 to 255). */
 export const DEFAULT_CHANNEL_TOLERANCE = 24
-/** A screen passes while at most this share of its pixels differs; none may. */
-export const MAXIMUM_DIFFERENCE_SHARE = 0
+/**
+ * A screen passes while at most this share of its pixels differs: 0.02 %, about 100 pixels on a 1000 x 600 screen.
+ * That is room for the anti-aliasing of a rounded corner or a glyph that lands a fraction of a pixel away, and no
+ * room for a layout shift, a wrong colour or a missing element (those are thousands of pixels).
+ */
+export const MAXIMUM_DIFFERENCE_SHARE = 0.0002
 
 const MATCHING_PIXEL_BRIGHTNESS = 0.35
 const DIFFERENCE_COLOUR = [255, 0, 0] as const

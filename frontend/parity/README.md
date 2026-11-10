@@ -21,7 +21,7 @@ Requires the Playwright browsers (`npx playwright install chromium`).
 ## Tolerance
 
 A pixel differs when any colour channel is more than 24 apart, which is above the anti-aliasing noise between two renders
-of the same screen. A screen passes only when no pixel differs, so a layout shift of one pixel fails.
+of the same screen. A screen passes while at most 0.02 % of its pixels differ (about 100 on a 1000 x 600 screen): room for the anti-aliasing of a rounded corner or a glyph a fraction of a pixel off, none for a layout shift (a one-pixel shift moves thousands of pixels), a wrong colour or a missing element.
 Both numbers are set once in `image-comparison.ts`.
 
 ## Where the references come from
