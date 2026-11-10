@@ -1,3 +1,10 @@
+## [1.55.0](https://github.com/stevendejongnl/retrospekt/compare/v1.54.1...v1.55.0) (2026-11-10)
+
+### Features
+
+* **columns:** colour columns by meaning and let the facilitator pick the colour ([8a16b3c](https://github.com/stevendejongnl/retrospekt/commit/8a16b3c56df0a9c054dbaa70bb2bdd8cc6e477cb))
+* **presentation:** present the board on a meeting screen, published cards only ([fd51a29](https://github.com/stevendejongnl/retrospekt/commit/fd51a2944930c1917a1c7fa0120dc8f281350fc2))
+
 ## [1.54.1](https://github.com/stevendejongnl/retrospekt/compare/v1.54.0...v1.54.1) (2026-11-10)
 
 ### Bug Fixes
