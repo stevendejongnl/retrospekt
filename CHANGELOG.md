@@ -1,3 +1,9 @@
+## [1.54.1](https://github.com/stevendejongnl/retrospekt/compare/v1.54.0...v1.54.1) (2026-11-10)
+
+### Bug Fixes
+
+* **home:** the history sidebar opens on the left, next to its button ([c3e5d05](https://github.com/stevendejongnl/retrospekt/commit/c3e5d05c1fefc7cf880bdcbdd2eac59d8dd415a7))
+
 ## [1.54.0](https://github.com/stevendejongnl/retrospekt/compare/v1.53.0...v1.54.0) (2026-11-10)
 
 ### Features
