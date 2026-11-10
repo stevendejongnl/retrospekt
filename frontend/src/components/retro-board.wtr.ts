@@ -99,7 +99,7 @@ describe('retro-board', () => {
 
     it('collecting: Start discussion, Add column and Settings, no Back', async () => {
       const root = await dockOf('collecting')
-      expect(text(root, '.phase-btn')).to.equal('Start discussion →')
+      expect(text(root, '.phase-btn')).to.equal('Start discussion')
       expect(root.querySelector('.add-column-btn')).to.not.be.null
       expect(root.querySelector('.settings-btn')).to.not.be.null
       expect(root.querySelector('.back-btn')).to.be.null
@@ -107,14 +107,14 @@ describe('retro-board', () => {
 
     it('discussing: Back and Close session, no Add column', async () => {
       const root = await dockOf('discussing')
-      expect(text(root, '.back-btn')).to.equal('← Back')
+      expect(text(root, '.back-btn')).to.equal('Back')
       expect(text(root, '.phase-btn.close-btn')).to.equal('Close session')
       expect(root.querySelector('.add-column-btn')).to.be.null
     })
 
     it('closed: Reopen instead of Back, and no phase button', async () => {
       const root = await dockOf('closed')
-      expect(text(root, '.back-btn')).to.equal('← Reopen')
+      expect(text(root, '.back-btn')).to.equal('Reopen')
       expect(root.querySelector('.phase-btn')).to.be.null
     })
 
