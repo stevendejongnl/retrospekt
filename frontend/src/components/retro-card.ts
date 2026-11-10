@@ -291,7 +291,6 @@ export class RetroCard extends LitElement {
       font-weight: 600;
     }
     .vote-btn:disabled {
-      opacity: 0.45;
       cursor: default;
     }
     .publish-btn {

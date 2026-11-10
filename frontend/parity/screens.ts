@@ -58,9 +58,9 @@ export const PARITY_SCREENS: ParityScreen[] = [
   ...pair('board-collecting', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'collecting' } }),
   ...pair('board-discussing', { viewer: 'facilitator', size: [1100, 760], route: SESSION, board: { phase: 'discussing' } }),
   ...pair('board-closed', { viewer: 'facilitator', size: [1100, 720], route: SESSION, board: { phase: 'closed' } }),
-  ...pair('board-share', { viewer: 'facilitator', size: [1100, 560], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.share-btn' }] }),
-  ...pair('board-actions', { viewer: 'facilitator', size: [1100, 560], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: 'button[aria-label="Action items"]' }] }),
-  ...pair('board-menu', { viewer: 'facilitator', size: [1100, 560], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.avatar-menu-btn' }] }),
+  ...pair('board-share', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.share-btn' }] }),
+  ...pair('board-actions', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: 'button[aria-label="Action items"]' }] }),
+  ...pair('board-menu', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.avatar-menu-btn' }] }),
   { viewer: 'facilitator', name: 'board-cs-brand', theme: 'light', brand: 'cs', size: [1100, 760], route: SESSION, board: { phase: 'discussing' } },
 
   // The header and dock, as a participant and in their other states
@@ -71,8 +71,8 @@ export const PARITY_SCREENS: ParityScreen[] = [
 
   // Overlays that open from the header or the dock
   ...pair('dock', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, askConsent: true, pending: 'needs the star-rating feedback card and the dock that shifts right' }),
-  ...pair('settings', { viewer: 'facilitator', size: [1100, 620], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.settings-btn' }] }),
-  ...pair('help', { viewer: 'facilitator', size: [1000, 700], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.avatar-menu-btn' }, { click: '.menu-help' }] }),
+  ...pair('settings', { viewer: 'facilitator', size: [1100, 640], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.settings-btn' }] }),
+  ...pair('help', { viewer: 'participant', size: [1000, 700], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.avatar-menu-btn' }, { click: '.menu-help' }] }),
   ...pair('history', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, withHistory: true, steps: [{ click: '.avatar-menu-btn' }, { click: '.menu-history' }] }),
   ...pair('notes', { viewer: 'facilitator', size: [1100, 820], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: 'button[aria-label=\"Board notes\"]' }] }),
 

@@ -301,7 +301,7 @@ test.describe('retro-timer display', () => {
     await page.goto(`/session/${SESSION_ID}`)
     await openTimer(page)
     await expect(page.locator('.timer-display')).toBeVisible()
-    await expect(page.locator('.timer-display')).toContainText('5:00')
+    await expect(page.locator('.timer-display')).toContainText('05:00')
   })
 
   test('timer-display has .green class when remaining > 25%', async ({ page }) => {
@@ -369,7 +369,7 @@ test.describe('retro-timer interval callback', () => {
     await expect(page.locator('.facilitator-dock .timer-display')).toBeVisible()
     // Wait for the interval to fire and hit remaining <= 0 → clearTimer (line 224)
     await page.waitForTimeout(1500)
-    await expect(page.locator('.facilitator-dock .timer-display')).toContainText('0:00')
+    await expect(page.locator('.facilitator-dock .timer-display')).toContainText('00:00')
   })
 
 })
@@ -601,7 +601,7 @@ test.describe('retro-timer dock states', () => {
     const session = { ...BASE, timer: { duration_seconds: 60, started_at: new Date(Date.now() - 120000).toISOString(), paused_remaining: null } }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('.facilitator-dock .timer-display.red')).toContainText('0:00')
+    await expect(page.locator('.facilitator-dock .timer-display.red')).toContainText('00:00')
     const req = page.waitForRequest(r => r.url().includes('/timer/reset') && r.method() === 'POST')
     await page.locator('.facilitator-dock .timer-btn').filter({ hasText: 'Reset' }).click()
     await req

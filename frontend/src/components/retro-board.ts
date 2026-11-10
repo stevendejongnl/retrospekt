@@ -219,7 +219,6 @@ export class RetroBoard extends LitElement {
       position: fixed;
       inset: 0;
       background: var(--retro-overlay-bg);
-      backdrop-filter: blur(2px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -228,108 +227,135 @@ export class RetroBoard extends LitElement {
     }
     .settings-card {
       background: var(--retro-glass-bg-strong);
-      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
       border-radius: var(--retro-radius-lg);
       padding: 24px;
-      max-width: 440px;
+      max-width: 420px;
       width: 100%;
-      box-shadow: var(--retro-glass-shadow);
+      box-shadow: var(--retro-shadow-float);
     }
     .settings-card h3 {
       font-size: 18px;
-      font-weight: 800;
+      font-weight: 700;
+      letter-spacing: -0.01em;
       color: var(--retro-text-primary);
-      margin: 0 0 20px;
-      letter-spacing: -0.4px;
+      margin: 0 0 16px;
     }
     .settings-field {
-      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
     .settings-label {
-      display: block;
       font-size: 12px;
       font-weight: 600;
-      color: var(--retro-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 6px;
+      color: var(--retro-text-primary);
     }
     .settings-input {
       width: 100%;
-      box-sizing: border-box;
-      padding: 9px 12px;
-      border: 1px solid var(--retro-border-default);
-      border-radius: var(--retro-radius-sm);
+      padding: 10px 12px;
+      border: 1px solid var(--retro-input-border);
+      border-radius: var(--retro-radius-md);
       font-family: inherit;
       font-size: 14px;
-      background: var(--retro-bg-page);
+      background: var(--retro-input-bg);
       color: var(--retro-text-primary);
       outline: none;
-      transition: border-color 0.12s;
     }
     .settings-input:focus {
+      border-color: color-mix(in srgb, var(--retro-accent) 55%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--retro-accent) 14%, transparent);
+    }
+    .settings-input.narrow {
+      width: 140px;
+    }
+    .settings-gap-16 {
+      height: 16px;
+    }
+    .settings-gap-8 {
+      height: 8px;
+    }
+    .settings-check {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--retro-radius-md);
+      background: var(--retro-check-bg);
+      border: 1px solid var(--retro-check-border);
+      cursor: pointer;
+    }
+    .settings-check input[type='checkbox'] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .settings-check:focus-within .check-box {
+      outline: 2px solid color-mix(in srgb, var(--retro-accent) 55%, transparent);
+      outline-offset: 2px;
+    }
+    .check-box {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      border: 1px solid var(--retro-check-box-border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--retro-accent-contrast);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .check-box.on {
+      background: var(--retro-accent);
       border-color: var(--retro-accent);
     }
-    .settings-checkbox-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-      font-size: 14px;
+    .check-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
       color: var(--retro-text-primary);
     }
-    .settings-checkbox-row input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      accent-color: var(--retro-accent);
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .settings-section {
-      font-size: 12px;
-      font-weight: 600;
+    .check-sub {
+      display: block;
+      font-size: 11px;
       color: var(--retro-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin: 20px 0 12px;
-      padding-top: 16px;
-      border-top: 1px solid var(--retro-border-subtle);
+      margin-top: 2px;
     }
     .settings-actions {
       display: flex;
       gap: 8px;
       justify-content: flex-end;
-      margin-top: 24px;
+      margin-top: 20px;
     }
     .settings-cancel-btn {
-      background: none;
-      border: 1px solid var(--retro-border-default);
-      border-radius: var(--retro-radius-sm);
-      padding: 9px 18px;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--retro-text-secondary);
+      background: var(--retro-input-bg);
+      border: 1px solid var(--retro-input-border);
+      border-radius: var(--retro-radius-md);
+      padding: 8px 16px;
+      font-size: 13px;
+      color: var(--retro-text-primary);
       cursor: pointer;
       font-family: inherit;
-      transition: background 0.12s;
     }
     .settings-cancel-btn:hover {
       background: var(--retro-bg-hover);
     }
     .settings-save-btn {
       background: var(--retro-accent);
-      color: white;
-      border: none;
-      border-radius: var(--retro-radius-sm);
+      color: var(--retro-accent-contrast);
+      border: 1px solid color-mix(in srgb, var(--retro-accent) 50%, transparent);
+      border-radius: var(--retro-radius-md);
       padding: 8px 18px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: background 0.12s;
-      box-shadow: 0 4px 12px rgba(217, 116, 38, 0.3);
     }
     .settings-save-btn:hover {
       background: var(--retro-accent-hover);
@@ -579,48 +605,57 @@ export class RetroBoard extends LitElement {
               <div class="settings-card" @click=${(e: Event) => e.stopPropagation()}>
                 <h3>Session settings</h3>
                 <div class="settings-field">
-                  <label class="settings-label">Session name</label>
+                  <label class="settings-label" for="settings-name">Session name</label>
                   <input
+                    id="settings-name"
                     class="settings-input settings-name-input"
                     type="text"
                     .value=${this.settingName}
                     @input=${(e: InputEvent) => { this.settingName = (e.target as HTMLInputElement).value }}
                   />
                 </div>
-                <div class="settings-checkbox-row">
+                <div class="settings-gap-16"></div>
+                <label class="settings-check">
                   <input
                     class="settings-reactions-input"
                     type="checkbox"
-                    id="settings-reactions"
                     .checked=${this.settingReactions}
                     @change=${(e: Event) => { this.settingReactions = (e.target as HTMLInputElement).checked }}
                   />
-                  <label for="settings-reactions">Enable emoji reactions</label>
-                </div>
-                <div class="settings-checkbox-row">
+                  <span class="check-box ${this.settingReactions ? 'on' : ''}" aria-hidden="true">${this.settingReactions ? designIcon('check', 12) : ''}</span>
+                  <span>
+                    <span class="check-label">Enable emoji reactions</span>
+                    <span class="check-sub">Participants can react with emoji</span>
+                  </span>
+                </label>
+                <div class="settings-gap-8"></div>
+                <label class="settings-check">
                   <input
                     class="settings-open-facilitator-input"
                     type="checkbox"
-                    id="settings-open-facilitator"
                     .checked=${this.settingOpenFacilitator}
                     @change=${(e: Event) => { this.settingOpenFacilitator = (e.target as HTMLInputElement).checked }}
                   />
-                  <label for="settings-open-facilitator">Allow all participants to manage the board</label>
-                </div>
+                  <span class="check-box ${this.settingOpenFacilitator ? 'on' : ''}" aria-hidden="true">${this.settingOpenFacilitator ? designIcon('check', 12) : ''}</span>
+                  <span>
+                    <span class="check-label">Allow all participants to manage the board</span>
+                    <span class="check-sub">Phase, timer, columns</span>
+                  </span>
+                </label>
+                <div class="settings-gap-16"></div>
                 <div class="settings-field">
-                  <label class="settings-label">
-                    Max votes per participant
-                    <input
-                      class="settings-input settings-max-votes-input"
-                      type="number"
-                      min="1"
-                      placeholder="Unlimited"
-                      .value=${this.settingMaxVotes}
-                      @input=${(e: InputEvent) => {
-                        this.settingMaxVotes = (e.target as HTMLInputElement).value
-                      }}
-                    />
-                  </label>
+                  <label class="settings-label" for="settings-max-votes">Max votes per participant</label>
+                  <input
+                    id="settings-max-votes"
+                    class="settings-input narrow settings-max-votes-input"
+                    type="number"
+                    min="1"
+                    placeholder="Unlimited"
+                    .value=${this.settingMaxVotes}
+                    @input=${(e: InputEvent) => {
+                      this.settingMaxVotes = (e.target as HTMLInputElement).value
+                    }}
+                  />
                 </div>
                 <div class="settings-actions">
                   <button class="settings-cancel-btn" @click=${() => (this.showSettings = false)}>Cancel</button>

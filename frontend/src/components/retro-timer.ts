@@ -4,7 +4,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 
 import type { TimerState } from '../types'
 import { api } from '../api'
-import { faIconStyles, designIcon, iconClock, iconVolumeHigh, iconVolumeXmark } from '../icons'
+import { faIconStyles, designIcon } from '../icons'
 
 /**
  * Pure function: compute how many seconds remain on the timer at a given `now` timestamp.
@@ -52,7 +52,6 @@ export class RetroTimer extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      position: relative;
       margin-bottom: 0;
     }
     .timer-chip {
@@ -96,37 +95,36 @@ export class RetroTimer extends LitElement {
       justify-content: center;
       border-radius: 50%;
     }
-    :host([isfacilitator]) .timer-panel {
+    .timer-panel {
       position: absolute;
-      bottom: calc(100% + 18px);
-      left: 50%;
-      transform: translateX(-50%);
+      bottom: calc(100% + 17px);
+      left: 2.5px;
       z-index: 30;
-      width: max-content;
+      width: 300px;
       max-width: calc(100vw - 24px);
+      padding: 12px;
       background: var(--retro-glass-bg-strong);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: var(--retro-radius-md);
       box-shadow: var(--retro-shadow-float);
     }
-    .timer-panel {
-      background: var(--retro-bg-subtle);
-      border: 1px solid var(--retro-border-default);
-      border-radius: var(--retro-radius-md);
-      padding: 14px 16px;
+    .panel-eyebrow {
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .timer-heading {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--retro-text-secondary);
+      gap: 4px;
+      margin-bottom: 8px;
+      font-size: 10px;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.6px;
-      flex-shrink: 0;
+      color: var(--retro-text-muted);
+    }
+    .panel-readout {
+      margin-bottom: 8px;
+      font-family: var(--retro-font-mono);
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--retro-text-primary);
     }
     .timer-display {
       font-size: 22px;
@@ -136,70 +134,63 @@ export class RetroTimer extends LitElement {
       min-width: 58px;
       flex-shrink: 0;
     }
-    .timer-display.green { color: #22c55e; }
+    .timer-display.green { color: var(--retro-timer-ok); }
     .timer-display.amber { color: #f97316; }
-    .timer-display.red   { color: #ef4444; }
+    .timer-display.red   { color: var(--retro-timer-late); }
     .timer-display.idle  { color: var(--retro-text-disabled); }
     .presets {
       display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
     }
     .preset-btn {
-      background: none;
+      padding: 4px 10px;
+      background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);
       border-radius: var(--retro-radius-sm);
-      padding: 3px 9px;
       font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
       color: var(--retro-text-secondary);
+      cursor: pointer;
       font-family: inherit;
-      transition: all 0.12s;
     }
     .preset-btn:hover {
-      border-color: var(--retro-accent);
-      color: var(--retro-accent);
+      border-color: var(--retro-accent-border);
     }
     .preset-btn.active {
-      background: var(--retro-accent);
-      border-color: var(--retro-accent);
-      color: white;
+      background: var(--retro-accent-tint);
+      border-color: color-mix(in srgb, var(--retro-accent) 50%, transparent);
+      color: var(--retro-accent-ink);
     }
     .custom-row {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+      margin-bottom: 10px;
     }
     .custom-input {
-      width: 52px;
-      padding: 3px 7px;
-      border: 1px solid var(--retro-border-default);
+      width: 80px;
+      padding: 5px 10px;
+      border: 1px solid var(--retro-input-border);
       border-radius: var(--retro-radius-sm);
       font-size: 12px;
       font-family: inherit;
-      background: var(--retro-bg-surface);
+      background: var(--retro-input-bg);
       color: var(--retro-text-primary);
     }
     .custom-input:focus {
       outline: none;
-      border-color: var(--retro-accent);
+      border-color: color-mix(in srgb, var(--retro-accent) 55%, transparent);
     }
     .custom-set-btn {
-      background: none;
+      padding: 5px 12px;
+      background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);
       border-radius: var(--retro-radius-sm);
-      padding: 3px 9px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 500;
+      color: var(--retro-text-primary);
       cursor: pointer;
-      color: var(--retro-text-secondary);
       font-family: inherit;
-      transition: all 0.12s;
-    }
-    .custom-set-btn:hover:not(:disabled) {
-      border-color: var(--retro-accent);
-      color: var(--retro-accent);
     }
     .custom-set-btn:disabled {
       opacity: 0.4;
@@ -208,7 +199,6 @@ export class RetroTimer extends LitElement {
     .timer-actions {
       display: flex;
       gap: 6px;
-      margin-left: auto;
     }
     .timer-btn {
       display: inline-flex;
@@ -233,9 +223,10 @@ export class RetroTimer extends LitElement {
       cursor: default;
     }
     .timer-btn.secondary {
-      background: none;
+      background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);
-      color: var(--retro-text-secondary);
+      color: var(--retro-text-primary);
+      font-weight: 500;
     }
     .timer-btn.secondary:hover:not(:disabled) {
       opacity: 1;
@@ -247,22 +238,29 @@ export class RetroTimer extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: var(--retro-bg-subtle);
+      background: var(--retro-glass-bg-medium);
       border: 1px solid var(--retro-border-default);
-      border-radius: var(--retro-radius-lg);
-      padding: 6px 14px;
+      border-radius: 999px;
+      box-shadow: var(--retro-glass-shadow);
+      padding: 5px 12px;
+      font-family: var(--retro-font-mono);
+    }
+    .timer-pill .timer-display {
+      font-size: 15px;
+      min-width: 0;
+      letter-spacing: 0;
     }
     .mute-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: none;
+      background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);
       border-radius: var(--retro-radius-sm);
-      padding: 5px 8px;
+      padding: 5px 12px;
       font-size: 12px;
       cursor: pointer;
-      color: var(--retro-text-secondary);
+      color: var(--retro-text-primary);
       font-family: inherit;
       transition: all 0.12s;
     }
@@ -277,10 +275,10 @@ export class RetroTimer extends LitElement {
       align-items: center;
       background: none;
       border: none;
-      padding: 0 2px;
+      padding: 0;
       font-size: 11px;
       cursor: pointer;
-      color: var(--retro-text-disabled);
+      color: var(--retro-text-secondary);
       transition: color 0.12s;
     }
     .mute-btn-pill:hover {
@@ -376,7 +374,7 @@ export class RetroTimer extends LitElement {
     const s = Math.max(0, Math.round(seconds))
     const m = Math.floor(s / 60)
     const sec = s % 60
-    return `${m}:${sec.toString().padStart(2, '0')}`
+    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
   }
 
   private get colorClass(): string {
@@ -437,15 +435,13 @@ export class RetroTimer extends LitElement {
       if (!this.timer) return html``
       return html`
         <div class="timer-pill">
-          ${iconClock()}
-          <span class="timer-display ${this.colorClass}" style="font-size:16px">
-            ${this.formatTime(this.displaySeconds)}
-          </span>
+          ${designIcon('clock', 14)}
+          <span class="timer-display ${this.colorClass}">${this.formatTime(this.displaySeconds)}</span>
           <button
             class="mute-btn-pill"
             title=${this._muted ? 'Unmute timer sound' : 'Mute timer sound'}
             @click=${this.toggleMute}
-          >${this._muted ? iconVolumeXmark() : iconVolumeHigh()}</button>
+          >${this._muted ? designIcon('mute', 13) : designIcon('volume', 13)}</button>
         </div>
       `
     }
@@ -457,7 +453,7 @@ export class RetroTimer extends LitElement {
     if (state === 'running') {
       return html`
         <span class="timer-readout">
-          ${iconClock()}
+          ${designIcon('clock', 14)}
           <span class="timer-display ${this.colorClass}">${this.formatTime(this.displaySeconds)}</span>
         </span>
         <button class="timer-btn secondary" @click=${this.onPause}>${designIcon('pause', 11)} Pause</button>
@@ -467,7 +463,7 @@ export class RetroTimer extends LitElement {
     if (state === 'up') {
       return html`
         <span class="timer-readout">
-          ${iconClock()}
+          ${designIcon('clock', 14)}
           <span class="timer-display red">${this.formatTime(0)}</span>
         </span>
         <button class="timer-btn" @click=${this.onReset}>Reset</button>
@@ -495,6 +491,8 @@ export class RetroTimer extends LitElement {
   private renderPanel(isPreset: number | null) {
     return html`
       <div class="timer-panel">
+        <div class="panel-eyebrow">${designIcon('clock', 12)} Timer</div>
+        <div class="panel-readout">${this.formatTime(this.timer ? this.displaySeconds : DEFAULT_SECONDS)}</div>
         <div class="presets">
           ${PRESETS.map(
             (p) => html`
@@ -514,6 +512,7 @@ export class RetroTimer extends LitElement {
             max="120"
             step="0.5"
             placeholder="min"
+            aria-label="Custom minutes"
             .value=${this.customMinutes}
             @input=${(e: Event) => { this.customMinutes = (e.target as HTMLInputElement).value }}
             @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter') void this.onSetCustom() }}
@@ -535,7 +534,7 @@ export class RetroTimer extends LitElement {
             class="mute-btn ${this._muted ? 'muted' : ''}"
             title=${this._muted ? 'Unmute timer sound' : 'Mute timer sound'}
             @click=${this.toggleMute}
-          >${this._muted ? iconVolumeXmark() : iconVolumeHigh()}</button>
+          >${this._muted ? designIcon('mute', 13) : designIcon('volume', 13)}</button>
         </div>
       </div>
     `

@@ -254,8 +254,15 @@ export class SessionPage extends LitElement {
       align-items: center;
       justify-content: center;
     }
+    .share-popover {
+      top: calc(100% + 21px);
+      right: 1px;
+      width: 340px;
+    }
     .actions-popover {
       width: 340px;
+      top: calc(100% + 18px);
+      right: -9px;
     }
     .action-list {
       display: flex;
@@ -301,6 +308,7 @@ export class SessionPage extends LitElement {
     .user-menu {
       width: 210px;
       padding: 6px;
+      top: calc(100% + 17px);
     }
     .menu-item {
       display: flex;
@@ -426,6 +434,10 @@ export class SessionPage extends LitElement {
     }
 
     /* ── Share popover ── */
+    .header-countdown retro-timer {
+      display: block;
+      margin: 0;
+    }
     .share-wrap {
       position: relative;
       display: inline-flex;
@@ -448,26 +460,6 @@ export class SessionPage extends LitElement {
     .share-btn[aria-expanded='true'] {
       border-color: var(--retro-accent-border);
       color: var(--retro-accent-ink);
-    }
-    .share-popover {
-      position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
-      z-index: 30;
-      width: 340px;
-      padding: 12px;
-      background: var(--retro-glass-bg-strong);
-      border: 1px solid var(--retro-glass-border);
-      border-radius: var(--retro-radius-md);
-      box-shadow: var(--retro-shadow-float);
-    }
-    .share-eyebrow {
-      margin-bottom: 8px;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: var(--retro-text-muted);
     }
     .share-row {
       display: flex;
@@ -507,6 +499,7 @@ export class SessionPage extends LitElement {
     .export-btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
       width: 100%;
       margin-top: 8px;
@@ -1050,7 +1043,7 @@ export class SessionPage extends LitElement {
                 <div class="popover share-popover" role="dialog" aria-label="Share this board">
                   <div class="eyebrow">Share this board</div>
                   <div class="share-row">
-                    <span class="share-url">${window.location.href}</span>
+                    <span class="share-url">${window.location.href.replace(/^https?:\/\//, '')}</span>
                     <button class="copy-btn" @click=${this.copyUrl}>
                       ${this.copied ? html`${designIcon('check', 13)} Copied` : 'Copy link'}
                     </button>

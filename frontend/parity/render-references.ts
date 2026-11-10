@@ -153,6 +153,8 @@ async function main(): Promise<void> {
         if (url.includes('fonts.googleapis.com')) return route.fulfill({ status: 200, contentType: 'text/css', body: fontStylesheet })
         return route.abort()
       })
+      page.on('pageerror', (error) => console.log(`  ${screen.name}: page error: ${error.message.split('\n')[0]}`))
+      page.on('console', (message) => { if (message.type() === 'error') console.log(`  ${screen.name}: console error: ${message.text().split('\n')[0].slice(0, 160)}`) })
       const query = new URLSearchParams({
         board: screen.name, w: String(screen.size[0]), h: String(screen.size[1]),
         dark: screen.theme === 'dark' ? '1' : '0', brand: screen.brand ? '1' : '0',

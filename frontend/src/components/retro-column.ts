@@ -245,7 +245,7 @@ export class RetroColumn extends LitElement {
       color: var(--retro-accent-ink);
     }
     .sort-votes-btn.active {
-      border-color: var(--retro-accent-border);
+      border-color: color-mix(in srgb, var(--retro-accent) 50%, transparent);
       color: var(--retro-accent-ink);
       font-weight: 600;
       background: var(--retro-accent-tint);
