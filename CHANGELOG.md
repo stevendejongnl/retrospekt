@@ -1,3 +1,14 @@
+## [1.56.0](https://github.com/stevendejongnl/retrospekt/compare/v1.55.0...v1.56.0) (2026-11-10)
+
+### Features
+
+* **mobile:** move and group a card with a finger, not only by dragging ([4d21222](https://github.com/stevendejongnl/retrospekt/commit/4d21222df0243dcb08ab7a86f783d0a1b89138b1))
+
+### Bug Fixes
+
+* **mobile:** the header, dock, popovers and cards fit a phone and can be touched ([10f8c41](https://github.com/stevendejongnl/retrospekt/commit/10f8c41b6b12b64e8f4be7801a59bb2e13ea101b))
+* **presentation:** match the design pixel for pixel while presenting ([1ae3e83](https://github.com/stevendejongnl/retrospekt/commit/1ae3e83e02db1cdccc995a6634f9bfed2e358e8d))
+
 ## [1.55.0](https://github.com/stevendejongnl/retrospekt/compare/v1.54.1...v1.55.0) (2026-11-10)
 
 ### Features
