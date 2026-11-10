@@ -4,7 +4,6 @@ import { baseStyles } from '../styles'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Session, SessionPhase } from '../types'
-import { buildParticipantColorMap } from '../types'
 import { api } from '../api'
 import { SSEClient } from '../sse'
 import { storage } from '../storage'
@@ -247,6 +246,7 @@ export class SessionPage extends LitElement {
       width: 20px;
       height: 20px;
       border-radius: 50%;
+      background: var(--retro-accent);
       color: var(--retro-accent-contrast);
       font-size: 10px;
       font-weight: 600;
@@ -960,7 +960,6 @@ export class SessionPage extends LitElement {
     if (!this.session) return nothing
 
     const { session } = this
-    const participantColors = buildParticipantColorMap(session.participants)
     const actionItems = session.cards.filter((c) => c.published && c.assignee)
     const maxVotes = session.max_votes_per_participant
 
@@ -1059,7 +1058,7 @@ export class SessionPage extends LitElement {
                   <div class="people">
                     ${session.participants.map((p) => html`
                       <span class="share-person">
-                        <span class="person-avatar" style="background:${participantColors[p.name] ?? 'var(--retro-accent)'}">${p.name[0].toUpperCase()}</span>${p.name}
+                        <span class="person-avatar">${p.name[0].toUpperCase()}</span>${p.name}
                       </span>
                     `)}
                   </div>

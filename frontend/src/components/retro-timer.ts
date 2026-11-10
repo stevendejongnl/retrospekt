@@ -98,7 +98,7 @@ export class RetroTimer extends LitElement {
     .timer-panel {
       position: absolute;
       bottom: calc(100% + 17px);
-      left: 2.5px;
+      left: 1.5px;
       z-index: 30;
       width: 300px;
       max-width: calc(100vw - 24px);
@@ -191,10 +191,6 @@ export class RetroTimer extends LitElement {
       color: var(--retro-text-primary);
       cursor: pointer;
       font-family: inherit;
-    }
-    .custom-set-btn:disabled {
-      opacity: 0.4;
-      cursor: default;
     }
     .timer-actions {
       display: flex;
@@ -390,8 +386,8 @@ export class RetroTimer extends LitElement {
   }
 
   private get activePreset(): number | null {
-    if (!this.timer) return null
-    const match = PRESETS.find((p) => p.seconds === this.timer!.duration_seconds)
+    const seconds = this.timer ? this.timer.duration_seconds : DEFAULT_SECONDS
+    const match = PRESETS.find((p) => p.seconds === seconds)
     return match?.seconds ?? null
   }
 
@@ -422,6 +418,7 @@ export class RetroTimer extends LitElement {
   }
 
   private async onReset(): Promise<void> {
+    if (!this.timer) return
     await api.resetTimer(this.sessionId, this.facilitatorToken, this.participantName)
   }
 
@@ -519,7 +516,7 @@ export class RetroTimer extends LitElement {
           />
           <button
             class="custom-set-btn"
-            ?disabled=${!this.customMinutes || isNaN(parseFloat(this.customMinutes))}
+            aria-disabled=${!this.customMinutes || isNaN(parseFloat(this.customMinutes)) ? 'true' : 'false'}
             @click=${this.onSetCustom}
           >Set</button>
         </div>
@@ -527,7 +524,7 @@ export class RetroTimer extends LitElement {
         <div class="timer-actions">
           <button
             class="timer-btn secondary"
-            ?disabled=${!this.timer}
+            aria-disabled=${this.timer ? 'false' : 'true'}
             @click=${this.onReset}
           >Reset</button>
           <button

@@ -79,6 +79,7 @@ export class RetroHelp extends LitElement {
     .help-phase-body h4 {
       font-size: 14px;
       font-weight: 700;
+      letter-spacing: -0.01em;
       color: var(--retro-text-primary);
     }
     .help-phase-body p {

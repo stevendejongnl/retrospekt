@@ -176,7 +176,7 @@ export class RetroCard extends LitElement {
     .assignee-chip {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       background: var(--retro-accent-tint);
       border: 1px solid color-mix(in srgb, var(--retro-accent) 35%, transparent);
       border-radius: var(--retro-radius-md);
@@ -189,7 +189,7 @@ export class RetroCard extends LitElement {
       background: none;
       border: none;
       cursor: pointer;
-      color: var(--retro-text-muted);
+      color: var(--retro-text-secondary);
       font-size: 12px;
       font-family: inherit;
       padding: 0;

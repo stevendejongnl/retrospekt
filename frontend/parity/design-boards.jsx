@@ -20,7 +20,7 @@ both('board-closed', (dark) => <BoardV2 dark={dark} phase="Closed" />);
 both('board-share', (dark) => <BoardV2 dark={dark} phase="Discussing" shareOpen shareUrl="127.0.0.1:5199/session/ad9aaaea-758c-4e27-a70d-169ff1b6cd90" />);
 both('board-actions', (dark) => <BoardV2 dark={dark} phase="Discussing" actionsOpen />);
 both('board-menu', (dark) => <BoardV2 dark={dark} phase="Discussing" menuOpen />);
-PARITY_BOARDS['board-cs-brand'] = () => <BoardV2 dark={false} phase="Discussing" />;
+PARITY_BOARDS['board-cs-brand'] = () => <BoardV2 dark={false} phase="Discussing" collab />;
 
 both('chosen-participant', (dark) => <BoardV2 dark={dark} phase="Discussing" role="participant" timer="running" />);
 PARITY_BOARDS['chosen-share-light'] = () => <BoardV2 dark={false} phase="Discussing" shareOpen />;
