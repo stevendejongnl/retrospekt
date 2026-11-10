@@ -37,7 +37,7 @@ const THEMED = [
   'bg-page', 'bg-surface', 'bg-subtle', 'border-default',
   'text-primary', 'text-secondary', 'text-muted',
   'accent', 'accent-ink', 'accent-contrast', 'accent-tint', 'accent-border',
-  'col-1', 'col-2', 'col-3', 'col-ink', 'strong-bg', 'shadow-float',
+  'col-1', 'col-2', 'col-3', 'col-4', 'col-5', 'col-6', 'col-ink', 'strong-bg', 'shadow-float',
 ]
 
 describe('design tokens (Slate + Soft)', () => {
@@ -79,6 +79,9 @@ describe('design tokens (Slate + Soft)', () => {
     ['col-ink', 'col-1'],
     ['col-ink', 'col-2'],
     ['col-ink', 'col-3'],
+    ['col-ink', 'col-4'],
+    ['col-ink', 'col-5'],
+    ['col-ink', 'col-6'],
   ]
 
   describe.each([['light', light], ['dark', dark]] as const)('%s contrast (WCAG AA, 4.5:1)', (_mode, tokens) => {

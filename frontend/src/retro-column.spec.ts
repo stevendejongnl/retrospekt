@@ -528,3 +528,57 @@ test.describe('retro-column closed phase card sorting', () => {
     await expect(cards.nth(2)).toContainText('Zero votes')
   })
 })
+
+// ── Column colour ─────────────────────────────────────────────────────────────
+
+test.describe('retro-column colour', () => {
+  test('a chosen colour from the session colours the column', async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
+    await mockApi(page, { ...BASE, column_colors: { 'Went Well': 'red' } } as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+
+    const badge = page.locator('retro-column').first().locator('.count-badge')
+    await expect(badge).toHaveCSS('background-color', await page.evaluate(() => {
+      const probe = document.createElement('i')
+      probe.style.background = 'var(--retro-col-4)'
+      document.body.appendChild(probe)
+      const colour = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      return colour
+    }))
+  })
+
+  test('the facilitator picks a colour -> PATCH /columns/{name}/color', async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
+    await mockApi(page, BASE as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+
+    const col = page.locator('retro-column').first()
+    await expect(col.locator('.color-picker')).toHaveCount(0)
+    await col.locator('.count-badge').click()
+    await expect(col.locator('.color-swatch')).toHaveCount(6)
+
+    const req = page.waitForRequest(r => r.url().endsWith('/columns/Went%20Well/color') && r.method() === 'PATCH')
+    await col.locator('.color-swatch[data-color="purple"]').click()
+    expect((await req).postDataJSON()).toEqual({ color: 'purple' })
+    await expect(col.locator('.color-picker')).toHaveCount(0)
+  })
+
+  test('a participant cannot open the colour picker', async ({ page }) => {
+    await withName(page, 'Bob')
+    await mockApi(page, BASE as unknown as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+
+    await page.locator('retro-column').first().locator('.count-badge').click()
+    await expect(page.locator('retro-column').first().locator('.color-picker')).toHaveCount(0)
+  })
+
+  test('the picker is not offered once the session is closed', async ({ page }) => {
+    await withName(page, 'Alice', FAC_TOKEN)
+    await mockApi(page, { ...BASE, phase: 'closed' } as Record<string, unknown>)
+    await page.goto(`/session/${SESSION_ID}`)
+
+    await page.locator('retro-column').first().locator('.count-badge').click()
+    await expect(page.locator('retro-column').first().locator('.color-picker')).toHaveCount(0)
+  })
+})

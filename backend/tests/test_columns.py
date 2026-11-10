@@ -362,3 +362,144 @@ async def test_set_column_sort_requires_discussing_phase(client: AsyncClient):
         headers={"X-Facilitator-Token": session.facilitator_token},
     )
     assert response.status_code == 409
+
+
+# ── column colours ───────────────────────────────────────────────────────────
+
+
+async def test_new_session_has_no_column_colors(client: AsyncClient):
+    session = await make_session(client)
+    data = (await client.get(f"/api/v1/sessions/{session.id}")).json()
+    assert data["column_colors"] == {}
+
+
+async def test_create_session_stores_column_colors(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions",
+        json={
+            "name": "Mood",
+            "columns": ["Mad", "Sad", "Glad"],
+            "column_colors": {"Mad": "red", "Sad": "blue", "Glad": "green"},
+        },
+    )
+    assert response.status_code == 201
+    assert response.json()["column_colors"] == {"Mad": "red", "Sad": "blue", "Glad": "green"}
+
+
+async def test_create_session_rejects_unknown_color(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions",
+        json={"name": "Mood", "columns": ["Mad"], "column_colors": {"Mad": "chartreuse"}},
+    )
+    assert response.status_code == 422
+
+
+async def test_create_session_ignores_colors_for_unknown_columns(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/sessions",
+        json={"name": "Mood", "columns": ["Mad"], "column_colors": {"Mad": "red", "Ghost": "blue"}},
+    )
+    assert response.json()["column_colors"] == {"Mad": "red"}
+
+
+async def test_add_column_with_color(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.post(
+        col_url(session.id),
+        json={"name": "Kudos", "color": "purple"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 201
+    assert response.json()["column_colors"]["Kudos"] == "purple"
+
+
+async def test_add_column_rejects_unknown_color(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.post(
+        col_url(session.id),
+        json={"name": "Kudos", "color": "chartreuse"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 422
+
+
+async def test_set_column_color(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.patch(
+        f"{col_url(session.id, 'Went Well')}/color",
+        json={"color": "pink"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 200
+    assert response.json()["column_colors"]["Went Well"] == "pink"
+
+
+async def test_set_column_color_requires_facilitator(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.patch(
+        f"{col_url(session.id, 'Went Well')}/color",
+        json={"color": "pink"},
+    )
+    assert response.status_code == 403
+
+
+async def test_set_column_color_unknown_column_is_404(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.patch(
+        f"{col_url(session.id, 'Nope')}/color",
+        json={"color": "pink"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 404
+
+
+async def test_set_column_color_rejects_unknown_color(client: AsyncClient):
+    session = await make_session(client)
+    response = await client.patch(
+        f"{col_url(session.id, 'Went Well')}/color",
+        json={"color": "chartreuse"},
+        headers={"X-Facilitator-Token": session.facilitator_token},
+    )
+    assert response.status_code == 422
+
+
+async def test_set_column_color_blocked_when_closed(client: AsyncClient):
+    session = await make_session(client)
+    headers = {"X-Facilitator-Token": session.facilitator_token}
+    for phase in ("discussing", "closed"):
+        url = f"/api/v1/sessions/{session.id}/phase"
+        step = await client.post(url, json={"phase": phase}, headers=headers)
+        assert step.status_code == 200, step.text
+    response = await client.patch(
+        f"{col_url(session.id, 'Went Well')}/color", json={"color": "pink"}, headers=headers
+    )
+    assert response.status_code == 409
+
+
+async def test_set_column_color_allowed_while_discussing(client: AsyncClient):
+    session = await make_session(client)
+    headers = {"X-Facilitator-Token": session.facilitator_token}
+    await client.post(f"/api/v1/sessions/{session.id}/phase", json={"phase": "discussing"}, headers=headers)
+    response = await client.patch(
+        f"{col_url(session.id, 'Went Well')}/color", json={"color": "pink"}, headers=headers
+    )
+    assert response.status_code == 200
+
+
+async def test_rename_column_keeps_its_color(client: AsyncClient):
+    session = await make_session(client)
+    headers = {"X-Facilitator-Token": session.facilitator_token}
+    await client.patch(f"{col_url(session.id, 'Went Well')}/color", json={"color": "pink"}, headers=headers)
+    response = await client.patch(col_url(session.id, "Went Well"), json={"name": "Great"}, headers=headers)
+    colors = response.json()["column_colors"]
+    assert colors["Great"] == "pink"
+    assert "Went Well" not in colors
+
+
+async def test_remove_column_drops_its_color(client: AsyncClient):
+    session = await make_session(client)
+    headers = {"X-Facilitator-Token": session.facilitator_token}
+    await client.patch(f"{col_url(session.id, 'Went Well')}/color", json={"color": "pink"}, headers=headers)
+    await client.delete(col_url(session.id, "Went Well"), headers=headers)
+    data = (await client.get(f"/api/v1/sessions/{session.id}")).json()
+    assert "Went Well" not in data["column_colors"]
