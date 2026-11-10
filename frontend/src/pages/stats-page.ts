@@ -460,6 +460,25 @@ export class StatsPage extends LitElement {
         letter-spacing: -0.02em;
         color: var(--retro-accent-ink);
       }
+
+      /* Phones: two tiles per row, every chart and list card full width, nothing under 11 px */
+      @media (max-width: 640px) {
+        .tiles {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+        .stat-card:nth-child(odd):last-child {
+          grid-column: 1 / -1;
+        }
+        .grid-narrow-wide,
+        .grid-thirds {
+          grid-template-columns: 1fr;
+        }
+        .eyebrow,
+        .axis {
+          font-size: 11px;
+        }
+      }
     `,
   ]
 }

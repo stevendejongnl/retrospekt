@@ -5,6 +5,7 @@ import { EMOJI_GROUPS, type EmojiGroup } from '../emoji-data'
 import { computePopupPosition } from '../popup-position'
 import { bacon } from '../theme'
 import { designIcon } from '../icons'
+import { touchTargetStyles } from '../styles'
 
 /**
  * Self-contained trigger + searchable popup over the full standard Unicode
@@ -27,7 +28,7 @@ export class EmojiPicker extends LitElement {
   private _scrollListener!: (e: Event) => void
   private _resizeListener!: () => void
 
-  static styles = css`
+  static styles = [touchTargetStyles, css`
     :host {
       position: relative;
       display: inline-block;
@@ -125,7 +126,7 @@ export class EmojiPicker extends LitElement {
       text-align: center;
       margin: 12px 0;
     }
-  `
+  `]
 
   connectedCallback(): void {
     super.connectedCallback()

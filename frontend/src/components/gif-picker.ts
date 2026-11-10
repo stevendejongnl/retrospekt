@@ -4,6 +4,7 @@ import { customElement, state } from 'lit/decorators.js'
 import { api } from '../api'
 import { computePopupPosition } from '../popup-position'
 import type { GifResult } from '../types'
+import { touchTargetStyles } from '../styles'
 
 const SEARCH_DEBOUNCE_MS = 350
 
@@ -29,7 +30,7 @@ export class GifPicker extends LitElement {
   private _resizeListener!: () => void
   private _debounceTimer: ReturnType<typeof setTimeout> | null = null
 
-  static styles = css`
+  static styles = [touchTargetStyles, css`
     :host {
       position: relative;
       display: inline-block;
@@ -111,7 +112,7 @@ export class GifPicker extends LitElement {
       object-fit: cover;
       display: block;
     }
-  `
+  `]
 
   connectedCallback(): void {
     super.connectedCallback()

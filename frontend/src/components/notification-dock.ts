@@ -57,12 +57,19 @@ export class NotificationDock extends LitElement {
       max-height: calc(100vh - 32px);
     }
 
-    @media (max-width: 480px) {
+    /* Phones: one card at a time (the first; the next shows when it is closed), above the two-row
+       facilitator dock, whose height <retro-board> publishes as --retro-fdock-height. */
+    @media (max-width: 640px) {
       :host {
         left: 8px;
         right: 8px;
-        bottom: 8px;
+        bottom: calc(8px + var(--retro-fdock-height, 0px));
         width: auto;
+      }
+      consent-banner:not(:first-child),
+      feedback-dialog:not(:first-child),
+      whats-new-dialog:not(:first-child) {
+        display: none;
       }
     }
 

@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 import './rating-stars'
+import { touchTargetStyles } from '../styles'
 
 // Exported for unit tests
 export function isValidRating(rating: number): boolean {
@@ -20,7 +21,7 @@ export class FeedbackDialog extends LitElement {
   @state() private submitting = false
   @state() private submitted = false
 
-  static styles = css`
+  static styles = [touchTargetStyles, css`
     /* Non-blocking card: <notification-dock> owns where this sits, so the
        host never positions itself and never captures pointer events — only
        the controls inside the card do. */
@@ -149,7 +150,7 @@ export class FeedbackDialog extends LitElement {
       color: var(--retro-text-primary);
       margin: 6px 0 0;
     }
-  `
+  `]
 
   private _dismiss(): void {
     this.dispatchEvent(new CustomEvent('feedback-dismissed', { bubbles: true, composed: true }))

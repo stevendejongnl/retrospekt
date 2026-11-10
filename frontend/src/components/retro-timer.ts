@@ -286,6 +286,18 @@ export class RetroTimer extends LitElement {
     .mute-btn-pill:hover {
       color: var(--retro-text-secondary);
     }
+
+    /* Phones: the dock's timer buttons are tall enough to touch */
+    @media (max-width: 640px) {
+      :host([isfacilitator]) .timer-chip,
+      :host([isfacilitator]) .timer-btn {
+        min-height: 40px;
+      }
+      :host([isfacilitator]) .timer-btn.icon {
+        width: 40px;
+        height: 40px;
+      }
+    }
   `]
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {

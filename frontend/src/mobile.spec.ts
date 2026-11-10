@@ -35,6 +35,7 @@ const BASE = {
     card({ id: 'c', column: 'To Improve', text: 'My draft', author_name: 'Alice', published: false }),
     card({ id: 'd', column: 'Action Items', text: 'Set up runbooks', assignee: 'Alice' }),
   ] as object[],
+  notes: [] as object[],
   max_votes_per_participant: 5,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
@@ -122,13 +123,12 @@ for (const width of PHONES) {
         await expect(page.locator('phase-stepper').getByRole('button')).toHaveCount(0)
       })
 
-      test('the header controls are all inside the screen, with and without a running timer', async ({ page }) => {
-        for (const timer of [null, RUNNING]) {
+      for (const [label, timer] of [['without', null], ['with', RUNNING]] as const) {
+        test(`the header controls are all inside the screen ${label} a running timer`, async ({ page }) => {
           await open(page, { session: { ...BASE, timer }, facilitator: false })
-          await expectInside(page, page.locator('header').locator('button:visible, .header-countdown'), `header controls (timer ${timer ? 'on' : 'off'})`)
-          await page.unroute(`/api/v1/sessions/${SESSION_ID}`)
-        }
-      })
+          await expectInside(page, page.locator('header').locator('button:visible, .header-countdown'), `header controls (${label} timer)`)
+        })
+      }
 
       test('the votes left do not overlap the brand', async ({ page }) => {
         await open(page)
@@ -145,7 +145,10 @@ for (const width of PHONES) {
         const brand = await page.locator('.brand').boundingBox()
         expect(overlaps(pill!, brand!), 'timer pill overlaps the brand').toBe(false)
         for (const button of await page.locator('.header-tools button:visible').all()) {
-          expect(overlaps(pill!, (await button.boundingBox())!), 'timer pill overlaps a header button').toBe(false)
+          const box = (await button.boundingBox())!
+          const insidePill = box.x >= pill!.x && box.y >= pill!.y && box.x + box.width <= pill!.x + pill!.width && box.y + box.height <= pill!.y + pill!.height
+          if (insidePill) continue // the pill's own mute button
+          expect(overlaps(pill!, box), 'timer pill overlaps a header button').toBe(false)
         }
       })
 
@@ -255,14 +258,14 @@ for (const width of PHONES) {
     })
 
     test.describe('touch targets and text (STE-255)', () => {
-      // the invisible hit area around a control: its box plus how far its ::after reaches out
+      // the invisible hit area around a control: its box, or its centred ::after when that is bigger
       const hitArea = (el: Element) => {
         const rect = el.getBoundingClientRect()
         const after = getComputedStyle(el, '::after')
-        const reach = (value: string) => (after.content !== 'none' && after.position === 'absolute' && parseFloat(value) < 0 ? -parseFloat(value) : 0)
+        const grows = after.content !== 'none' && after.position === 'absolute'
         return {
-          width: rect.width + reach(after.left) + reach(after.right),
-          height: rect.height + reach(after.top) + reach(after.bottom),
+          width: Math.max(rect.width, grows ? parseFloat(after.width) : 0),
+          height: Math.max(rect.height, grows ? parseFloat(after.height) : 0),
         }
       }
 

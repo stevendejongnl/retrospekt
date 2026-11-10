@@ -254,6 +254,15 @@ export class ChangelogPage extends LitElement {
       color: var(--retro-text-muted);
     }
     .older span { color: var(--retro-accent); }
+
+    /* Phones: nothing under 11 px */
+    @media (max-width: 640px) {
+      .sidebar-date,
+      .latest-badge,
+      .group-label {
+        font-size: 11px;
+      }
+    }
   `]
 
   connectedCallback(): void {

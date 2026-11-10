@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/browser'
 import { LitElement, PropertyValues, css, html, nothing } from 'lit'
 import { baseStyles } from '../styles'
+import { classMap } from 'lit/directives/class-map.js'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Session, SessionPhase } from '../types'
@@ -405,25 +406,6 @@ export class SessionPage extends LitElement {
       border-radius: var(--retro-radius-sm);
       white-space: nowrap;
     }
-    @media (max-width: 640px) {
-      header {
-        padding: 0 12px;
-        gap: 8px;
-      }
-      .session-title {
-        display: none;
-      }
-      phase-stepper {
-        display: none;
-      }
-      .avatar-name {
-        display: none;
-      }
-      .cs-collab {
-        display: none;
-      }
-    }
-
     /* ── Main ── */
     main {
       max-width: 1280px;
@@ -720,6 +702,126 @@ export class SessionPage extends LitElement {
     .name-card button:disabled {
       opacity: 0.55;
       cursor: not-allowed;
+    }
+
+    /* Tablet: the title gives way (with an ellipsis) before the stepper and the tools do. */
+    @media (max-width: 900px) {
+      header {
+        gap: 12px;
+      }
+      .avatar-name,
+      .session-date,
+      .brand-name {
+        display: none;
+      }
+      phase-stepper,
+      .header-tools {
+        flex-shrink: 0;
+      }
+      .session-title {
+        flex: 1 1 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .session-title > span:first-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .session-date {
+        flex-shrink: 0;
+      }
+    }
+
+    /* Phones: two rows. Row 1: bacon, the countdown pill (or the title), Share, Action items, Notes, you.
+       Row 2: the phase stepper over the full width, and the votes left while discussing. */
+    @media (max-width: 640px) {
+      .actions-badge {
+        font-size: 11px;
+      }
+      header {
+        height: auto;
+        padding: 8px 12px 10px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto auto auto auto;
+        align-items: center;
+        gap: 8px;
+      }
+      .header-left,
+      .header-tools {
+        display: contents;
+      }
+      .brand {
+        grid-row: 1;
+        grid-column: 1;
+      }
+      .brand-name,
+      .session-date,
+      .cs-collab,
+      .avatar-name,
+      .share-label,
+      .share-chevron,
+      .avatar-chevron {
+        display: none;
+      }
+      .session-title,
+      .header-countdown {
+        grid-row: 1;
+        grid-column: 2;
+        min-width: 0;
+      }
+      header.has-countdown .session-title {
+        display: none;
+      }
+      .share-wrap {
+        grid-row: 1;
+        grid-column: 3;
+      }
+      .actions-wrap {
+        grid-row: 1;
+        grid-column: 4;
+      }
+      .notes-btn {
+        grid-row: 1;
+        grid-column: 5;
+      }
+      .user-chip {
+        grid-row: 1;
+        grid-column: 6;
+      }
+      phase-stepper {
+        grid-row: 2;
+        grid-column: 1 / -1;
+      }
+      header.has-votes phase-stepper {
+        grid-column: 1 / 5;
+      }
+      .header-votes {
+        grid-row: 2;
+        grid-column: 5 / 7;
+        justify-self: end;
+      }
+      .icon-btn,
+      .share-btn,
+      .avatar-menu-btn {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 50%;
+      }
+      /* the popovers open under the header, as wide as the screen */
+      .share-wrap,
+      .actions-wrap {
+        position: static;
+      }
+      .share-popover,
+      .actions-popover {
+        top: calc(100% + 6px);
+        left: 12px;
+        right: 12px;
+        width: auto;
+      }
     }
   `]
 
@@ -1065,6 +1167,8 @@ export class SessionPage extends LitElement {
     const { session } = this
     const actionItems = session.cards.filter((c) => c.published && c.assignee)
     const maxVotes = session.max_votes_per_participant
+    const hasVotes = !this.presenting && session.phase === 'discussing' && !!maxVotes
+    const hasCountdown = !!session.timer && !!(session.timer.started_at || !this.isFacilitator || this.presenting)
 
     return html`
       <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
@@ -1112,9 +1216,9 @@ export class SessionPage extends LitElement {
           `
         : ''}
 
-      <header class=${this.showNamePrompt ? 'dimmed' : ''}>
+      <header class=${classMap({ dimmed: this.showNamePrompt, 'has-countdown': hasCountdown, 'has-votes': hasVotes })}>
         <div class="header-left">
-        <span class="brand" @click=${this.goHome}><span class="brand-mark">${bacon()}</span><span>Retro<em>spekt</em></span>${getBrand() === 'cs' ? html`<span class="cs-collab">× ${csLogo()}</span>` : nothing}</span>
+        <span class="brand" @click=${this.goHome}><span class="brand-mark">${bacon()}</span><span class="brand-name">Retro<em>spekt</em></span>${getBrand() === 'cs' ? html`<span class="cs-collab">× ${csLogo()}</span>` : nothing}</span>
         <span class="session-title">
           <span>${session.name}</span><span class="session-date">${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
         </span>
@@ -1125,10 +1229,10 @@ export class SessionPage extends LitElement {
           @phase-select=${this.onPhaseSelect}
         ></phase-stepper>
         <div class="header-tools">
-        ${!this.presenting && session.phase === 'discussing' && maxVotes
+        ${hasVotes
           ? html`<span class="header-votes">${this.votesUsed}/${maxVotes} votes</span>`
           : nothing}
-        ${session.timer && (session.timer.started_at || !this.isFacilitator || this.presenting)
+        ${hasCountdown
           ? html`<div class="header-countdown">
               <retro-timer .timer=${session.timer} .sessionId=${session.id} .participantName=${this.participantName}></retro-timer>
             </div>`
@@ -1137,10 +1241,11 @@ export class SessionPage extends LitElement {
         <div class="share-wrap pop-wrap" ?data-open=${this.openPanel === 'share'}>
           <button
             class="share-btn"
+            aria-label="Share"
             aria-haspopup="dialog"
             aria-expanded=${this.openPanel === 'share'}
             @click=${() => this.togglePanel('share')}
-          >${designIcon('link', 13)} Share ${designIcon('chevronDown', 12)}</button>
+          ><span class="share-icon">${designIcon('link', 13)}</span> <span class="share-label">Share</span> <span class="share-chevron">${designIcon('chevronDown', 12)}</span></button>
           ${this.openPanel === 'share'
             ? html`
                 <div class="popover share-popover" role="dialog" aria-label="Share this board">
@@ -1205,7 +1310,7 @@ export class SessionPage extends LitElement {
               `
             : ''}
         </div>
-        <button class="icon-btn" aria-label="Board notes" @click=${() => { this.showNotes = true }} title="Board notes">${designIcon('note', 15)}</button>
+        <button class="icon-btn notes-btn" aria-label="Board notes" @click=${() => { this.showNotes = true }} title="Board notes">${designIcon('note', 15)}</button>
         ${this.participantName
           ? html`
               <div class="user-chip pop-wrap" ?data-open=${this.openPanel === 'menu'}>
@@ -1236,7 +1341,7 @@ export class SessionPage extends LitElement {
                       >
                         <span class="avatar">${this.participantName[0].toUpperCase()}</span>
                         <span class="avatar-name">${this.participantName}</span>
-                        ${designIcon('chevronDown', 12)}
+                        <span class="avatar-chevron">${designIcon('chevronDown', 12)}</span>
                       </button>
                     `}
                 ${this.openPanel === 'menu' ? this.renderUserMenu() : ''}

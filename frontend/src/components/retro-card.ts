@@ -340,6 +340,14 @@ export class RetroCard extends LitElement {
     .unpublish-btn:hover {
       color: var(--retro-accent-ink);
     }
+
+    /* Phones: nothing under 11 px */
+    @media (max-width: 640px) {
+      .reaction-count,
+      .draft-badge {
+        font-size: 11px;
+      }
+    }
   `]
 
   private get hasVoted(): boolean {

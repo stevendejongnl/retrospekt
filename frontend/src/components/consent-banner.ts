@@ -2,6 +2,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement } from 'lit/decorators.js'
 
 import { storage } from '../storage'
+import { touchTargetStyles } from '../styles'
 
 /**
  * Card asking for analytics consent (Matomo). Nothing is tracked until the
@@ -14,7 +15,7 @@ import { storage } from '../storage'
  */
 @customElement('consent-banner')
 export class ConsentBanner extends LitElement {
-  static styles = css`
+  static styles = [touchTargetStyles, css`
     /* Non-blocking: neither the host nor .bar captures pointer events —
        only the actual controls (button, a) opt back in — so this can never
        eat a click meant for something behind or beside it. The dock owns
@@ -65,7 +66,7 @@ export class ConsentBanner extends LitElement {
       color: var(--retro-accent-contrast);
       font-weight: 600;
     }
-  `
+  `]
 
   private close(): void {
     this.dispatchEvent(new CustomEvent('consent-closed', { bubbles: true, composed: true }))

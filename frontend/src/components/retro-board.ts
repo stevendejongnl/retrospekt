@@ -166,10 +166,24 @@ export class RetroBoard extends LitElement {
       overflow-x: auto;
       padding-bottom: 96px; /* the facilitator dock floats over the bottom edge */
     }
-    @media (max-width: 800px) {
+    /* Tablet: two columns side by side. Phones: one column. */
+    @media (max-width: 900px) {
+      .columns {
+        flex-wrap: wrap;
+      }
+      .columns > retro-column {
+        flex: 1 1 calc(50% - 6px);
+      }
+    }
+    @media (max-width: 640px) {
       .columns {
         flex-direction: column;
+        flex-wrap: nowrap;
         align-items: stretch;
+      }
+      .columns > retro-column {
+        flex: none;
+        min-width: 0;
       }
     }
 
@@ -388,7 +402,83 @@ export class RetroBoard extends LitElement {
       border-radius: 4px;
       margin: 0 16px 8px;
     }
+
+    /* Phones: a full-width card in two rows. Row 1: the timer. Row 2: the actions, the main one takes the rest. */
+    @media (max-width: 640px) {
+      .facilitator-dock {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        transform: none;
+        max-width: none;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px;
+        border-radius: var(--retro-radius-lg);
+      }
+      .dock-sep {
+        display: none;
+      }
+      .facilitator-dock retro-timer {
+        order: -1;
+        flex: 0 0 100%;
+        justify-content: center;
+      }
+      .back-btn,
+      .phase-btn,
+      .add-column-btn {
+        min-height: 40px;
+        justify-content: center;
+      }
+      .phase-btn {
+        flex: 1;
+      }
+      /* closed: Reopen is the only wide button */
+      .facilitator-dock:not(:has(.phase-btn)) .back-btn {
+        flex: 1;
+      }
+      .settings-btn {
+        width: 40px;
+        height: 40px;
+      }
+      .columns {
+        padding-bottom: 156px; /* the two-row dock never covers a card */
+      }
+    }
   `]
+
+  /**
+   * Phones: the facilitator dock is two rows tall and the notification cards sit above it, so publish its
+   * height (plus its margin) for <notification-dock>. Zero when there is no dock. The dock grows after its
+   * first render (the timer upgrades later), so it is watched, not measured once.
+   */
+  private dockObserver: ResizeObserver | null = null
+  private observedDock: HTMLElement | null = null
+
+  private syncDockHeight = (): void => {
+    const dock = this.renderRoot.querySelector<HTMLElement>('.facilitator-dock')
+    document.documentElement.style.setProperty('--retro-fdock-height', `${dock ? dock.offsetHeight + 12 : 0}px`)
+    if (dock === this.observedDock) return
+    this.dockObserver?.disconnect()
+    this.observedDock = dock
+    if (dock && typeof ResizeObserver !== 'undefined') {
+      this.dockObserver ??= new ResizeObserver(this.syncDockHeight)
+      this.dockObserver.observe(dock)
+    }
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback()
+    this.dockObserver?.disconnect()
+    this.dockObserver = null
+    this.observedDock = null
+    document.documentElement.style.removeProperty('--retro-fdock-height')
+  }
+
+  protected updated(): void {
+    this.syncDockHeight()
+  }
 
   private get participantColorMap(): Record<string, string> {
     return buildParticipantColorMap(this.session.participants)

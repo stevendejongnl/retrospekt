@@ -1,13 +1,14 @@
 import { LitElement, css, html, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import type { ChangelogEntry } from '../generated/changelog'
+import { touchTargetStyles } from '../styles'
 
 @customElement('whats-new-dialog')
 export class WhatsNewDialog extends LitElement {
   @property({ type: Boolean }) open = false
   @property({ type: Object }) entry: ChangelogEntry | null = null
 
-  static styles = css`
+  static styles = [touchTargetStyles, css`
     /* Non-blocking card: <notification-dock> owns where this sits, so the
        host never positions itself and never captures pointer events — only
        the controls inside the card do. */
@@ -86,7 +87,7 @@ export class WhatsNewDialog extends LitElement {
       font-family: inherit;
       flex-shrink: 0;
     }
-  `
+  `]
 
   private _gotIt(): void {
     this.dispatchEvent(new CustomEvent('whats-new-acknowledged', { bubbles: true, composed: true }))

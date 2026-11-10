@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js'
 
 import { faIconStyles, designIcon } from '../icons'
 import { getThemePreference, setThemePreference, getHalalMode, setHalalMode } from '../theme'
+import { touchTargetStyles } from '../styles'
 
 @customElement('theme-menu')
 export class ThemeMenu extends LitElement {
@@ -14,7 +15,7 @@ export class ThemeMenu extends LitElement {
   private _outsideClickListener!: (e: MouseEvent) => void
   private _escListener!: (e: KeyboardEvent) => void
 
-  static styles = [faIconStyles, css`
+  static styles = [touchTargetStyles, faIconStyles, css`
     :host {
       position: relative;
       display: inline-block;

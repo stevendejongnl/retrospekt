@@ -434,6 +434,20 @@ export class AdminPage extends LitElement {
         font-size: 12px;
         color: var(--retro-error-ink);
       }
+
+      /* Phones: the health cards stack and their numbers keep their units */
+      @media (max-width: 640px) {
+        .health-row {
+          flex-direction: column;
+        }
+        .metrics {
+          flex-wrap: wrap;
+          gap: 12px 22px;
+        }
+        .eyebrow {
+          font-size: 11px;
+        }
+      }
     `,
   ]
 }

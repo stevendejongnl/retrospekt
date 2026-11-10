@@ -71,6 +71,22 @@ export class PhaseStepper extends LitElement {
       background: var(--retro-phase-closed-bg);
       color: var(--retro-phase-closed-text);
     }
+    /* Phones: three equal steps across the whole row, tall enough to touch */
+    @media (max-width: 640px) {
+      :host {
+        display: flex;
+      }
+      .stepper {
+        display: flex;
+        flex: 1;
+      }
+      .step {
+        flex: 1;
+        justify-content: center;
+        min-height: 34px;
+        padding: 5px 4px;
+      }
+    }
   `]
 
   private select(phase: SessionPhase): void {

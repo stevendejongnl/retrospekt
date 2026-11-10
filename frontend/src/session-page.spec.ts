@@ -1131,11 +1131,22 @@ test.describe('session-page CS brand logo', () => {
 // ── Mobile layout ────────────────────────────────────────────────────────────
 
 test.describe('session-page mobile layout', () => {
-  test('session title is hidden on mobile viewport', async ({ page }) => {
+  test('session title is shown on mobile viewport, until a running timer takes its place', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await withName(page, 'Alice')
     await mockApi(page, BASE)
     await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.session-title')).toBeVisible()
+    await expect(page.locator('.header-countdown')).not.toBeVisible()
+  })
+
+  test('the countdown pill replaces the title on a phone while a timer runs', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await withName(page, 'Alice')
+    const timer = { duration_seconds: 600, started_at: new Date().toISOString(), paused_remaining: null }
+    await mockApi(page, { ...BASE, timer })
+    await page.goto(`/session/${SESSION_ID}`)
+    await expect(page.locator('.header-countdown')).toBeVisible()
     await expect(page.locator('.session-title')).not.toBeVisible()
   })
 
