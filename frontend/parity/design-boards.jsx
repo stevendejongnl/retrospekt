@@ -17,6 +17,9 @@ PARITY_BOARDS['join-dark-taken'] = () => <JoinOverlay dark error />;
 both('board-collecting', (dark) => <BoardV2 dark={dark} phase="Collecting" />);
 both('board-discussing', (dark) => <BoardV2 dark={dark} phase="Discussing" />);
 both('board-closed', (dark) => <BoardV2 dark={dark} phase="Closed" />);
+both('board-share', (dark) => <BoardV2 dark={dark} phase="Discussing" shareOpen />);
+both('board-actions', (dark) => <BoardV2 dark={dark} phase="Discussing" actionsOpen />);
+both('board-menu', (dark) => <BoardV2 dark={dark} phase="Discussing" menuOpen />);
 PARITY_BOARDS['board-cs-brand'] = () => <BoardV2 dark={false} phase="Discussing" />;
 
 both('chosen-participant', (dark) => <BoardV2 dark={dark} phase="Discussing" role="participant" timer="running" />);

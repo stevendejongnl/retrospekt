@@ -118,7 +118,7 @@ test.describe('MatomoTagManager', () => {
     await load(page)
     expect(
       await page.evaluate(() => {
-        const w = window as unknown as { __tagManager: object; __MatomoTagManager: Function }
+        const w = window as unknown as { __tagManager: object; __MatomoTagManager: new () => object }
         return w.__tagManager instanceof w.__MatomoTagManager
       }),
     ).toBe(true)

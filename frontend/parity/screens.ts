@@ -60,6 +60,9 @@ export const PARITY_SCREENS: ParityScreen[] = [
   ...pair('board-collecting', { viewer: 'facilitator', size: [1100, 600], route: SESSION, board: { phase: 'collecting' } }),
   ...pair('board-discussing', { viewer: 'facilitator', size: [1100, 760], route: SESSION, board: { phase: 'discussing' } }),
   ...pair('board-closed', { viewer: 'facilitator', size: [1100, 720], route: SESSION, board: { phase: 'closed' } }),
+  ...pair('board-share', { viewer: 'facilitator', size: [1100, 560], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.share-btn' }] }),
+  ...pair('board-actions', { viewer: 'facilitator', size: [1100, 560], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: 'button[aria-label="Action items"]' }] }),
+  ...pair('board-menu', { viewer: 'facilitator', size: [1100, 560], route: SESSION, board: { phase: 'discussing' }, steps: [{ click: '.avatar-menu-btn' }] }),
   { viewer: 'facilitator', name: 'board-cs-brand', theme: 'light', brand: 'cs', size: [1100, 760], route: SESSION, board: { phase: 'discussing' } },
 
   // The header and dock, as a participant and in their other states

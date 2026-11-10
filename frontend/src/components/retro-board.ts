@@ -7,13 +7,10 @@ import { api, countParticipantVotes } from '../api'
 import { storage } from '../storage'
 import {
   faIconStyles,
-  iconUsers,
-  iconCircleCheck,
   iconGear,
 } from '../icons'
 import './retro-column'
 import './retro-timer'
-import './retro-help'
 
 // Columns take the design's three colours in order and wrap after the third.
 const COLUMN_COLOUR_COUNT = 3
@@ -24,8 +21,6 @@ export class RetroBoard extends LitElement {
   @property({ type: Object }) session!: Session
   @property({ type: String }) participantName = ''
 
-  @state() private showHelp = false
-  @state() private showParticipants = false
   @state() private showSettings = false
   @state() private settingName = ''
   @state() private settingReactions = true
@@ -83,11 +78,6 @@ export class RetroBoard extends LitElement {
     .phase-btn.close-btn:hover {
       opacity: 0.85;
     }
-    .participant-count {
-      white-space: nowrap;
-      font-size: 12px;
-      color: var(--retro-facilitator-text);
-    }
     .back-btn {
       background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);
@@ -102,26 +92,6 @@ export class RetroBoard extends LitElement {
       transition: background 0.12s;
     }
     .back-btn:hover {
-      background: var(--retro-bg-hover);
-    }
-    .help-btn {
-      background: none;
-      border: 1px solid var(--retro-facilitator-border);
-      border-radius: 50%;
-      width: 26px;
-      height: 26px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--retro-facilitator-text);
-      cursor: pointer;
-      font-family: inherit;
-      flex-shrink: 0;
-      transition: background 0.12s;
-    }
-    .help-btn:hover {
       background: var(--retro-bg-hover);
     }
     .settings-btn {
@@ -142,121 +112,6 @@ export class RetroBoard extends LitElement {
     }
     .settings-btn:hover {
       background: var(--retro-bg-hover);
-    }
-
-    /* ── Participant count button ── */
-    .participant-count {
-      margin-left: auto;
-      font-size: 12px;
-      color: var(--retro-facilitator-text);
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      padding: 4px 8px;
-      border-radius: var(--retro-radius-sm);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      transition: background 0.12s;
-    }
-    .participant-count:hover {
-      background: var(--retro-bg-hover);
-    }
-
-    /* ── Non-facilitator participants bar ── */
-    .participant-bar {
-      display: flex;
-      align-items: center;
-      padding: 8px 14px;
-      background: var(--retro-glass-bg-medium);
-      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      border: 1px solid var(--retro-glass-border);
-      border-radius: var(--retro-radius-md);
-      margin-bottom: 16px;
-      box-shadow: var(--retro-glass-shadow);
-    }
-
-    /* ── Participants popup ── */
-    .participants-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--retro-overlay-bg);
-      backdrop-filter: blur(2px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      padding: 24px;
-    }
-    .participants-card {
-      background: var(--retro-glass-bg-strong);
-      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      border: 1px solid var(--retro-glass-border);
-      border-radius: var(--retro-radius-lg);
-      padding: 28px 32px;
-      max-width: 400px;
-      width: 100%;
-      box-shadow: var(--retro-glass-shadow);
-    }
-    .participants-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-    .participants-header h3 {
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--retro-text-primary);
-      margin: 0;
-      letter-spacing: -0.4px;
-    }
-    .participants-close {
-      background: none;
-      border: 1px solid var(--retro-border-default);
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      cursor: pointer;
-      color: var(--retro-text-secondary);
-      font-family: inherit;
-      transition: background 0.12s;
-    }
-    .participants-close:hover {
-      background: var(--retro-bg-hover);
-    }
-    .participants-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .participant-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .participant-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
-      color: white;
-      flex-shrink: 0;
-    }
-    .participant-name {
-      font-size: 14px;
-      color: var(--retro-text-primary);
     }
 
     .add-column-btn {
@@ -493,12 +348,6 @@ export class RetroBoard extends LitElement {
     return storage.getFacilitatorToken(this.session.id) ?? ''
   }
 
-  private get actionItems(): Array<{ card: Card; column: string }> {
-    return this.session.cards
-      .filter((c) => c.published && c.assignee)
-      .map((c) => ({ card: c, column: c.column }))
-  }
-
   private async transitionPhase(): Promise<void> {
     const order: SessionPhase[] = ['collecting', 'discussing', 'closed']
     const next = order[order.indexOf(this.session.phase) + 1]
@@ -713,43 +562,8 @@ export class RetroBoard extends LitElement {
   render() {
     const { session } = this
 
-    const colorMap = this.participantColorMap
     const participantNames = session.participants.map((p) => p.name)
-    const participantCountBtn = html`
-      <button class="participant-count" @click=${() => (this.showParticipants = true)}>
-        ${iconUsers()} ${session.participants.length}
-        participant${session.participants.length !== 1 ? 's' : ''}
-      </button>
-    `
-    const items = this.actionItems
-
     return html`
-      ${this.showParticipants
-        ? html`
-            <div class="participants-overlay" @click=${() => (this.showParticipants = false)}>
-              <div class="participants-card" @click=${(e: Event) => e.stopPropagation()}>
-                <div class="participants-header">
-                  <h3>Participants (${session.participants.length})</h3>
-                  <button class="participants-close" @click=${() => (this.showParticipants = false)}>×</button>
-                </div>
-                <div class="participants-list">
-                  ${session.participants.map(
-                    (p) => html`
-                      <div class="participant-row">
-                        <div
-                          class="participant-avatar"
-                          style="background: ${colorMap[p.name] ?? '#6b7280'}"
-                        >${p.name[0]?.toUpperCase() ?? '?'}</div>
-                        <span class="participant-name">${p.name}</span>
-                      </div>
-                    `,
-                  )}
-                </div>
-              </div>
-            </div>
-          `
-        : ''}
-
       ${this.showSettings
         ? html`
             <div class="settings-overlay" @click=${() => (this.showSettings = false)}>
@@ -808,7 +622,6 @@ export class RetroBoard extends LitElement {
           `
         : ''}
 
-      <retro-help .open=${this.showHelp} variant="facilitator" @close=${() => { this.showHelp = false }}></retro-help>
 
       ${this.isFacilitator
         ? html`
@@ -823,7 +636,6 @@ export class RetroBoard extends LitElement {
                 ? html`<button class="add-column-btn" @click=${this.onAddColumn}>+ Add column</button>`
                 : ''}
               <button class="settings-btn" title="Session settings" @click=${this.openSettings}>${iconGear()}</button>
-              ${participantCountBtn}
               <retro-timer
                 .timer=${session.timer ?? null}
                 .sessionId=${session.id}
@@ -831,7 +643,6 @@ export class RetroBoard extends LitElement {
                 .facilitatorToken=${this.facilitatorToken}
                 .participantName=${this.participantName}
               ></retro-timer>
-              <button class="help-btn" @click=${() => (this.showHelp = true)}>?</button>
               ${session.phase !== 'closed'
                 ? html`
                     <span class="dock-sep" aria-hidden="true"></span>
@@ -847,11 +658,7 @@ export class RetroBoard extends LitElement {
                 : ''}
             </div>
           `
-        : html`
-            <div class="participant-bar">
-              ${participantCountBtn}
-            </div>
-          `}
+        : ''}
 
       ${this.voteLimitMessage
         ? html`<div class="vote-limit-msg">${this.voteLimitMessage}</div>`
@@ -893,33 +700,10 @@ export class RetroBoard extends LitElement {
               ?isFacilitator=${this.isFacilitator}
               .reactionsEnabled=${session.reactions_enabled}
               .sortByVotes=${session.column_sorts?.[col] ?? false}
-              .votesUsed=${this.votesUsed}
-              .maxVotes=${session.max_votes_per_participant}
             ></retro-column>
           `,
         )}
       </div>
-
-      ${(session.phase === 'discussing' || session.phase === 'closed') && items.length > 0
-        ? html`
-            <div class="action-items-panel">
-              <h3 class="action-items-heading">${iconCircleCheck()} Action Items</h3>
-              <div class="action-items-list">
-                ${items.map(
-                  ({ card, column }) => html`
-                    <div class="action-item">
-                      <span class="action-item-text">${card.text}</span>
-                      <span class="action-item-meta">
-                        <span class="action-item-assignee">${card.assignee}</span>
-                        <span class="action-item-column">${column}</span>
-                      </span>
-                    </div>
-                  `,
-                )}
-              </div>
-            </div>
-          `
-        : ''}
     `
   }
 }

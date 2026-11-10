@@ -398,16 +398,20 @@ test('capture all screens', async ({ browser }) => {
       return badge?.textContent?.includes('Discussing')
     }, { timeout: 8000 })
     await page.waitForTimeout(400)
-    // Click the feedback button in session-page shadow DOM header
+    // Give feedback lives in the avatar menu (session-page shadow DOM)
     await page.evaluate(() => {
       const sp = document.querySelector('session-page') as any
-      const btn = sp?.shadowRoot?.querySelector('button.feedback-btn') as HTMLButtonElement
-      btn?.click()
+      ;(sp?.shadowRoot?.querySelector('.avatar-menu-btn') as HTMLButtonElement)?.click()
     })
-    await page.waitForFunction(() => {
+    await page.waitForTimeout(200)
+    await page.evaluate(() => {
       const sp = document.querySelector('session-page') as any
-      const fd = sp?.shadowRoot?.querySelector('feedback-dialog') as any
-      return fd?.open === true
+      ;(sp?.shadowRoot?.querySelector('.menu-feedback') as HTMLButtonElement)?.click()
+    })
+    // the feedback card is docked bottom-left by the notification dock
+    await page.waitForFunction(() => {
+      const dock = document.querySelector('notification-dock') as any
+      return !!dock?.shadowRoot?.querySelector('feedback-dialog')
     }, { timeout: 5000 })
     await shot(page, '06-feedback-dialog.jpg')
     await ctx.close()

@@ -57,25 +57,31 @@ async function withName(page: Page, name: string, token = '') {
   )
 }
 
+async function openFeedbackDialog(page: Page) {
+  await page.locator('.avatar-menu-btn').click()
+  await page.getByRole('menuitem', { name: 'Give feedback' }).click()
+}
+
 async function setupAndOpenDialog(page: Page) {
   await withName(page, 'Alice')
   await mockApi(page, makeSession())
   await page.goto(`/session/${SESSION_ID}`)
   await expect(page.locator('retro-board')).toBeVisible()
-  // Click the feedback button in the header
-  await page.locator('button.feedback-btn').click()
+  // Give feedback lives in the avatar menu
+  await openFeedbackDialog(page)
   await expect(page.locator('feedback-dialog .card')).toBeVisible()
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 test.describe('feedback-dialog rendering', () => {
-  test('feedback button is visible in session header', async ({ page }) => {
+  test('Give feedback is in the avatar menu', async ({ page }) => {
     await withName(page, 'Alice')
     await mockApi(page, makeSession())
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
-    await expect(page.locator('button.feedback-btn')).toBeVisible()
+    await page.locator('.avatar-menu-btn').click()
+    await expect(page.getByRole('menuitem', { name: 'Give feedback' })).toBeVisible()
   })
 
   test('dialog is not visible initially', async ({ page }) => {
@@ -131,7 +137,7 @@ test.describe('feedback-dialog submission', () => {
 
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
-    await page.locator('button.feedback-btn').click()
+    await openFeedbackDialog(page)
     await page.locator('feedback-dialog .rating-btn').nth(4).click()
     await page.locator('feedback-dialog .submit-btn').click()
 
@@ -157,7 +163,7 @@ test.describe('feedback-dialog submission', () => {
 
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
-    await page.locator('button.feedback-btn').click()
+    await openFeedbackDialog(page)
     await page.locator('feedback-dialog .rating-btn').nth(4).click()
     await page.locator('feedback-dialog .submit-btn').click()
 
@@ -185,7 +191,7 @@ test.describe('feedback-dialog submission', () => {
 
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
-    await page.locator('button.feedback-btn').click()
+    await openFeedbackDialog(page)
     await expect(page.locator('feedback-dialog .card')).toBeVisible()
     await page.locator('feedback-dialog .rating-btn').nth(2).click()
     await expect(page.locator('feedback-dialog .submit-btn')).toBeEnabled()
@@ -212,7 +218,7 @@ test.describe('feedback-dialog dismissal', () => {
 
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
-    await page.locator('button.feedback-btn').click()
+    await openFeedbackDialog(page)
     await expect(page.locator('feedback-dialog .card')).toBeVisible()
     await page.locator('feedback-dialog .skip-btn').click()
     await expect(page.locator('feedback-dialog .card')).not.toBeVisible()
@@ -224,7 +230,7 @@ test.describe('feedback-dialog dismissal', () => {
     await mockApi(page, makeSession())
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
-    await page.locator('button.feedback-btn').click()
+    await openFeedbackDialog(page)
     await page.locator('feedback-dialog .skip-btn').click()
 
     // localStorage should not have the feedback key
@@ -244,7 +250,7 @@ test.describe('feedback-dialog dismissal', () => {
     await setupAndOpenDialog(page)
     // The card docks bottom-left and never captures clicks outside itself, so
     // a control on the board behind it still responds.
-    await page.locator('button.feedback-btn').click()
+    await openFeedbackDialog(page)
     await expect(page.locator('feedback-dialog .card')).toBeVisible()
   })
 })
@@ -264,7 +270,7 @@ test.describe('feedback-dialog suppression', () => {
     await expect(page.locator('retro-board')).toBeVisible()
     // The dialog should be closeable manually — it's not automatically shown
     // Verify the feedback button still opens dialog on explicit click
-    await page.locator('button.feedback-btn').click()
+    await openFeedbackDialog(page)
     await expect(page.locator('feedback-dialog .card')).toBeVisible()
   })
 })

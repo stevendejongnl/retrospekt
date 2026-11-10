@@ -176,14 +176,14 @@ test.describe('session-page rename', () => {
 
   test('clicking your name turns it into an editable input', async ({ page }) => {
     await page.goto(`/session/${SESSION_ID}`)
-    await page.locator('.avatar-name').click()
+    await startRename(page)
     await expect(page.locator('.avatar-name-input')).toBeVisible()
     await expect(page.locator('.avatar-name-input')).toHaveValue('Alice')
   })
 
   test('renaming to a free name updates the displayed name', async ({ page }) => {
     await page.goto(`/session/${SESSION_ID}`)
-    await page.locator('.avatar-name').click()
+    await startRename(page)
     await page.locator('.avatar-name-input').fill('Alicia')
     await page.locator('.avatar-name-input').press('Enter')
     await expect(page.locator('.avatar-name')).toHaveText('Alicia')
@@ -191,7 +191,7 @@ test.describe('session-page rename', () => {
 
   test('renaming to a name already taken by another participant shows an error and keeps editing', async ({ page }) => {
     await page.goto(`/session/${SESSION_ID}`)
-    await page.locator('.avatar-name').click()
+    await startRename(page)
     await page.locator('.avatar-name-input').fill('Bob')
     await page.locator('.avatar-name-input').press('Enter')
     await expect(page.getByText(/already taken/i)).toBeVisible()
@@ -200,12 +200,21 @@ test.describe('session-page rename', () => {
 
   test('pressing Escape cancels the rename without saving', async ({ page }) => {
     await page.goto(`/session/${SESSION_ID}`)
-    await page.locator('.avatar-name').click()
+    await startRename(page)
     await page.locator('.avatar-name-input').fill('Something Else')
     await page.locator('.avatar-name-input').press('Escape')
     await expect(page.locator('.avatar-name')).toHaveText('Alice')
   })
 })
+
+async function openMenuItem(page: Page, name: string) {
+  await page.locator('.avatar-menu-btn').click()
+  await page.getByRole('menuitem', { name }).click()
+}
+
+async function startRename(page: Page) {
+  await openMenuItem(page, 'Change name')
+}
 
 // ── Board: participant view ───────────────────────────────────────────────────
 
@@ -254,7 +263,7 @@ test.describe('session-page board (participant)', () => {
   })
 
   test('history icon button opens the sidebar', async ({ page }) => {
-    await page.locator('button[title="Your sessions"]').click()
+    await openMenuItem(page, 'Your sessions')
     await expect(page.locator('.sidebar.open')).toBeVisible()
   })
 
@@ -262,9 +271,8 @@ test.describe('session-page board (participant)', () => {
     const before = await page.evaluate(
       () => document.documentElement.getAttribute('data-theme') ?? 'light',
     )
-    const menu = page.locator('theme-menu')
-    await menu.getByRole('button', { name: 'Theme settings' }).click()
-    await menu.getByText(before === 'dark' ? 'Light' : 'Dark', { exact: true }).click()
+    await openMenuItem(page, 'Theme')
+    await page.getByRole('menuitemradio', { name: before === 'dark' ? 'Light' : 'Dark' }).click()
     const after = await page.evaluate(() => document.documentElement.getAttribute('data-theme'))
     expect(after).not.toBe(before)
   })
@@ -275,19 +283,19 @@ test.describe('session-page board (participant)', () => {
   })
 
   test('"?" button in user chip opens the help overlay', async ({ page }) => {
-    await page.locator('.user-chip .help-btn').click()
+    await openMenuItem(page, 'How it works')
     await expect(page.locator('.help-overlay')).toBeVisible()
     await expect(page.getByText('How Retrospekt works')).toBeVisible()
   })
 
   test('"Got it" closes the help overlay', async ({ page }) => {
-    await page.locator('.user-chip .help-btn').click()
+    await openMenuItem(page, 'How it works')
     await page.getByRole('button', { name: 'Got it' }).click()
     await expect(page.locator('.help-overlay')).not.toBeVisible()
   })
 
   test('clicking the help overlay backdrop closes it', async ({ page }) => {
-    await page.locator('.user-chip .help-btn').click()
+    await openMenuItem(page, 'How it works')
     await page.locator('.help-overlay').click({ position: { x: 10, y: 10 } })
     await expect(page.locator('.help-overlay')).not.toBeVisible()
   })
@@ -317,8 +325,7 @@ test.describe('session-page board (participant)', () => {
     }))
   })
 
-  test('participant bar (not facilitator bar) is rendered', async ({ page }) => {
-    await expect(page.locator('.participant-bar')).toBeVisible()
+  test('no facilitator dock for a participant', async ({ page }) => {
     await expect(page.locator('.facilitator-dock')).not.toBeVisible()
   })
 })
@@ -431,36 +438,17 @@ test.describe('session-page board (facilitator, collecting)', () => {
     await expect(page.getByRole('button', { name: '← Back' })).not.toBeVisible()
   })
 
-  test('participants popup opens and shows participant names', async ({ page }) => {
-    await page.locator('.participant-count').click()
-    await expect(page.locator('.participants-overlay')).toBeVisible()
-    await expect(page.getByText('Participants (1)')).toBeVisible()
-    await expect(page.locator('.participants-overlay').getByText('Alice')).toBeVisible()
-  })
-
-  test('participants popup closes via the × button', async ({ page }) => {
-    await page.locator('.participant-count').click()
-    await page.locator('.participants-close').click()
-    await expect(page.locator('.participants-overlay')).not.toBeVisible()
-  })
-
-  test('participants popup closes by clicking the backdrop', async ({ page }) => {
-    await page.locator('.participant-count').click()
-    await page.locator('.participants-overlay').click({ position: { x: 10, y: 10 } })
-    await expect(page.locator('.participants-overlay')).not.toBeVisible()
-  })
-
   test('retro-timer is rendered for the facilitator', async ({ page }) => {
     await expect(page.locator('retro-timer')).toBeVisible()
   })
 
-  test('"?" button in facilitator bar opens the help overlay', async ({ page }) => {
-    await page.locator('.facilitator-dock .help-btn').click()
+  test('How it works in the avatar menu opens the facilitator help overlay', async ({ page }) => {
+    await openMenuItem(page, 'How it works')
     await expect(page.locator('.help-overlay')).toBeVisible()
   })
 
   test('help overlay in facilitator bar closes via "Got it"', async ({ page }) => {
-    await page.locator('.facilitator-dock .help-btn').click()
+    await openMenuItem(page, 'How it works')
     await page.locator('.help-close-btn').click()
     await expect(page.locator('.help-overlay')).not.toBeVisible()
   })
@@ -557,8 +545,8 @@ test.describe('retro-card rendering', () => {
 
 // ── Action items panel ────────────────────────────────────────────────────────
 
-test.describe('action items panel', () => {
-  test('renders assigned cards as action items in closed phase', async ({ page }) => {
+test.describe('action items popover', () => {
+  test('lists assigned cards in the closed phase', async ({ page }) => {
     await withName(page, 'Alice')
     const session = {
       ...BASE,
@@ -576,9 +564,9 @@ test.describe('action items panel', () => {
     }
     await mockApi(page, session as typeof BASE)
     await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('.action-items-panel')).toBeVisible()
-    await expect(page.locator('.action-item-text')).toHaveText('Fix the deploy pipeline')
-    await expect(page.locator('.action-item-assignee')).toHaveText('Bob')
+    await page.getByRole('button', { name: 'Action items' }).click()
+    await expect(page.locator('.actions-popover')).toContainText('Fix the deploy pipeline')
+    await expect(page.locator('.actions-popover')).toContainText('Assigned to Bob')
   })
 })
 
@@ -1077,7 +1065,7 @@ test.describe('session-page board (facilitator, closed)', () => {
   })
 
   test('clicking the help overlay backdrop in facilitator bar closes it', async ({ page }) => {
-    await page.locator('.facilitator-dock .help-btn').click()
+    await openMenuItem(page, 'How it works')
     await expect(page.locator('.help-overlay')).toBeVisible()
     await page.locator('.help-overlay').click({ position: { x: 5, y: 5 } })
     await expect(page.locator('.help-overlay')).not.toBeVisible()
@@ -1127,8 +1115,9 @@ test.describe('session-page CS brand logo', () => {
     await withName(page, 'Alice')
     await mockApi(page, BASE)
     await page.goto(`/session/${SESSION_ID}`)
+    await page.locator('.avatar-menu-btn').click()
     await expect(page.locator('.brand-reset')).toBeVisible()
-    await expect(page.locator('.theme-toggle')).not.toBeVisible()
+    await expect(page.getByRole('menuitem', { name: 'Theme', exact: true })).not.toBeVisible()
   })
 
   test('clicking brand-reset removes CS brand and shows theme toggle', async ({ page }) => {
@@ -1136,8 +1125,10 @@ test.describe('session-page CS brand logo', () => {
     await withName(page, 'Alice')
     await mockApi(page, BASE)
     await page.goto(`/session/${SESSION_ID}`)
+    await page.locator('.avatar-menu-btn').click()
     await page.locator('.brand-reset').click()
-    await expect(page.locator('.theme-toggle')).toBeVisible()
+    await page.locator('.avatar-menu-btn').click()
+    await expect(page.getByRole('menuitem', { name: 'Theme', exact: true })).toBeVisible()
     await expect(page.locator('.brand-reset')).not.toBeVisible()
     const brand = await page.evaluate(() => document.documentElement.getAttribute('data-brand'))
     expect(brand).toBeNull()
@@ -1315,7 +1306,7 @@ test('vote indicator shows used/max votes in column header when limit is set', a
   await withName(page, 'Alice')
   await mockApi(page, session as typeof BASE)
   await page.goto(`/session/${SESSION_ID}`)
-  await expect(page.locator('.vote-indicator').first()).toContainText('1/5 votes')
+  await expect(page.locator('.header-votes')).toHaveText('1/5 votes')
 })
 
 test('vote indicator is not shown when no limit is set', async ({ page }) => {
@@ -1328,7 +1319,7 @@ test('vote indicator is not shown when no limit is set', async ({ page }) => {
   await withName(page, 'Alice')
   await mockApi(page, session as typeof BASE)
   await page.goto(`/session/${SESSION_ID}`)
-  await expect(page.locator('.vote-indicator')).toHaveCount(0)
+  await expect(page.locator('.header-votes')).toHaveCount(0)
 })
 
 test('vote on individual card when at limit shows limit message without API call', async ({ page }) => {
@@ -1406,7 +1397,7 @@ test.describe('session-page stats link', () => {
     await mockApi(page, BASE)
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
-    await page.locator('session-page').getByTitle('Stats').click()
+    await openMenuItem(page, 'Stats')
     await expect(page).toHaveURL('/stats')
   })
 })

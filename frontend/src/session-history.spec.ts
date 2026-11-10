@@ -226,7 +226,8 @@ test.describe('session-history on session-page', () => {
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
 
-    await page.locator('button[title="Your sessions"]').click()
+    await page.locator('.avatar-menu-btn').click()
+    await page.getByRole('menuitem', { name: 'Your sessions' }).click()
     await expect(page.locator('.sidebar.open')).toBeVisible()
   })
 
@@ -235,7 +236,8 @@ test.describe('session-history on session-page', () => {
     await mockApi(page, BASE as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
 
-    await page.locator('button[title="Your sessions"]').click()
+    await page.locator('.avatar-menu-btn').click()
+    await page.getByRole('menuitem', { name: 'Your sessions' }).click()
     await expect(page.locator('.sidebar.open')).toBeVisible()
 
     // Click the backdrop to the right of the sidebar (sidebar is 320px wide, so click at x=400)
@@ -259,7 +261,8 @@ test.describe('session-history on session-page', () => {
     await page.goto(`/session/${SESSION_ID}`)
     await expect(page.locator('retro-board')).toBeVisible()
 
-    await page.locator('button[title="Your sessions"]').click()
+    await page.locator('.avatar-menu-btn').click()
+    await page.getByRole('menuitem', { name: 'Your sessions' }).click()
     await expect(page.locator('.sidebar.open')).toBeVisible()
     await expect(page.locator('.item-name').filter({ hasText: 'Sprint Retro' })).toBeVisible()
   })

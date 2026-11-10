@@ -8,18 +8,12 @@ import { buildParticipantColorMap } from '../types'
 import { api } from '../api'
 import { SSEClient } from '../sse'
 import { storage } from '../storage'
-import { getBrand, clearBrand, bacon } from '../theme'
+import { getBrand, clearBrand, bacon, getThemePreference, setThemePreference, getHalalMode, setHalalMode } from '../theme'
 import { tagManager } from '../analytics'
 import {
   faIconStyles,
-  iconLink,
-  iconCheck,
-  iconClockRotateLeft,
-  iconChartBar,
-  iconFileArrowDown,
-  iconNoteSticky,
-  iconRotateLeft,
   csLogo,
+  designIcon,
 } from '../icons'
 import '../components/retro-board'
 import '../components/phase-stepper'
@@ -28,7 +22,6 @@ import '../components/session-history'
 import '../components/board-notes'
 import { notifications } from '../components/notification-dock'
 import '../components/retro-help'
-import '../components/theme-menu'
 import { CHANGELOG } from '../generated/changelog'
 import { semverGt } from '../storage'
 import { exportFilename, sessionToMarkdown } from '../export-markdown'
@@ -50,7 +43,8 @@ export class SessionPage extends LitElement {
   @state() private loading = true
   @state() private showNamePrompt = false
   @state() private copied = false
-  @state() private shareOpen = false
+  @state() private openPanel: 'share' | 'actions' | 'menu' | null = null
+  @state() private themeOpen = false
   @state() private brand = getBrand()
   @state() private showHelp = false
   @state() private showHistory = false
@@ -167,8 +161,181 @@ export class SessionPage extends LitElement {
       border-color: var(--retro-accent);
       color: var(--retro-accent);
     }
-    theme-menu {
-      flex-shrink: 0;
+
+    .icon-btn.active {
+      border-color: var(--retro-accent-border);
+      color: var(--retro-accent-ink);
+      background: var(--retro-accent-tint);
+    }
+    .actions-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+    .actions-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 999px;
+      background: var(--retro-accent);
+      color: var(--retro-accent-contrast);
+      font-size: 10px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+    .header-votes {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--retro-text-secondary);
+      white-space: nowrap;
+    }
+    .pop-wrap {
+      position: relative;
+    }
+    .popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 30;
+      padding: 12px;
+      background: var(--retro-glass-bg-strong);
+      border: 1px solid var(--retro-glass-border);
+      border-radius: var(--retro-radius-md);
+      box-shadow: var(--retro-shadow-float);
+      box-sizing: border-box;
+    }
+    .eyebrow {
+      margin-bottom: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--retro-text-muted);
+    }
+    .people-eyebrow {
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+    .people {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .share-person {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 10px 2px 2px;
+      border-radius: 999px;
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
+      font-size: 12px;
+      color: var(--retro-text-primary);
+    }
+    .person-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      color: var(--retro-accent-contrast);
+      font-size: 10px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .actions-popover {
+      width: 340px;
+    }
+    .action-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .action-row {
+      padding: 8px 10px;
+      border-radius: var(--retro-radius-sm);
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
+    }
+    .action-text {
+      font-size: 13px;
+      color: var(--retro-text-primary);
+    }
+    .action-meta {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--retro-text-muted);
+    }
+    .popover-empty {
+      margin: 0;
+      font-size: 12px;
+      color: var(--retro-text-secondary);
+    }
+    .avatar-menu-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px 3px 3px;
+      border-radius: 999px;
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--retro-text-primary);
+      cursor: pointer;
+    }
+    .avatar-menu-btn.open {
+      border-color: var(--retro-accent-border);
+    }
+    .user-menu {
+      width: 210px;
+      padding: 6px;
+    }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 8px 10px;
+      border: none;
+      border-radius: var(--retro-radius-sm);
+      background: none;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--retro-text-primary);
+      text-align: left;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+    .menu-item svg {
+      color: var(--retro-text-secondary);
+    }
+    .menu-item:hover {
+      background: var(--retro-bg-hover);
+    }
+    .menu-chevron {
+      margin-left: auto;
+      display: inline-flex;
+    }
+    .menu-sub {
+      padding: 2px 0 4px 34px;
+    }
+    .menu-choice.selected {
+      color: var(--retro-accent-ink);
+      font-weight: 600;
+    }
+    .menu-halal {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      font-size: 13px;
+      color: var(--retro-text-secondary);
     }
     .user-chip {
       position: relative;
@@ -225,28 +392,6 @@ export class SessionPage extends LitElement {
       border-radius: var(--retro-radius-sm);
       white-space: nowrap;
     }
-    .help-btn {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      border: 1.5px solid #e0dbd4;
-      background: none;
-      font-size: 13px;
-      font-weight: 700;
-      color: #9a6a3a;
-      cursor: pointer;
-      font-family: inherit;
-      flex-shrink: 0;
-      transition: background 0.12s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-    }
-    .help-btn:hover {
-      background: #f5f0eb;
-    }
-
     @media (max-width: 640px) {
       header {
         padding: 0 12px;
@@ -502,8 +647,8 @@ export class SessionPage extends LitElement {
     window.removeEventListener('retro-brand-change', this._brandListener)
     window.removeEventListener('pointermove', this._onActivity)
     window.removeEventListener('keydown', this._onActivity)
-    document.removeEventListener('keydown', this._onShareKeydown)
-    document.removeEventListener('click', this._onShareOutsideClick, true)
+    document.removeEventListener('keydown', this._onPanelKeydown)
+    document.removeEventListener('click', this._onPanelOutsideClick, true)
     if (this._idleCheckInterval !== null) clearInterval(this._idleCheckInterval)
   }
 
@@ -605,30 +750,38 @@ export class SessionPage extends LitElement {
     await api.setPhase(this.session.id, e.detail, storage.getFacilitatorToken(this.session.id) ?? '', this.participantName)
   }
 
-  private toggleShare(): void {
-    if (this.shareOpen) this.closeShare()
-    else this.openShare()
+  private togglePanel(name: 'share' | 'actions' | 'menu'): void {
+    if (this.openPanel === name) {
+      this.closePanel()
+      return
+    }
+    if (!this.openPanel) {
+      document.addEventListener('keydown', this._onPanelKeydown)
+      document.addEventListener('click', this._onPanelOutsideClick, true)
+    }
+    this.openPanel = name
+    this.themeOpen = false
   }
 
-  private openShare(): void {
-    this.shareOpen = true
-    document.addEventListener('keydown', this._onShareKeydown)
-    document.addEventListener('click', this._onShareOutsideClick, true)
+  private closePanel(): void {
+    this.openPanel = null
+    this.themeOpen = false
+    document.removeEventListener('keydown', this._onPanelKeydown)
+    document.removeEventListener('click', this._onPanelOutsideClick, true)
   }
 
-  private closeShare(): void {
-    this.shareOpen = false
-    document.removeEventListener('keydown', this._onShareKeydown)
-    document.removeEventListener('click', this._onShareOutsideClick, true)
+  private _onPanelKeydown = (e: KeyboardEvent): void => {
+    if (e.key === 'Escape') this.closePanel()
   }
 
-  private _onShareKeydown = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape') this.closeShare()
+  private _onPanelOutsideClick = (e: MouseEvent): void => {
+    const wrap = this.renderRoot.querySelector('.pop-wrap[data-open]')
+    if (wrap && !e.composedPath().includes(wrap)) this.closePanel()
   }
 
-  private _onShareOutsideClick = (e: MouseEvent): void => {
-    const wrap = this.renderRoot.querySelector('.share-wrap')
-    if (wrap && !e.composedPath().includes(wrap)) this.closeShare()
+  private get votesUsed(): number {
+    if (!this.session) return 0
+    return this.session.cards.reduce((n, c) => n + c.votes.filter((v) => v.participant_name === this.participantName).length, 0)
   }
 
   private async copyUrl(): Promise<void> {
@@ -724,6 +877,63 @@ export class SessionPage extends LitElement {
   }
 
 
+  private menuAction(action: () => void): void {
+    this.closePanel()
+    action()
+  }
+
+  private renderUserMenu() {
+    const preference = getThemePreference()
+    const choice = (value: 'light' | 'dark' | 'system', label: string) => html`
+      <button
+        class="menu-item menu-choice ${preference === value ? 'selected' : ''}"
+        role="menuitemradio"
+        aria-checked=${preference === value}
+        @click=${() => { setThemePreference(value); this.requestUpdate() }}
+      >${label}</button>
+    `
+    return html`
+      <div class="popover user-menu" role="menu">
+        <button class="menu-item menu-history" role="menuitem" @click=${() => this.menuAction(() => { this.showHistory = true })}>
+          ${designIcon('history', 14)} Your sessions
+        </button>
+        <button class="menu-item menu-stats" role="menuitem" @click=${() => this.menuAction(() => window.router.navigate('/stats'))}>
+          ${designIcon('chart', 14)} Stats
+        </button>
+        <button class="menu-item menu-feedback" role="menuitem" @click=${() => this.menuAction(() => this._openFeedback())}>
+          ${designIcon('comment', 14)} Give feedback
+        </button>
+        ${this.brand === 'cs'
+          ? html`<button class="menu-item brand-reset" role="menuitem" @click=${() => this.menuAction(clearBrand)}>${designIcon('theme', 14)} Reset theme</button>`
+          : html`
+              <button
+                class="menu-item menu-theme"
+                role="menuitem"
+                aria-expanded=${this.themeOpen}
+                @click=${() => { this.themeOpen = !this.themeOpen }}
+              >${designIcon('theme', 14)} Theme <span class="menu-chevron">${designIcon(this.themeOpen ? 'chevronUp' : 'chevronDown', 12)}</span></button>
+              ${this.themeOpen
+                ? html`
+                    <div class="menu-sub">
+                      ${choice('light', 'Light')}${choice('dark', 'Dark')}${choice('system', 'System')}
+                      <label class="menu-halal">
+                        <input type="checkbox" .checked=${getHalalMode()} @change=${(e: Event) => setHalalMode((e.target as HTMLInputElement).checked)} />
+                        Halal mode
+                      </label>
+                    </div>
+                  `
+                : ''}
+            `}
+        <button class="menu-item menu-rename" role="menuitem" @click=${() => this.menuAction(() => this.startRename())}>
+          ${designIcon('pencil', 14)} Change name
+        </button>
+        <button class="menu-item menu-help" role="menuitem" @click=${() => this.menuAction(() => { this.showHelp = true })}>
+          ${designIcon('help', 14)} How it works
+        </button>
+      </div>
+    `
+  }
+
   render() {
     if (this.loading) {
       return html`
@@ -737,6 +947,9 @@ export class SessionPage extends LitElement {
     if (!this.session) return nothing
 
     const { session } = this
+    const participantColors = buildParticipantColorMap(session.participants)
+    const actionItems = session.cards.filter((c) => c.published && c.assignee)
+    const maxVotes = session.max_votes_per_participant
 
     return html`
       <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
@@ -748,7 +961,7 @@ export class SessionPage extends LitElement {
         @close=${() => { this.showNotes = false }}
       ></board-notes>
 
-      <retro-help .open=${this.showHelp} variant="participant" @close=${() => { this.showHelp = false }}></retro-help>
+      <retro-help .open=${this.showHelp} variant=${this.isFacilitator ? 'facilitator' : 'participant'} @close=${() => { this.showHelp = false }}></retro-help>
 
       ${this.showNamePrompt
         ? html`
@@ -794,59 +1007,85 @@ export class SessionPage extends LitElement {
           @phase-select=${this.onPhaseSelect}
         ></phase-stepper>
         <div class="header-tools">
+        ${session.phase === 'discussing' && maxVotes
+          ? html`<span class="header-votes">${this.votesUsed}/${maxVotes} votes</span>`
+          : nothing}
         ${session.timer && (session.timer.started_at || !this.isFacilitator)
           ? html`<div class="header-countdown">
               <retro-timer .timer=${session.timer} .sessionId=${session.id} .participantName=${this.participantName}></retro-timer>
             </div>`
           : nothing}
-        <div class="share-wrap">
+        <div class="share-wrap pop-wrap" ?data-open=${this.openPanel === 'share'}>
           <button
             class="share-btn"
             aria-haspopup="dialog"
-            aria-expanded=${this.shareOpen}
-            @click=${this.toggleShare}
-          >${iconLink()} Share</button>
-          ${this.shareOpen
+            aria-expanded=${this.openPanel === 'share'}
+            @click=${() => this.togglePanel('share')}
+          >${designIcon('link', 13)} Share ${designIcon('chevronDown', 12)}</button>
+          ${this.openPanel === 'share'
             ? html`
-                <div class="share-popover" role="dialog" aria-label="Share this board">
-                  <div class="share-eyebrow">Share this board</div>
+                <div class="popover share-popover" role="dialog" aria-label="Share this board">
+                  <div class="eyebrow">Share this board</div>
                   <div class="share-row">
                     <span class="share-url">${window.location.href}</span>
                     <button class="copy-btn" @click=${this.copyUrl}>
-                      ${this.copied ? html`${iconCheck()} Copied` : 'Copy link'}
+                      ${this.copied ? html`${designIcon('check', 13)} Copied` : 'Copy link'}
                     </button>
                   </div>
                   ${session.phase !== 'collecting'
                     ? html`
-                        <button class="export-btn" @click=${() => { this.exportSession(); this.closeShare() }}>
-                          ${iconFileArrowDown()} Export to Markdown
+                        <button class="export-btn" @click=${() => { this.exportSession(); this.closePanel() }}>
+                          ${designIcon('download', 13)} Export to Markdown
                         </button>
                       `
                     : ''}
+                  <div class="eyebrow people-eyebrow">${session.participants.length} ${session.participants.length === 1 ? 'person' : 'people'} here</div>
+                  <div class="people">
+                    ${session.participants.map((p) => html`
+                      <span class="share-person">
+                        <span class="person-avatar" style="background:${participantColors[p.name] ?? 'var(--retro-accent)'}">${p.name[0].toUpperCase()}</span>${p.name}
+                      </span>
+                    `)}
+                  </div>
                 </div>
               `
             : ''}
         </div>
-        <button class="icon-btn" @click=${() => { this.showHistory = true }} title="Your sessions">${iconClockRotateLeft()}</button>
-        <button
-          class="icon-btn"
-          @click=${(e: Event) => {
-            e.preventDefault()
-            window.router.navigate('/stats')
-          }}
-          title="Stats"
-        >${iconChartBar()}</button>
-        <button class="icon-btn" @click=${() => { this.showNotes = true }} title="Board notes">${iconNoteSticky()}</button>
-        <button class="icon-btn feedback-btn" @click=${() => this._openFeedback()} title="Give feedback">💬</button>
-        ${this.brand === 'cs'
-          ? html`<button class="icon-btn brand-reset" @click=${clearBrand} title="Reset to default theme">${iconRotateLeft()}</button>`
-          : html`<theme-menu></theme-menu>`}
+        <div class="pop-wrap actions-wrap" ?data-open=${this.openPanel === 'actions'}>
+          <button
+            class="icon-btn ${this.openPanel === 'actions' ? 'active' : ''}"
+            aria-label="Action items"
+            title="Action items"
+            aria-haspopup="dialog"
+            aria-expanded=${this.openPanel === 'actions'}
+            @click=${() => this.togglePanel('actions')}
+          >${designIcon('tasks', 15)}</button>
+          ${actionItems.length > 0 ? html`<span class="actions-badge" aria-hidden="true">${actionItems.length}</span>` : nothing}
+          ${this.openPanel === 'actions'
+            ? html`
+                <div class="popover actions-popover" role="dialog" aria-label="Action items">
+                  <div class="eyebrow">Action items · ${actionItems.length}</div>
+                  ${actionItems.length === 0
+                    ? html`<p class="popover-empty">Nothing is assigned yet. Assign a card to somebody and it shows up here.</p>`
+                    : html`<div class="action-list">
+                        ${actionItems.map((c) => html`
+                          <div class="action-row">
+                            <div class="action-text">${c.text}</div>
+                            <div class="action-meta">Assigned to ${c.assignee} · from ${c.author_name}</div>
+                          </div>
+                        `)}
+                      </div>`}
+                </div>
+              `
+            : ''}
+        </div>
+        <button class="icon-btn" aria-label="Board notes" @click=${() => { this.showNotes = true }} title="Board notes">${designIcon('note', 15)}</button>
         ${this.participantName
           ? html`
-              <div class="user-chip">
-                <div class="avatar" style="background:${this.myColor}">${this.participantName[0].toUpperCase()}</div>
+              <div class="user-chip pop-wrap" ?data-open=${this.openPanel === 'menu'}>
                 ${this.renamingName
                   ? html`
+                      <div class="avatar" style="background:${this.myColor}">${this.participantName[0].toUpperCase()}</div>
                       <input
                         class="avatar-name-input"
                         .value=${this.renameInput}
@@ -863,13 +1102,18 @@ export class SessionPage extends LitElement {
                       />
                     `
                   : html`
-                      <span
-                        class="avatar-name"
-                        title="Click to change your name"
-                        @click=${this.startRename}
-                      >${this.participantName}</span>
+                      <button
+                        class="avatar-menu-btn ${this.openPanel === 'menu' ? 'open' : ''}"
+                        aria-haspopup="menu"
+                        aria-expanded=${this.openPanel === 'menu'}
+                        @click=${() => this.togglePanel('menu')}
+                      >
+                        <span class="avatar" style="background:${this.myColor}">${this.participantName[0].toUpperCase()}</span>
+                        <span class="avatar-name">${this.participantName}</span>
+                        ${designIcon('chevronDown', 12)}
+                      </button>
                     `}
-                <button class="help-btn" @click=${() => (this.showHelp = true)}>?</button>
+                ${this.openPanel === 'menu' ? this.renderUserMenu() : ''}
                 ${this.renameTakenError
                   ? html`<p class="name-error rename-error">That name is already taken in this retro.</p>`
                   : ''}
