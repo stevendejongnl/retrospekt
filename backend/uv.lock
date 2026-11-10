@@ -1000,7 +1000,7 @@ wheels = [
 
 [[package]]
 name = "retrospekt-backend"
-version = "1.52.0"
+version = "1.53.0"
 source = { editable = "." }
 dependencies = [
     { name = "argon2-cffi" },

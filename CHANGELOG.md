@@ -1,3 +1,15 @@
+## [1.53.0](https://github.com/stevendejongnl/retrospekt/compare/v1.52.0...v1.53.0) (2026-11-10)
+
+### Features
+
+* **board:** cards and columns in the design's colours ([0422f84](https://github.com/stevendejongnl/retrospekt/commit/0422f84d134a88094dbcc619a1dd5293dd99a967))
+* **board:** the dock, timer, cards and columns match the design ([eb438eb](https://github.com/stevendejongnl/retrospekt/commit/eb438ebfb49662b1d69c75b28301f9c8ecb1941f))
+* **board:** the facilitator controls are a floating dock ([bcc1508](https://github.com/stevendejongnl/retrospekt/commit/bcc1508bc566398ad09c7599a29ce1476526c657))
+* **header:** share, action items, notes and an avatar menu; the rest moves inside them ([7413a5f](https://github.com/stevendejongnl/retrospekt/commit/7413a5f2967f15777aa0ecb7739dfbadedc23570))
+* **header:** wordmark, title and phase stepper glyphs as in the design ([1bd7710](https://github.com/stevendejongnl/retrospekt/commit/1bd77101af34d0477a00bd307015419191546671))
+* **timer:** a countdown pill in the header for everyone ([588daf7](https://github.com/stevendejongnl/retrospekt/commit/588daf71f94315b3956316fb98373a5010a32499))
+* **timer:** the facilitator timer is a chip in the dock that opens its controls ([c86cf3d](https://github.com/stevendejongnl/retrospekt/commit/c86cf3d71a4e84ea4ae63b9ca5325087d970613c))
+
 ## [1.52.0](https://github.com/stevendejongnl/retrospekt/compare/v1.51.0...v1.52.0) (2026-11-09)
 
 ### Features
