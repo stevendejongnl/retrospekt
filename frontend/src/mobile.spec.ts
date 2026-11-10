@@ -410,3 +410,66 @@ test.describe('desktop 1100px keeps three columns in a row', () => {
     expect(new Set(tops).size, 'columns are not all in one row').toBe(1)
   })
 })
+
+test.describe('touch: move and group a card without dragging (STE-256)', () => {
+  test.use({ viewport: { width: 390, height: HEIGHT }, hasTouch: true, isMobile: true })
+
+  const TWO_IN_COLUMN = {
+    ...BASE,
+    cards: [
+      card({ id: 'a', text: 'First card' }),
+      card({ id: 'b', text: 'Second card' }),
+      card({ id: 'x', column: 'To Improve', text: 'Elsewhere' }),
+    ] as object[],
+  }
+
+  test('a card has a Move or group control on a touch screen', async ({ page }) => {
+    await open(page, { session: TWO_IN_COLUMN })
+    await expect(page.locator('retro-card').first().locator('.move-select')).toBeVisible()
+  })
+
+  test('choosing another column moves the card there', async ({ page }) => {
+    await open(page, { session: TWO_IN_COLUMN })
+    const request = page.waitForRequest((r) => r.url().endsWith('/cards/a/column') && r.method() === 'PATCH')
+    await page.locator('retro-card').first().locator('.move-select').selectOption({ label: 'To Improve' })
+    expect((await request).postDataJSON()).toEqual({ column: 'To Improve' })
+  })
+
+  test('choosing another card in the column groups them', async ({ page }) => {
+    await open(page, { session: TWO_IN_COLUMN })
+    const request = page.waitForRequest((r) => r.url().endsWith('/cards/a/group') && r.method() === 'POST')
+    await page.locator('retro-card').first().locator('.move-select').selectOption({ label: 'Second card' })
+    expect((await request).postDataJSON()).toEqual({ target_card_id: 'b' })
+  })
+
+  test('the options leave out the column the card is in and the card itself', async ({ page }) => {
+    await open(page, { session: TWO_IN_COLUMN })
+    const options = await page.locator('retro-card').first().locator('.move-select option').allTextContents()
+    expect(options).toContain('To Improve')
+    expect(options).toContain('Action Items')
+    expect(options).toContain('Second card')
+    expect(options).not.toContain('Went Well')
+    expect(options).not.toContain('First card')
+  })
+
+  test('no control in a closed session, or for a card you may not move', async ({ page }) => {
+    await open(page, { session: { ...TWO_IN_COLUMN, phase: 'closed' } })
+    await expect(page.locator('.move-select')).toHaveCount(0)
+  })
+
+  test('a participant has it for their own cards only', async ({ page }) => {
+    const mine = { ...BASE, cards: [card({ id: 'a', text: 'Bobs', author_name: 'Bob' }), card({ id: 'z', text: 'Alices', author_name: 'Alice' })] as object[] }
+    await open(page, { session: mine, facilitator: false })
+    await expect(page.locator('retro-card').filter({ hasText: 'Bobs' }).locator('.move-select')).toBeAttached()
+    await expect(page.locator('retro-card').filter({ hasText: 'Alices' }).locator('.move-select')).toHaveCount(0)
+  })
+})
+
+test.describe('with a mouse the touch control is not shown (STE-256)', () => {
+  test.use({ viewport: { width: 1100, height: 800 } })
+
+  test('there is no Move or group control on desktop', async ({ page }) => {
+    await open(page)
+    await expect(page.locator('.move-select')).toBeHidden()
+  })
+})
