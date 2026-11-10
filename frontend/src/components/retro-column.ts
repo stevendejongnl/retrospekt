@@ -30,7 +30,7 @@ export class RetroColumn extends LitElement {
   @property({ type: String }) color: ColumnColor | '' = ''
   @property({ type: Boolean }) isFacilitator = false
   // Presentation mode: published cards only, nothing to press (the board decides who the audience is)
-  @property({ type: Boolean }) presenting = false
+  @property({ type: Boolean, reflect: true }) presenting = false
   @property({ type: Object }) participantColorMap: Record<string, string> = {}
   @property({ type: Array }) participantNames: string[] = []
   @property({ type: Boolean }) reactionsEnabled = true
@@ -88,6 +88,10 @@ export class RetroColumn extends LitElement {
     }
     .count-badge[role='button'] {
       cursor: pointer;
+    }
+    /* presenting: an empty column is just its note, not a drop zone */
+    :host([presenting]) .cards-list.empty {
+      display: none;
     }
     .empty-note {
       padding: 18px 12px;

@@ -40,7 +40,7 @@ export class RetroBoard extends LitElement {
       align-items: center;
       justify-content: center;
       gap: 10px;
-      margin: 14px 24px 0;
+      margin: 0 0 12px;
       padding: 12px 16px;
       border-radius: var(--retro-radius-md);
       background: var(--retro-glass-bg-medium);

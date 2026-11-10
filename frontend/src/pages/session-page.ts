@@ -562,6 +562,7 @@ export class SessionPage extends LitElement {
       cursor: pointer;
     }
     .presenting-pill kbd {
+      margin-left: 4px;
       padding: 0 5px;
       border: 1px solid var(--retro-border-default);
       border-radius: var(--retro-radius-sm);

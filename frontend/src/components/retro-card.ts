@@ -164,6 +164,8 @@ export class RetroCard extends LitElement {
     }
     .reaction-btn:disabled {
       cursor: default;
+      /* a disabled button would grey its emoji; presenting shows reactions as plain chips */
+      color: var(--retro-text-primary);
     }
     .reaction-count {
       font-size: 10px;
