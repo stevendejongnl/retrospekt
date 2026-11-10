@@ -22,7 +22,8 @@ async function mount(page: Page) {
 }
 
 type Notifications = {
-  consent: () => void
+  suppress: (on: boolean) => void
+  consent: (onClose?: () => void) => void
   feedback: (o?: { sessionId?: string; participantName?: string }) => void
   whatsNew: (e: unknown) => void
 }
@@ -207,5 +208,41 @@ test.describe('notification-dock', () => {
     await dock(page).locator('consent-banner').getByRole('button', { name: 'Decline' }).click()
     await expect(dock(page).locator('consent-banner')).toHaveCount(0)
     await expect.poll(shift).toBe('0px')
+  })
+
+  test.describe('suppressed (presenting)', () => {
+    test('a card asked for while suppressed never appears, and is not queued for later', async ({ page }) => {
+      await mount(page)
+      await page.evaluate(() => (window as unknown as Win).notifications.suppress(true))
+      await page.evaluate(() => (window as unknown as Win).notifications.feedback({}))
+      await expect(dock(page).locator('feedback-dialog')).toHaveCount(0)
+
+      await page.evaluate(() => (window as unknown as Win).notifications.suppress(false))
+      await expect(dock(page).locator('feedback-dialog')).toHaveCount(0)
+    })
+
+    test('suppressing removes a card that is already docked and tells its owner it closed', async ({ page }) => {
+      await mount(page)
+      await page.evaluate(() => {
+        const w = window as unknown as Win & { __closed?: boolean }
+        w.notifications.consent(() => { w.__closed = true })
+      })
+      await expect(dock(page).locator('consent-banner')).toHaveCount(1)
+
+      await page.evaluate(() => (window as unknown as Win).notifications.suppress(true))
+      await expect(dock(page).locator('consent-banner')).toHaveCount(0)
+      expect(await page.evaluate(() => (window as unknown as { __closed?: boolean }).__closed)).toBe(true)
+    })
+
+    test('cards show again once suppression is lifted', async ({ page }) => {
+      await mount(page)
+      await page.evaluate(() => {
+        const n = (window as unknown as Win).notifications
+        n.suppress(true)
+        n.suppress(false)
+        n.feedback({})
+      })
+      await expect(dock(page).locator('feedback-dialog')).toHaveCount(1)
+    })
   })
 })

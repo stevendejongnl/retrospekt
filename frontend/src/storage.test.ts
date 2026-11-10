@@ -25,6 +25,29 @@ describe('RetroStorage', () => {
     })
   })
 
+  describe('getPresenting / setPresenting', () => {
+    it('is off until it is switched on', () => {
+      expect(storage.getPresenting('session-1')).toBe(false)
+    })
+
+    it('remembers that the board is being presented', () => {
+      storage.setPresenting('session-1', true)
+      expect(storage.getPresenting('session-1')).toBe(true)
+    })
+
+    it('is per board', () => {
+      storage.setPresenting('session-1', true)
+      expect(storage.getPresenting('session-2')).toBe(false)
+    })
+
+    it('forgets it again when switched off', () => {
+      storage.setPresenting('session-1', true)
+      storage.setPresenting('session-1', false)
+      expect(storage.getPresenting('session-1')).toBe(false)
+      expect(localStorage.getItem('retro_present_session-1')).toBeNull()
+    })
+  })
+
   describe('getFacilitatorToken / setFacilitatorToken', () => {
     it('returns null when no token has been stored', () => {
       expect(storage.getFacilitatorToken('session-1')).toBeNull()
