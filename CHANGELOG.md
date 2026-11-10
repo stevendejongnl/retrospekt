@@ -1,3 +1,20 @@
+## [1.54.0](https://github.com/stevendejongnl/retrospekt/compare/v1.53.0...v1.54.0) (2026-11-10)
+
+### Features
+
+* **redesign:** closed-state details, timer popover, share list and header open states follow the design ([3900c67](https://github.com/stevendejongnl/retrospekt/commit/3900c67d2e636b7d3649c1dc93aae4afeb1e6dc2))
+* **redesign:** home page follows the design; parity renders the fixture version ([35ca139](https://github.com/stevendejongnl/retrospekt/commit/35ca1398f7bf1527cf4f68aa086cd3c65eb6955e))
+* **redesign:** join dialog, sidebars, cards and columns follow the design; geometry report for parity ([cfca3f3](https://github.com/stevendejongnl/retrospekt/commit/cfca3f3ec596b9deabef2bfa96be3704738162aa))
+* **redesign:** notes sidebar, reaction row and picker match the design ([fbab4d8](https://github.com/stevendejongnl/retrospekt/commit/fbab4d8a78707191ac8558620f948da645aa4e4d))
+* **redesign:** notification dock cards follow the design and the facilitator dock makes room for them ([15eefe9](https://github.com/stevendejongnl/retrospekt/commit/15eefe986a3b45010527621aefb13dbd7a530a85))
+* **redesign:** settings, help, closed board, share list, brand header and timer popover match the design ([c64f212](https://github.com/stevendejongnl/retrospekt/commit/c64f2123005baaa4bb525c1a910f49b4f292737d))
+* **redesign:** settings, help, timer, popovers and stepper follow the design ([f786500](https://github.com/stevendejongnl/retrospekt/commit/f7865007b38221aa52b0304913b9e71557b45d2d))
+* **redesign:** stats, admin, feedback panel and changelog follow the design ([4b7daaa](https://github.com/stevendejongnl/retrospekt/commit/4b7daaa72a988b4b837d0f95a3fea8038a310e8a))
+
+### Bug Fixes
+
+* **redesign:** admin sparkline, notes buttons, timer pill, brand tokens and menu match the design ([47c2931](https://github.com/stevendejongnl/retrospekt/commit/47c29313341c87141fae9582f63a6b22915b43d0))
+
 ## [1.53.0](https://github.com/stevendejongnl/retrospekt/compare/v1.52.0...v1.53.0) (2026-11-10)
 
 ### Features
