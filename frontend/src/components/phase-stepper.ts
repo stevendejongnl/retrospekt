@@ -2,7 +2,7 @@ import { LitElement, css, html, type TemplateResult } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { ifDefined } from 'lit/directives/if-defined.js'
 
-import { faIconStyles, iconCommentDots, iconLock, iconPencil } from '../icons'
+import { designIcon } from '../icons'
 import { baseStyles } from '../styles'
 import type { SessionPhase } from '../types'
 
@@ -14,9 +14,9 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-  { phase: 'collecting', label: 'Collecting', hint: 'Add your cards privately', icon: iconPencil },
-  { phase: 'discussing', label: 'Discussing', hint: 'Vote on the cards that matter most', icon: iconCommentDots },
-  { phase: 'closed', label: 'Closed', hint: 'This session is read only', icon: iconLock },
+  { phase: 'collecting', label: 'Collecting', hint: 'Add your cards privately', icon: () => designIcon('pencil', 13) },
+  { phase: 'discussing', label: 'Discussing', hint: 'Vote on the cards that matter most', icon: () => designIcon('comment', 13) },
+  { phase: 'closed', label: 'Closed', hint: 'This session is read only', icon: () => designIcon('lock', 13) },
 ]
 
 /**
@@ -28,7 +28,7 @@ export class PhaseStepper extends LitElement {
   @property({ type: String }) phase: SessionPhase = 'collecting'
   @property({ type: Boolean }) interactive = false
 
-  static styles = [baseStyles, faIconStyles, css`
+  static styles = [baseStyles, css`
     :host {
       display: inline-flex;
     }
@@ -59,7 +59,6 @@ export class PhaseStepper extends LitElement {
     }
     .step.active {
       font-weight: 700;
-      box-shadow: 0 2px 6px color-mix(in srgb, var(--retro-text-primary) 10%, transparent);
     }
     .step.active.collecting {
       background: var(--retro-phase-collecting-bg);
@@ -72,10 +71,6 @@ export class PhaseStepper extends LitElement {
     .step.active.closed {
       background: var(--retro-phase-closed-bg);
       color: var(--retro-phase-closed-text);
-    }
-    .fa-icon {
-      width: 13px;
-      height: 13px;
     }
   `]
 

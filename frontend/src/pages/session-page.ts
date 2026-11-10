@@ -81,20 +81,27 @@ export class SessionPage extends LitElement {
       backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border-bottom: 1px solid var(--retro-glass-border);
-      padding: 0 24px;
+      padding: 0 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
     }
     .brand {
-      font-size: 20px;
-      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 6.4px;
+      font-size: 16px;
+      font-weight: 700;
       color: var(--retro-text-primary);
       text-decoration: none;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.02em;
       cursor: pointer;
       flex-shrink: 0;
+    }
+    .brand-mark {
+      font-size: 17.6px;
+      filter: saturate(1.1);
     }
     .brand em {
       font-style: normal;
@@ -127,18 +134,19 @@ export class SessionPage extends LitElement {
       gap: 6px;
     }
     .session-title {
-      font-size: 14px;
-      color: var(--retro-text-secondary);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
       min-width: 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--retro-text-primary);
+      white-space: nowrap;
     }
     .session-date {
-      color: var(--retro-text-disabled);
+      color: var(--retro-text-muted);
       font-size: 12px;
       font-weight: 400;
-      margin-left: 6px;
     }
     .icon-btn {
       width: 34px;
@@ -996,9 +1004,9 @@ export class SessionPage extends LitElement {
 
       <header>
         <div class="header-left">
-        <span class="brand" @click=${this.goHome}>${bacon()} Retro<em>spekt</em>${getBrand() === 'cs' ? html`<span class="cs-collab">× ${csLogo()}</span>` : nothing}</span>
+        <span class="brand" @click=${this.goHome}><span class="brand-mark">${bacon()}</span><span>Retro<em>spekt</em></span>${getBrand() === 'cs' ? html`<span class="cs-collab">× ${csLogo()}</span>` : nothing}</span>
         <span class="session-title">
-          ${session.name}<span class="session-date">· ${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+          <span>${session.name}</span><span class="session-date">${new Date(session.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
         </span>
         </div>
         <phase-stepper
