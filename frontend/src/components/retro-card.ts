@@ -2,7 +2,8 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { Card } from '../types'
-import { faIconStyles, iconThumbsUp, iconUser } from '../icons'
+import { designIcon } from '../icons'
+import { baseStyles } from '../styles'
 import { bacon } from '../theme'
 import { renderCardText } from '../linkify'
 import '../components/emoji-picker'
@@ -65,7 +66,7 @@ export class RetroCard extends LitElement {
     window.removeEventListener('retro-halal-change', this._halalListener)
   }
 
-  static styles = [faIconStyles, css`
+  static styles = [baseStyles, css`
     :host {
       display: block;
     }
@@ -285,7 +286,7 @@ export class RetroCard extends LitElement {
       background: var(--retro-accent);
       border-color: var(--retro-accent-border);
       color: var(--retro-accent-contrast);
-      font-weight: 700;
+      font-weight: 600;
     }
     .vote-btn:disabled {
       opacity: 0.45;
@@ -610,7 +611,12 @@ export class RetroCard extends LitElement {
         : ''}
             ${this.canAssign && !card.assignee && !this.assigning
         ? html`<button class="assign-btn" @click=${this.onAssignClick} title="Assign to…">
-                  ${iconUser()}
+                  ${designIcon('user', 13)}
+                </button>`
+        : ''}
+            ${canUnpublish
+        ? html`<button class="unpublish-btn" @click=${this.onUnpublishClick} title="Unpublish card">
+                  Unpublish
                 </button>`
         : ''}
             ${canPublish
@@ -627,15 +633,10 @@ export class RetroCard extends LitElement {
                     @click=${this.onVoteClick}
                     title="${this.hasVoted ? 'Remove vote' : 'Vote'}"
                   >
-                    ${iconThumbsUp()} ${card.votes.length}
+                    ${designIcon('thumb', 13)} ${card.votes.length}
                   </button>
                 `
           : ''}
-            ${canUnpublish
-        ? html`<button class="unpublish-btn" @click=${this.onUnpublishClick} title="Unpublish card">
-                  Unpublish
-                </button>`
-        : ''}
             ${canDelete
         ? html`<button class="delete-btn" @click=${this.onDeleteClick} title="Delete card">
                   ×

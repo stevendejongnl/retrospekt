@@ -40,7 +40,7 @@ test('facilitator can create a session', async ({ page }) => {
 test('facilitator can advance phase to discussing', async ({ page }) => {
   await createSession(page, 'Phase Test', 'Alice')
 
-  await page.getByRole('button', { name: 'Start discussion →' }).click()
+  await page.getByRole('button', { name: /Start discussion/ }).click()
 
   await expect(page.getByText('💬 Discussing')).toBeVisible()
   await expect(page.getByText('💬 Discussion phase')).toBeVisible()
@@ -48,7 +48,7 @@ test('facilitator can advance phase to discussing', async ({ page }) => {
 
 test('facilitator can close a session', async ({ page }) => {
   await createSession(page, 'Close Test', 'Alice')
-  await page.getByRole('button', { name: 'Start discussion →' }).click()
+  await page.getByRole('button', { name: /Start discussion/ }).click()
   await page.getByRole('button', { name: 'Close session' }).click()
 
   await expect(page.getByText('🔒 Closed')).toBeVisible()
@@ -78,7 +78,7 @@ test('facilitator can add a card to Went Well column', async ({ page }) => {
 
 test('cards are not addable after phase advances to discussing', async ({ page }) => {
   await createSession(page, 'Lock Test', 'Alice')
-  await page.getByRole('button', { name: 'Start discussion →' }).click()
+  await page.getByRole('button', { name: /Start discussion/ }).click()
   await expect(page.getByText('💬 Discussing')).toBeVisible()
 
   // The "+ Add a card" button should no longer be present
@@ -112,7 +112,7 @@ test('phase change is reflected live for participant (SSE)', async ({ page, brow
   await joinSession(participantPage, sessionUrl, 'Bob')
 
   // Facilitator advances phase
-  await page.getByRole('button', { name: 'Start discussion →' }).click()
+  await page.getByRole('button', { name: /Start discussion/ }).click()
 
   // Participant sees the discussion banner without refreshing
   await expect(participantPage.getByText('💬 Discussion phase')).toBeVisible({ timeout: 5000 })

@@ -426,7 +426,7 @@ test.describe('session-page board (facilitator, collecting)', () => {
     await page.route(`/api/v1/sessions/${SESSION_ID}/phase`, (route) =>
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(BASE) }),
     )
-    await page.getByRole('button', { name: 'Start discussion →' }).click()
+    await page.getByRole('button', { name: /Start discussion/ }).click()
     // No error = API was reached
   })
 
@@ -435,7 +435,7 @@ test.describe('session-page board (facilitator, collecting)', () => {
   })
 
   test('"← Back" button is NOT shown in collecting', async ({ page }) => {
-    await expect(page.getByRole('button', { name: '← Back' })).not.toBeVisible()
+    await expect(page.getByRole('button', { name: 'Back', exact: true })).not.toBeVisible()
   })
 
   test('retro-timer is rendered for the facilitator', async ({ page }) => {
@@ -463,7 +463,7 @@ test.describe('session-page board (facilitator, discussing)', () => {
   })
 
   test('shows "← Back" and "Close session" buttons', async ({ page }) => {
-    await expect(page.getByRole('button', { name: '← Back' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Back', exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Close session' })).toBeVisible()
   })
 
@@ -471,7 +471,7 @@ test.describe('session-page board (facilitator, discussing)', () => {
     await page.route(`/api/v1/sessions/${SESSION_ID}/phase`, (route) =>
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(BASE) }),
     )
-    await page.getByRole('button', { name: '← Back' }).click()
+    await page.getByRole('button', { name: 'Back', exact: true }).click()
   })
 })
 
@@ -955,27 +955,6 @@ test.describe('session-page export', () => {
     expect(didError).toBe(false)
   })
 
-  test('myColor returns fallback accent when participant is not in color map', async ({ page }) => {
-    await withName(page, 'Alice')
-    await mockApi(page, BASE)
-    await page.goto(`/session/${SESSION_ID}`)
-    await expect(page.locator('retro-board')).toBeVisible()
-
-    // Set participantName to a name not in the session participants list
-    const color = await page.evaluate(() => {
-      const el = document.querySelector('session-page') as Record<string, unknown>
-      el['participantName'] = 'UnknownPerson'
-      return Object.getOwnPropertyDescriptor(
-        Object.getPrototypeOf(el), 'myColor'
-      )?.get?.call(el)
-    })
-    expect(color).toBe('var(--retro-accent)')
-  })
-})
-
-// ── SSE error path (sse.ts line 26) ──────────────────────────────────────────
-
-test.describe('session-page SSE error handling', () => {
   test('SSE onmessage ignores invalid JSON without crashing (sse.ts line 26)', async ({ page }) => {
     await page.addInitScript(() => {
        
@@ -1061,7 +1040,7 @@ test.describe('session-page board (facilitator, closed)', () => {
 
   test('shows Closed in the header stepper, and Reopen in the dock', async ({ page }) => {
     await expect(page.locator('header phase-stepper .step.active')).toContainText('Closed')
-    await expect(page.locator('.facilitator-dock .back-btn')).toHaveText('← Reopen')
+    await expect(page.locator('.facilitator-dock .back-btn')).toHaveText('Reopen')
   })
 
   test('clicking the help overlay backdrop in facilitator bar closes it', async ({ page }) => {

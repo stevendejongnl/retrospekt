@@ -80,8 +80,10 @@ async function withName(page: Page, name: string, token = '') {
 
 
 async function openTimer(page: Page) {
+  // Running and time-up states show a readout instead of the chip; only the idle chip opens the controls.
+  await page.locator('.timer-chip, .timer-readout').first().waitFor()
   const chip = page.locator('.timer-chip')
-  await chip.waitFor()
+  if ((await chip.count()) === 0) return
   if ((await chip.getAttribute('aria-expanded')) !== 'true') await chip.click()
   await expect(chip).toHaveAttribute('aria-expanded', 'true')
 }
@@ -190,12 +192,17 @@ test.describe('retro-timer custom input', () => {
 // ── Start / Pause / Resume / Reset buttons ────────────────────────────────────
 
 test.describe('retro-timer start button', () => {
-  test('Start button is disabled when no timer is set', async ({ page }) => {
+  test('with no timer set the chip shows 10:00 and Start sets ten minutes, then starts', async ({ page }) => {
     await withName(page, 'Alice', FAC_TOKEN)
     await mockApi(page, BASE as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
-    await openTimer(page)
-    await expect(page.locator('.timer-btn').filter({ hasText: 'Start' })).toBeDisabled()
+    await expect(page.locator('.timer-chip')).toContainText('10:00')
+    const setReq = page.waitForRequest(r => r.url().includes('/timer') && r.method() === 'PATCH')
+    const startReq = page.waitForRequest(r => r.url().includes('/timer/start') && r.method() === 'POST')
+    await page.locator('.timer-btn').filter({ hasText: 'Start' }).click()
+    const body = JSON.parse((await setReq).postData() ?? '{}') as Record<string, unknown>
+    expect(body.duration_seconds).toBe(600)
+    await startReq
   })
 
   test('Start button is enabled when timer is set and not running', async ({ page }) => {
@@ -299,31 +306,28 @@ test.describe('retro-timer display', () => {
 
   test('timer-display has .green class when remaining > 25%', async ({ page }) => {
     await withName(page, 'Alice', FAC_TOKEN)
-    const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: null } }
+    const session = { ...BASE, timer: { duration_seconds: 300, started_at: new Date(Date.now() - 10000).toISOString(), paused_remaining: null } }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
-    await openTimer(page)
-    await expect(page.locator('.timer-display.green')).toBeVisible()
+    await expect(page.locator('.facilitator-dock .timer-display.green')).toBeVisible()
   })
 
   test('timer-display has .amber class when remaining is 10-25%', async ({ page }) => {
     await withName(page, 'Alice', FAC_TOKEN)
-    // 300s total, 50s remaining = ~16.6% -> amber
-    const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: 50 } }
+    // 300s total, started 250s ago = 50s remaining = ~16.6% -> amber
+    const session = { ...BASE, timer: { duration_seconds: 300, started_at: new Date(Date.now() - 250000).toISOString(), paused_remaining: null } }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
-    await openTimer(page)
-    await expect(page.locator('.timer-display.amber')).toBeVisible()
+    await expect(page.locator('.facilitator-dock .timer-display.amber')).toBeVisible()
   })
 
   test('timer-display has .red class when remaining < 10%', async ({ page }) => {
     await withName(page, 'Alice', FAC_TOKEN)
-    // 300s total, 20s remaining = ~6.7% -> red
-    const session = { ...BASE, timer: { duration_seconds: 300, started_at: null, paused_remaining: 20 } }
+    // 300s total, started 280s ago = 20s remaining = ~6.7% -> red
+    const session = { ...BASE, timer: { duration_seconds: 300, started_at: new Date(Date.now() - 280000).toISOString(), paused_remaining: null } }
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
-    await openTimer(page)
-    await expect(page.locator('.timer-display.red')).toBeVisible()
+    await expect(page.locator('.facilitator-dock .timer-display.red')).toBeVisible()
   })
 })
 
@@ -341,12 +345,12 @@ test.describe('retro-timer interval callback', () => {
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
     await openTimer(page)
-    await expect(page.locator('.timer-chip .timer-display')).toBeVisible()
+    await expect(page.locator('.facilitator-dock .timer-display')).toBeVisible()
     // Capture the initial rendered value
-    const firstText = await page.locator('.timer-chip .timer-display').textContent()
+    const firstText = await page.locator('.facilitator-dock .timer-display').textContent()
     // Wait for the setInterval callback to fire and update displaySeconds (lines 222-223)
     await expect(async () => {
-      const current = await page.locator('.timer-chip .timer-display').textContent()
+      const current = await page.locator('.facilitator-dock .timer-display').textContent()
       expect(current).not.toBe(firstText)
     }).toPass({ timeout: 3000 })
   })
@@ -362,10 +366,10 @@ test.describe('retro-timer interval callback', () => {
     await mockApi(page, session as unknown as Record<string, unknown>)
     await page.goto(`/session/${SESSION_ID}`)
     await openTimer(page)
-    await expect(page.locator('.timer-chip .timer-display')).toBeVisible()
+    await expect(page.locator('.facilitator-dock .timer-display')).toBeVisible()
     // Wait for the interval to fire and hit remaining <= 0 → clearTimer (line 224)
     await page.waitForTimeout(1500)
-    await expect(page.locator('.timer-chip .timer-display')).toContainText('0:00')
+    await expect(page.locator('.facilitator-dock .timer-display')).toContainText('0:00')
   })
 
 })

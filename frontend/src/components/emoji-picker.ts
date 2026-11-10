@@ -4,6 +4,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 import { EMOJI_GROUPS, type EmojiGroup } from '../emoji-data'
 import { computePopupPosition } from '../popup-position'
 import { bacon } from '../theme'
+import { designIcon } from '../icons'
 
 /**
  * Self-contained trigger + searchable popup over the full standard Unicode
@@ -33,14 +34,16 @@ export class EmojiPicker extends LitElement {
     }
     .trigger {
       width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: 1px dashed var(--retro-border-default);
-      background: none;
-      color: var(--retro-text-muted);
+      height: 22px;
+      border-radius: var(--retro-radius-md);
+      border: 1px dashed var(--retro-border-strong);
+      background: var(--retro-bg-subtle);
+      color: var(--retro-text-secondary);
       cursor: pointer;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 700;
+      font-family: inherit;
+      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -202,7 +205,7 @@ export class EmojiPicker extends LitElement {
         aria-label=${this.triggerTitle}
         aria-haspopup="true"
         aria-expanded=${this.open}
-      >${this.triggerLabel}</button>
+      >${this.triggerLabel === '+' ? designIcon('smile', 13) : this.triggerLabel}</button>
       ${this.open ? html`
         <div class="popup" popover="manual" style=${this.popupStyle}>
           <input

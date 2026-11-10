@@ -353,15 +353,16 @@ export class SessionPage extends LitElement {
       flex-shrink: 0;
     }
     .avatar {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
-      color: white;
+      background: var(--retro-accent);
+      color: var(--retro-accent-contrast);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 600;
       flex-shrink: 0;
     }
     .avatar-name {
@@ -423,7 +424,7 @@ export class SessionPage extends LitElement {
     main {
       max-width: 1280px;
       margin: 0 auto;
-      padding: 20px 24px 40px;
+      padding: 14px 24px 40px;
     }
 
     /* ── Share popover ── */
@@ -804,12 +805,6 @@ export class SessionPage extends LitElement {
     window.router.navigate('/')
   }
 
-  private get myColor(): string {
-    if (!this.session || !this.participantName) return 'var(--retro-accent)'
-    const map = buildParticipantColorMap(this.session.participants)
-    return map[this.participantName] ?? 'var(--retro-accent)'
-  }
-
   protected override updated(changedProps: PropertyValues): void {
     super.updated(changedProps)
     if (changedProps.has('session')) {
@@ -1093,7 +1088,7 @@ export class SessionPage extends LitElement {
               <div class="user-chip pop-wrap" ?data-open=${this.openPanel === 'menu'}>
                 ${this.renamingName
                   ? html`
-                      <div class="avatar" style="background:${this.myColor}">${this.participantName[0].toUpperCase()}</div>
+                      <div class="avatar">${this.participantName[0].toUpperCase()}</div>
                       <input
                         class="avatar-name-input"
                         .value=${this.renameInput}
@@ -1116,7 +1111,7 @@ export class SessionPage extends LitElement {
                         aria-expanded=${this.openPanel === 'menu'}
                         @click=${() => this.togglePanel('menu')}
                       >
-                        <span class="avatar" style="background:${this.myColor}">${this.participantName[0].toUpperCase()}</span>
+                        <span class="avatar">${this.participantName[0].toUpperCase()}</span>
                         <span class="avatar-name">${this.participantName}</span>
                         ${designIcon('chevronDown', 12)}
                       </button>

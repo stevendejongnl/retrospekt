@@ -1,3 +1,5 @@
+import { baseStyles } from '../styles'
+import { designIcon } from '../icons'
 import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
@@ -7,7 +9,6 @@ import { api, countParticipantVotes } from '../api'
 import { storage } from '../storage'
 import {
   faIconStyles,
-  iconGear,
 } from '../icons'
 import './retro-column'
 import './retro-timer'
@@ -29,7 +30,7 @@ export class RetroBoard extends LitElement {
   @state() private voteLimitMessage = ''
   private _voteLimitTimer: ReturnType<typeof setTimeout> | null = null
 
-  static styles = [faIconStyles, css`
+  static styles = [baseStyles, faIconStyles, css`
     :host {
       display: block;
     }
@@ -55,6 +56,9 @@ export class RetroBoard extends LitElement {
       background: var(--retro-border-default);
     }
     .phase-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       background: var(--retro-accent);
       color: var(--retro-accent-contrast);
       border: 1px solid var(--retro-accent-border);
@@ -79,6 +83,9 @@ export class RetroBoard extends LitElement {
       opacity: 0.85;
     }
     .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);
       border-radius: var(--retro-radius-sm);
@@ -95,26 +102,28 @@ export class RetroBoard extends LitElement {
       background: var(--retro-bg-hover);
     }
     .settings-btn {
-      background: none;
-      border: 1px solid var(--retro-facilitator-border);
+      background: var(--retro-bg-subtle);
+      border: 1px solid var(--retro-border-default);
       border-radius: 50%;
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
-      color: var(--retro-facilitator-text);
+      color: var(--retro-text-secondary);
       cursor: pointer;
       font-family: inherit;
       flex-shrink: 0;
+      padding: 0;
       transition: background 0.12s;
     }
     .settings-btn:hover {
       background: var(--retro-bg-hover);
     }
-
     .add-column-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       background: none;
       border: 1px dashed var(--retro-border-strong);
       border-radius: var(--retro-radius-sm);
@@ -133,7 +142,7 @@ export class RetroBoard extends LitElement {
     }
     .columns {
       display: flex;
-      gap: 16px;
+      gap: 12px;
       align-items: flex-start;
       overflow-x: auto;
       padding-bottom: 96px; /* the facilitator dock floats over the bottom edge */
@@ -628,21 +637,28 @@ export class RetroBoard extends LitElement {
             <div class="facilitator-dock" role="toolbar" aria-label="Facilitator controls">
               ${session.phase !== 'collecting'
                 ? html`
-                    <button class="back-btn" @click=${this.goBackPhase}>${session.phase === 'closed' ? '← Reopen' : '← Back'}</button>
-                    <span class="dock-sep" aria-hidden="true"></span>
+                    <button class="back-btn" @click=${this.goBackPhase}>
+                      ${designIcon('arrowLeft', 13)} ${session.phase === 'closed' ? 'Reopen' : 'Back'}
+                    </button>
+                    ${session.phase === 'discussing' ? html`<span class="dock-sep" aria-hidden="true"></span>` : ''}
                   `
                 : ''}
+              ${session.phase !== 'closed'
+                ? html`
+                    <retro-timer
+                      .timer=${session.timer ?? null}
+                      .sessionId=${session.id}
+                      isFacilitator
+                      .facilitatorToken=${this.facilitatorToken}
+                      .participantName=${this.participantName}
+                    ></retro-timer>
+                    <span class="dock-sep" aria-hidden="true"></span>
+                  `
+                : html`<span class="dock-sep" aria-hidden="true"></span>`}
               ${session.phase === 'collecting'
-                ? html`<button class="add-column-btn" @click=${this.onAddColumn}>+ Add column</button>`
+                ? html`<button class="add-column-btn" aria-label="Add column" @click=${this.onAddColumn}>${designIcon('plus', 12)} Column</button>`
                 : ''}
-              <button class="settings-btn" title="Session settings" @click=${this.openSettings}>${iconGear()}</button>
-              <retro-timer
-                .timer=${session.timer ?? null}
-                .sessionId=${session.id}
-                isFacilitator
-                .facilitatorToken=${this.facilitatorToken}
-                .participantName=${this.participantName}
-              ></retro-timer>
+              <button class="settings-btn" aria-label="Session settings" title="Session settings" @click=${this.openSettings}>${designIcon('settings', 14)}</button>
               ${session.phase !== 'closed'
                 ? html`
                     <span class="dock-sep" aria-hidden="true"></span>
@@ -651,7 +667,7 @@ export class RetroBoard extends LitElement {
                       @click=${this.transitionPhase}
                     >
                       ${session.phase === 'collecting'
-                        ? 'Start discussion →'
+                        ? html`Start discussion ${designIcon('arrowRight', 13)}`
                         : 'Close session'}
                     </button>
                   `

@@ -1,9 +1,10 @@
+import { baseStyles } from '../styles'
 import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 
 import type { TimerState } from '../types'
 import { api } from '../api'
-import { faIconStyles, iconChevronDown, iconClock, iconPlay, iconPause, iconRotateLeft, iconVolumeHigh, iconVolumeXmark } from '../icons'
+import { faIconStyles, designIcon, iconClock, iconVolumeHigh, iconVolumeXmark } from '../icons'
 
 /**
  * Pure function: compute how many seconds remain on the timer at a given `now` timestamp.
@@ -16,6 +17,8 @@ export function computeRemaining(timer: TimerState, now: number): number {
   }
   return timer.paused_remaining ?? timer.duration_seconds
 }
+
+const DEFAULT_SECONDS = 600
 
 const PRESETS = [
   { label: '5m', seconds: 300 },
@@ -40,13 +43,15 @@ export class RetroTimer extends LitElement {
   private _muted = localStorage.getItem('retro_timer_muted') === 'true'
   private _audioCtx: AudioContext | null = null
 
-  static styles = [faIconStyles, css`
+  static styles = [baseStyles, faIconStyles, css`
     :host {
       display: block;
       margin-bottom: 16px;
     }
     :host([isfacilitator]) {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       position: relative;
       margin-bottom: 0;
     }
@@ -57,19 +62,39 @@ export class RetroTimer extends LitElement {
       background: var(--retro-bg-subtle);
       border: 1px solid var(--retro-border-default);
       border-radius: var(--retro-radius-sm);
-      padding: 4px 10px;
-      font-size: 12px;
-      font-weight: 500;
+      padding: 5px 10px;
       color: var(--retro-text-primary);
       cursor: pointer;
-      font-family: inherit;
+      font-family: var(--retro-font-mono);
+      font-size: 14px;
+      font-weight: 800;
       white-space: nowrap;
     }
     .timer-chip:hover {
       background: var(--retro-bg-hover);
     }
     .timer-chip .timer-display {
-      font-size: 12px;
+      font-size: 14px;
+      min-width: 0;
+      letter-spacing: 0;
+    }
+    .timer-readout {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--retro-font-mono);
+    }
+    .timer-readout .timer-display {
+      font-size: 14px;
+      min-width: 0;
+      letter-spacing: 0;
+    }
+    .timer-btn.icon {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      justify-content: center;
+      border-radius: 50%;
     }
     :host([isfacilitator]) .timer-panel {
       position: absolute;
@@ -190,8 +215,8 @@ export class RetroTimer extends LitElement {
       align-items: center;
       gap: 5px;
       background: var(--retro-accent);
-      color: white;
-      border: none;
+      color: var(--retro-accent-contrast);
+      border: 1px solid var(--retro-accent-border);
       border-radius: var(--retro-radius-sm);
       padding: 5px 12px;
       font-size: 12px;
@@ -383,6 +408,13 @@ export class RetroTimer extends LitElement {
     this.customMinutes = ''
   }
 
+  private async onStartClick(): Promise<void> {
+    if (!this.timer) {
+      await api.setTimerDuration(this.sessionId, DEFAULT_SECONDS, this.facilitatorToken, this.participantName)
+    }
+    await this.onStart()
+  }
+
   private async onStart(): Promise<void> {
     await api.startTimer(this.sessionId, this.facilitatorToken, this.participantName)
   }
@@ -418,27 +450,49 @@ export class RetroTimer extends LitElement {
       `
     }
 
-    const canStart = !!this.timer && !this.isRunning && this.displaySeconds > 0
+    const state = this.isRunning ? (this.displaySeconds <= 0 ? 'up' : 'running') : 'idle'
+    const idleSeconds = this.timer ? this.displaySeconds : DEFAULT_SECONDS
     const isPreset = this.activePreset
 
+    if (state === 'running') {
+      return html`
+        <span class="timer-readout">
+          ${iconClock()}
+          <span class="timer-display ${this.colorClass}">${this.formatTime(this.displaySeconds)}</span>
+        </span>
+        <button class="timer-btn secondary" @click=${this.onPause}>${designIcon('pause', 11)} Pause</button>
+        <button class="timer-btn secondary icon" aria-label="Reset timer" title="Reset timer" @click=${this.onReset}>${designIcon('history', 13)}</button>
+      `
+    }
+    if (state === 'up') {
+      return html`
+        <span class="timer-readout">
+          ${iconClock()}
+          <span class="timer-display red">${this.formatTime(0)}</span>
+        </span>
+        <button class="timer-btn" @click=${this.onReset}>Reset</button>
+      `
+    }
     return html`
       <button
         class="timer-chip"
         aria-expanded=${this.open ? 'true' : 'false'}
-        title="Timer"
+        aria-label="Set timer"
+        title="Set timer"
         @click=${() => { this.open = !this.open }}
       >
-        ${iconClock()}
-        ${this.timer
-          ? html`<span class="timer-display ${this.colorClass}">${this.formatTime(this.displaySeconds)}</span>`
-          : html`<span>Timer</span>`}
-        ${iconChevronDown()}
+        ${designIcon('clock', 14)}
+        <span class="timer-display idle-time">${this.formatTime(idleSeconds)}</span>
+        ${designIcon('chevronUp', 12)}
       </button>
-      ${this.open ? this.renderPanel(canStart, isPreset) : ''}
+      <button class="timer-btn" @click=${this.onStartClick}>
+        ${designIcon('play', 10)} ${this.timer?.paused_remaining != null ? 'Resume' : 'Start'}
+      </button>
+      ${this.open ? this.renderPanel(isPreset) : ''}
     `
   }
 
-  private renderPanel(canStart: boolean, isPreset: number | null) {
+  private renderPanel(isPreset: number | null) {
     return html`
       <div class="timer-panel">
         <div class="presets">
@@ -472,22 +526,11 @@ export class RetroTimer extends LitElement {
         </div>
 
         <div class="timer-actions">
-          ${this.isRunning
-            ? html`
-                <button class="timer-btn" @click=${this.onPause}>
-                  ${iconPause()} Pause
-                </button>
-              `
-            : html`
-                <button class="timer-btn" ?disabled=${!canStart} @click=${this.onStart}>
-                  ${iconPlay()} ${this.timer?.paused_remaining != null ? 'Resume' : 'Start'}
-                </button>
-              `}
           <button
             class="timer-btn secondary"
             ?disabled=${!this.timer}
             @click=${this.onReset}
-          >${iconRotateLeft()} Reset</button>
+          >Reset</button>
           <button
             class="mute-btn ${this._muted ? 'muted' : ''}"
             title=${this._muted ? 'Unmute timer sound' : 'Mute timer sound'}

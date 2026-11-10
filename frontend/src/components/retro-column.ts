@@ -1,3 +1,4 @@
+import { baseStyles } from '../styles'
 import { LitElement, css, html } from 'lit'
 import type { TemplateResult } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
@@ -38,7 +39,7 @@ export class RetroColumn extends LitElement {
   @state() private dragOverGroupId: string | null = null
   @state() private isMoveTarget = false
 
-  static styles = [faIconStyles, css`
+  static styles = [baseStyles, faIconStyles, css`
     :host {
       display: flex;
       flex-direction: column;
