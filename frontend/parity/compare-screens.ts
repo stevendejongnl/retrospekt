@@ -167,6 +167,7 @@ async function startAppServer(): Promise<ChildProcess> {
   const server = spawn('npx', ['vite', '--host', '127.0.0.1', '--port', String(APP_PORT), '--strictPort'], {
     cwd: FRONTEND_DIRECTORY,
     stdio: 'ignore',
+    env: { ...process.env, PARITY_APP_VERSION: FIXTURE_APP_VERSION },
   })
   const deadline = Date.now() + SERVER_START_TIMEOUT_MS
   while (Date.now() < deadline) {

@@ -40,12 +40,14 @@ function pair(name: string, base: Base): ParityScreen[] {
   return (['light', 'dark'] as const).map((theme) => ({ ...base, name: `${name}-${theme}`, theme }))
 }
 
+const HOME_FILLED: Step[] = [{ fill: ['#session-name', 'Sprint 42 Retro'] }, { fill: ['#your-name', 'Alice'] }]
+
 const PAGE: Pick<ParityScreen, 'viewer'> = { viewer: 'visitor' }
 
 export const PARITY_SCREENS: ParityScreen[] = [
   // Home
-  ...pair('home', { ...PAGE, size: [1000, 940], route: '/' }),
-  { ...PAGE, name: 'home-cs-brand', theme: 'light', brand: 'cs', size: [1000, 940], route: '/' },
+  ...pair('home', { ...PAGE, size: [1000, 940], route: '/', steps: HOME_FILLED }),
+  { ...PAGE, name: 'home-cs-brand', theme: 'light', brand: 'cs', size: [1000, 940], route: '/', steps: HOME_FILLED },
 
   // Joining a board
   { ...PAGE, name: 'join-light', theme: 'light', size: [1000, 620], route: SESSION },

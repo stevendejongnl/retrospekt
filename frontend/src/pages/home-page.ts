@@ -1,11 +1,11 @@
-import { LitElement, css, html } from 'lit'
+import { LitElement, css, html, nothing } from 'lit'
 import { baseStyles } from '../styles'
 import { customElement, state } from 'lit/decorators.js'
 
 import { api } from '../api'
 import { storage } from '../storage'
 import { getBrand, clearBrand, bacon } from '../theme'
-import { faIconStyles, iconClockRotateLeft, iconRotateLeft, iconChartBar } from '../icons'
+import { faIconStyles, designIcon } from '../icons'
 import '../components/session-history'
 import '../components/theme-menu'
 
@@ -58,204 +58,149 @@ export class HomePage extends LitElement {
 
   static styles = [ baseStyles, faIconStyles, css`
     :host {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: block;
       min-height: 100vh;
       background: var(--retro-bg-page);
-      padding: 24px;
+    }
+    .page {
+      min-height: 100vh;
+      padding: 24px 32px;
       position: relative;
-      overflow: hidden;
     }
-    .history-toggle {
-      position: absolute;
-      top: 16px;
-      left: 16px;
+    .corner {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .corner-btn {
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: var(--retro-glass-bg-medium);
-      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      border: 1px solid var(--retro-glass-border);
+      background: var(--retro-corner-bg);
+      border: 1px solid var(--retro-corner-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       cursor: pointer;
-      font-size: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.12s, border-color 0.12s;
-      z-index: 2;
+      padding: 0;
       color: var(--retro-text-secondary);
+      transition: border-color 0.12s, color 0.12s;
     }
-    .history-toggle:hover {
+    .corner-btn:hover {
       border-color: var(--retro-accent);
       color: var(--retro-accent);
-    }
-    .stats-link {
-      position: absolute;
-      top: 16px;
-      left: 60px;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--retro-glass-bg-medium);
-      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      border: 1px solid var(--retro-glass-border);
-      cursor: pointer;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.12s, border-color 0.12s;
-      z-index: 2;
-      color: var(--retro-text-secondary);
-    }
-    .stats-link:hover {
-      border-color: var(--retro-accent);
-      color: var(--retro-accent);
-    }
-    theme-menu {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      z-index: 2;
-    }
-    .brand-reset {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--retro-glass-bg-medium);
-      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      border: 1px solid var(--retro-glass-border);
-      color: var(--retro-text-secondary);
-      cursor: pointer;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.12s, border-color 0.12s;
-      z-index: 2;
-    }
-    .brand-reset:hover {
-      border-color: var(--retro-accent);
-    }
-    .theme-toggle:hover {
-      border-color: var(--retro-accent);
     }
     .hero {
-      width: 100%;
-      max-width: 420px;
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      margin-top: 32px;
       position: relative;
-      z-index: 1;
     }
     .logo {
-      font-size: 72px;
+      font-size: 68px;
       line-height: 1;
-      margin-bottom: 12px;
       filter: drop-shadow(0 8px 24px rgba(217, 116, 38, 0.35));
+      user-select: none;
+    }
+    .title {
+      text-align: center;
     }
     h1 {
       font-size: 44px;
       font-weight: 800;
       color: var(--retro-text-primary);
       letter-spacing: -0.025em;
-      line-height: 1;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     h1 em {
       font-style: normal;
       color: var(--retro-accent);
     }
     .tagline {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--retro-text-secondary);
-      margin-bottom: 28px;
     }
     .card {
+      width: 460px;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
       background: var(--retro-glass-bg-strong);
-      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1px solid var(--retro-glass-border);
       border-radius: var(--retro-radius-lg);
       padding: 24px;
-      box-shadow: var(--retro-glass-shadow);
+      box-shadow: var(--retro-shadow-float);
     }
     .field {
-      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
       text-align: left;
     }
-    label {
-      display: block;
+    .field-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .field-label {
       font-size: 12px;
       font-weight: 600;
       color: var(--retro-text-primary);
-      margin-bottom: 6px;
-      letter-spacing: 0.2px;
     }
-    input {
+    input[type='text'], input[type='number'] {
       width: 100%;
       padding: 10px 12px;
-      border: 1px solid var(--retro-border-default);
+      border: 1px solid var(--retro-input-border);
       border-radius: var(--retro-radius-md);
       font-size: 14px;
       font-family: inherit;
       color: var(--retro-text-primary);
-      box-sizing: border-box;
-      transition: border-color 0.12s, box-shadow 0.12s;
-      background: var(--retro-glass-bg-light);
-    }
-    input:focus {
+      background: var(--retro-input-bg);
       outline: none;
-      border-color: var(--retro-accent);
+    }
+    input[type='text']:focus, input[type='number']:focus {
+      border-color: color-mix(in srgb, var(--retro-accent) 45%, transparent);
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--retro-accent) 12%, transparent);
-      background: var(--retro-glass-bg-strong);
     }
     input::placeholder {
-      color: var(--retro-text-disabled);
+      color: var(--retro-text-muted);
     }
     input:disabled {
       opacity: 0.6;
     }
+    input.narrow {
+      width: 140px;
+    }
     .create-btn {
-      width: 100%;
-      margin-top: 8px;
       padding: 14px;
       background: var(--retro-accent);
-      color: white;
-      border: none;
+      color: var(--retro-accent-contrast);
+      border: 1px solid color-mix(in srgb, var(--retro-accent) 50%, transparent);
       border-radius: var(--retro-radius-md);
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: background 0.12s, transform 0.1s;
-      letter-spacing: 0.1px;
-      box-shadow: 0 4px 16px rgba(217, 116, 38, 0.35);
     }
     .create-btn:hover:not(:disabled) {
       background: var(--retro-accent-hover);
-    }
-    .create-btn:active:not(:disabled) {
-      transform: scale(0.99);
     }
     .create-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
     .error-msg {
-      margin-top: 10px;
       font-size: 13px;
       color: var(--retro-error);
       text-align: center;
     }
     .footer {
-      margin-top: 20px;
+      margin-top: 8px;
       font-size: 11px;
       color: var(--retro-text-muted);
     }
@@ -270,70 +215,88 @@ export class HomePage extends LitElement {
     }
     .template-btn {
       padding: 10px 12px;
-      border: 1px solid var(--retro-border-default);
+      border: 1px solid var(--retro-check-border);
       border-radius: var(--retro-radius-md);
       cursor: pointer;
-      background: var(--retro-glass-bg-light);
+      background: var(--retro-check-bg);
       text-align: left;
       font-family: inherit;
-      transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
     }
     .template-btn:hover {
       border-color: var(--retro-accent);
-      background: color-mix(in srgb, var(--retro-accent) 8%, var(--retro-glass-bg-strong));
     }
     .template-btn.selected {
-      border-color: var(--retro-accent);
-      background: color-mix(in srgb, var(--retro-accent) 8%, var(--retro-glass-bg-strong));
+      border-color: color-mix(in srgb, var(--retro-accent) 50%, transparent);
+      background: color-mix(in srgb, var(--retro-accent) 8%, transparent);
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--retro-accent) 12%, transparent);
     }
     .template-btn .t-label {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       color: var(--retro-text-primary);
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
     .template-btn .t-cols {
       font-size: 11px;
+      line-height: 1.3;
       color: var(--retro-text-muted);
     }
     .option-row {
+      position: relative;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 10px;
       padding: 10px 12px;
-      border: 1px solid var(--retro-border-default);
+      border: 1px solid var(--retro-check-border);
       border-radius: var(--retro-radius-md);
+      background: var(--retro-check-bg);
       cursor: pointer;
-      background: var(--retro-glass-bg-light);
-      transition: border-color 0.12s, background 0.12s;
       user-select: none;
     }
-    .option-row:hover {
+    .option-row input[type='checkbox'] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .option-row:focus-within .check-box {
+      outline: 2px solid color-mix(in srgb, var(--retro-accent) 55%, transparent);
+      outline-offset: 2px;
+    }
+    .check-box {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      border: 1px solid var(--retro-check-box-border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--retro-accent-contrast);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .check-box.on {
+      background: var(--retro-accent);
       border-color: var(--retro-accent);
     }
-    .option-row input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      accent-color: var(--retro-accent);
-      cursor: pointer;
-      flex-shrink: 0;
-      margin: 0;
-      padding: 0;
-      border: none;
-    }
     .option-label {
+      display: block;
       font-size: 13px;
-      color: var(--retro-text-primary);
       font-weight: 600;
-      line-height: 1.4;
+      color: var(--retro-text-primary);
     }
     .option-label small {
       display: block;
       font-size: 11px;
       font-weight: 400;
       color: var(--retro-text-muted);
-      margin-top: 1px;
+      margin-top: 2px;
     }
     .not-found-banner {
       position: absolute;
@@ -344,15 +307,13 @@ export class HomePage extends LitElement {
       align-items: center;
       gap: 10px;
       background: var(--retro-glass-bg-strong);
-      backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-strong)) saturate(180%);
       border: 1.5px solid var(--retro-error);
       border-radius: var(--retro-radius-md);
       padding: 10px 16px;
       font-size: 13px;
       color: var(--retro-text-primary);
       white-space: nowrap;
-      box-shadow: var(--retro-glass-shadow);
+      box-shadow: var(--retro-shadow-float);
       z-index: 10;
     }
     .not-found-banner .dismiss {
@@ -407,6 +368,22 @@ export class HomePage extends LitElement {
     clearBrand()
   }
 
+  private checkRow(label: string, sub: string, checked: boolean, onChange: (value: boolean) => void) {
+    return html`
+      <label class="option-row">
+        <input
+          type="checkbox"
+          aria-label=${label}
+          .checked=${checked}
+          @change=${(e: Event) => onChange((e.target as HTMLInputElement).checked)}
+          ?disabled=${this.loading}
+        />
+        <span class="check-box ${checked ? 'on' : ''}">${checked ? designIcon('check', 12) : nothing}</span>
+        <span class="option-label">${label}<small>${sub}</small></span>
+      </label>
+    `
+  }
+
   render() {
     const canCreate = !!this.sessionName.trim() && !this.loading
 
@@ -418,56 +395,57 @@ export class HomePage extends LitElement {
         </div>
       ` : ''}
       <session-history .open=${this.showHistory} @close=${() => { this.showHistory = false }}></session-history>
-      <button class="history-toggle" @click=${() => { this.showHistory = true }} title="Your sessions">${iconClockRotateLeft()}</button>
-      <button
-        class="stats-link"
-        @click=${(e: Event) => {
-          e.preventDefault()
-          window.router.navigate('/stats')
-        }}
-        title="Stats"
-      >${iconChartBar()}</button>
-      ${this.brand === 'cs'
-        ? html`<button class="brand-reset" @click=${this.onBrandReset} title="Reset to default theme">${iconRotateLeft()}</button>`
-        : html`<theme-menu></theme-menu>`}
+      <div class="page">
+      <div class="corner">
+        <button class="corner-btn history-toggle" @click=${() => { this.showHistory = true }} title="Your sessions" aria-label="Your sessions">${designIcon('history', 15)}</button>
+        ${this.brand === 'cs'
+          ? html`<button class="corner-btn brand-reset" @click=${this.onBrandReset} title="Reset to default theme" aria-label="Reset to default theme">${designIcon('settings', 15)}</button>`
+          : html`<theme-menu></theme-menu>`}
+      </div>
       <div class="hero">
         <div class="logo">${bacon()}</div>
-        <h1>Retro<em>spekt</em></h1>
-        <p class="tagline">A simple, self-hosted retrospective board</p>
+        <div class="title">
+          <h1>Retro<em>spekt</em></h1>
+          <p class="tagline">A simple, self-hosted retrospective board</p>
+        </div>
 
         <div class="card">
           <div class="field">
-            <label for="session-name">Session name</label>
-            <input
-              id="session-name"
-              type="text"
-              placeholder="e.g. Sprint 42 Retro"
-              .value=${this.sessionName}
-              @input=${(e: Event) => {
-                this.sessionName = (e.target as HTMLInputElement).value
-              }}
-              @keydown=${this.onKeydown}
-              ?disabled=${this.loading}
-              autofocus
-            />
+            <label class="field-label" for="session-name">Session name</label>
+            <div class="field-body">
+              <input
+                id="session-name"
+                type="text"
+                placeholder="e.g. Sprint 42 Retro"
+                .value=${this.sessionName}
+                @input=${(e: Event) => {
+                  this.sessionName = (e.target as HTMLInputElement).value
+                }}
+                @keydown=${this.onKeydown}
+                ?disabled=${this.loading}
+                autofocus
+              />
+            </div>
           </div>
           <div class="field">
-            <label for="your-name">Your name</label>
-            <input
-              id="your-name"
-              type="text"
-              placeholder="e.g. Alice (facilitator)"
-              .value=${this.yourName}
-              @input=${(e: Event) => {
-                this.yourName = (e.target as HTMLInputElement).value
-              }}
-              @keydown=${this.onKeydown}
-              ?disabled=${this.loading}
-            />
+            <label class="field-label" for="your-name">Your name</label>
+            <div class="field-body">
+              <input
+                id="your-name"
+                type="text"
+                placeholder="e.g. Alice (facilitator)"
+                .value=${this.yourName}
+                @input=${(e: Event) => {
+                  this.yourName = (e.target as HTMLInputElement).value
+                }}
+                @keydown=${this.onKeydown}
+                ?disabled=${this.loading}
+              />
+            </div>
           </div>
 
           <div class="field">
-            <label>Column template</label>
+            <span class="field-label">Column template</span>
             <div class="template-grid">
               ${COLUMN_TEMPLATES.map(
                 (t, i) => html`
@@ -487,43 +465,23 @@ export class HomePage extends LitElement {
           </div>
 
           <div class="field">
-            <label>Options</label>
-            <label class="option-row">
+            <span class="field-label">Options</span>
+            <div class="field-body">
+              ${this.checkRow('Emoji reactions on cards', 'Participants can react to published cards with emoji', this.reactionsEnabled, (value) => { this.reactionsEnabled = value })}
+              ${this.checkRow('Open facilitator mode', 'All participants can control the session (phase, timer, columns)', this.openFacilitator, (value) => { this.openFacilitator = value })}
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="max-votes">Max votes per participant</label>
+            <div class="field-body">
               <input
-                type="checkbox"
-                aria-label="Emoji reactions on cards"
-                .checked=${this.reactionsEnabled}
-                @change=${(e: Event) => { this.reactionsEnabled = (e.target as HTMLInputElement).checked }}
-                ?disabled=${this.loading}
-              />
-              <span class="option-label">
-                Emoji reactions on cards
-                <small>Participants can react to published cards with emoji</small>
-              </span>
-            </label>
-            <label class="option-row" style="margin-top:8px">
-              <input
-                type="checkbox"
-                aria-label="Open facilitator mode"
-                .checked=${this.openFacilitator}
-                @change=${(e: Event) => { this.openFacilitator = (e.target as HTMLInputElement).checked }}
-                ?disabled=${this.loading}
-              />
-              <span class="option-label">
-                Open facilitator mode
-                <small>All participants can control the session (phase, timer, columns)</small>
-              </span>
-            </label>
-            <label class="option-row" style="margin-top:8px">
-              <span class="option-label" style="flex:1">
-                Max votes per participant
-                <small>Leave empty for no limit</small>
-              </span>
-              <input
+                id="max-votes"
+                class="narrow"
                 type="number"
                 aria-label="Max votes per participant"
                 min="1"
-                style="width:64px;text-align:center"
+                placeholder="Unlimited"
                 .value=${this.maxVotesPerParticipant !== null ? String(this.maxVotesPerParticipant) : ''}
                 @input=${(e: Event) => {
                   const v = (e.target as HTMLInputElement).value
@@ -531,7 +489,7 @@ export class HomePage extends LitElement {
                 }}
                 ?disabled=${this.loading}
               />
-            </label>
+            </div>
           </div>
 
           ${this.error ? html`<p class="error-msg">${this.error}</p>` : ''}
@@ -546,8 +504,11 @@ export class HomePage extends LitElement {
           <a href="https://github.com/stevendejongnl/retrospekt" target="_blank" rel="noopener noreferrer">GitHub</a>
           &middot;
           <a href="/privacy" @click=${(e: Event) => { e.preventDefault(); window.router.navigate('/privacy') }}>Privacy</a>
+          &middot;
+          <a class="stats-link" href="/stats" @click=${(e: Event) => { e.preventDefault(); window.router.navigate('/stats') }}>Stats</a>
           &middot; v${__APP_VERSION__}
         </p>
+      </div>
       </div>
     `
   }

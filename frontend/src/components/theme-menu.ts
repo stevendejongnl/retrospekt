@@ -1,7 +1,7 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
 
-import { faIconStyles, iconGear } from '../icons'
+import { faIconStyles, designIcon } from '../icons'
 import { getThemePreference, setThemePreference, getHalalMode, setHalalMode } from '../theme'
 
 @customElement('theme-menu')
@@ -24,12 +24,13 @@ export class ThemeMenu extends LitElement {
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: var(--retro-glass-bg-medium);
-      backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--retro-glass-blur-medium)) saturate(180%);
-      border: 1px solid var(--retro-glass-border);
+      background: var(--retro-corner-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--retro-corner-border);
       cursor: pointer;
       color: var(--retro-text-secondary);
+      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -133,7 +134,7 @@ export class ThemeMenu extends LitElement {
         aria-label="Theme settings"
         aria-haspopup="true"
         aria-expanded=${this.open}
-      >${iconGear()}</button>
+      >${designIcon('settings', 15)}</button>
       ${this.open ? html`
         <div class="popup">
           <button

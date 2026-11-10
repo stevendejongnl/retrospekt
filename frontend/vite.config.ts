@@ -48,7 +48,7 @@ export default defineConfig({
       ]
     : [changelogPlugin()],
   define: {
-    __APP_VERSION__: JSON.stringify(pkg.version),
+    __APP_VERSION__: JSON.stringify(process.env.PARITY_APP_VERSION ?? pkg.version),
   },
   test: {
     environment: 'jsdom',
